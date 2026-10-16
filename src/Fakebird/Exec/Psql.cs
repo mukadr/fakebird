@@ -1,0 +1,497 @@
+using Fakebird.Engine;
+using Fakebird.Types;
+
+namespace Fakebird.Exec;
+
+public enum Flow { Normal, Leave, Continue, Exit }
+
+public abstract class PStmt
+{
+    public abstract Flow Exec(Ctx c);
+}
+
+/// <summary>Assignment target: a column of a stream (PSQL variable, NEW.field, output parameter).</summary>
+public readonly record struct Target(int Stream, int Index, SqlType Type, bool NotNull, string Name)
+{
+    public void Set(Ctx c, in Value v)
+    {
+        var x = Conv.Cast(v, Type);
+        if (NotNull && x.IsNull) throw Err.Random("variable " + Name + " cannot be NULL");
+        c.Rows[Stream][Index] = x;
+    }
+}
+
+public sealed class CompiledRoutine
+{
+    public string Name = "";
+    public int Streams;
+    public int VarStream;
+    public int VarCount;
+    public int[] Inputs = [];
+    public int[] Outputs = [];
+    public SqlType[] VarTypes = [];
+    public bool[] VarNotNull = [];
+    public PStmt Body = null!;
+    public int NewStream = -1;
+    public int OldStream = -1;
+    public int NewWidth;
+    public int CursorCount;
+    public SqlType? Returns;
+    public bool Selectable;
+
+    public Ctx NewCtx(Ctx caller)
+    {
+        var c = caller.Child(Streams);
+        c.Rows[VarStream] = new Value[VarCount];
+        if (CursorCount > 0) c.Cursors = new object?[CursorCount];
+        return c;
+    }
+}
+
+public sealed class BlockP : PStmt
+{
+    public (Target Target, XNode? Init)[] Decls = [];
+    public PStmt[] Body = [];
+    public (Func<FbError, bool> Match, PStmt Handler)[] Handlers = [];
+
+    public override Flow Exec(Ctx c)
+    {
+        foreach (var (t, init) in Decls)
+        {
+            c.Cache = null;
+            t.Set(c, init == null ? Value.Null : init.Eval(c));
+        }
+        if (Handlers.Length == 0) return RunBody(c);
+        var mark = c.Tx.Mark;
+        try
+        {
+            return RunBody(c);
+        }
+        catch (FbError e)
+        {
+            foreach (var (match, handler) in Handlers)
+            {
+                if (!match(e)) continue;
+                c.Tx.RollbackTo(mark);
+                var prev = c.CurrentError;
+                c.CurrentError = e;
+                try
+                {
+                    c.Cache = null;
+                    return handler.Exec(c);
+                }
+                finally
+                {
+                    c.CurrentError = prev;
+                }
+            }
+            throw;
+        }
+    }
+
+    Flow RunBody(Ctx c)
+    {
+        foreach (var s in Body)
+        {
+            c.Cache = null;
+            var f = s.Exec(c);
+            if (f != Flow.Normal) return f;
+        }
+        return Flow.Normal;
+    }
+}
+
+public sealed class AssignP(Target target, XNode value) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        target.Set(c, value.Eval(c));
+        return Flow.Normal;
+    }
+}
+
+public sealed class IfP(XNode cond, PStmt then, PStmt? els) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        if (cond.IsTrue(c)) return then.Exec(c);
+        return els?.Exec(c) ?? Flow.Normal;
+    }
+}
+
+public abstract class LoopP : PStmt
+{
+    public string? Label;
+
+    /// <summary>Returns true when the loop must stop and sets the flow to propagate.</summary>
+    protected bool Handle(Ctx c, Flow f, out Flow result)
+    {
+        result = Flow.Normal;
+        switch (f)
+        {
+            case Flow.Normal: return false;
+            case Flow.Exit: result = Flow.Exit; return true;
+            case Flow.Leave:
+                if (c.FlowLabel == null || c.FlowLabel == Label)
+                {
+                    c.FlowLabel = null;
+                    return true;
+                }
+                result = Flow.Leave;
+                return true;
+            case Flow.Continue:
+                if (c.FlowLabel == null || c.FlowLabel == Label)
+                {
+                    c.FlowLabel = null;
+                    return false;
+                }
+                result = Flow.Continue;
+                return true;
+        }
+        return false;
+    }
+}
+
+public sealed class WhileP(XNode cond, PStmt body) : LoopP
+{
+    public override Flow Exec(Ctx c)
+    {
+        while (true)
+        {
+            c.Cache = null;
+            if (!cond.IsTrue(c)) return Flow.Normal;
+            if (Handle(c, body.Exec(c), out var r)) return r;
+        }
+    }
+}
+
+public sealed class ForSelectP(QueryNode query, Target[] into, int cursorStream, int cursorSlot, PStmt body) : LoopP
+{
+    public override Flow Exec(Ctx c)
+    {
+        var rows = query.ToList(c);
+        var cursor = cursorSlot >= 0 ? new CursorState { Rows = rows } : null;
+        if (cursor != null) c.Cursors![cursorSlot] = cursor;
+        try
+        {
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (cursor != null) cursor.Pos = i;
+                for (var k = 0; k < into.Length; k++) into[k].Set(c, row[k]);
+                if (cursorStream >= 0) c.Rows[cursorStream] = row;
+                c.RowCount = 1;
+                c.Cache = null;
+                if (Handle(c, body.Exec(c), out var r)) return r;
+            }
+            return Flow.Normal;
+        }
+        finally
+        {
+            if (cursor != null) c.Cursors![cursorSlot] = null;
+        }
+    }
+}
+
+public sealed class CursorState
+{
+    public List<Value[]> Rows = null!;
+    public int Pos = -1;
+}
+
+public sealed class OpenCursorP(QueryNode query, int slot, string name) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        if (c.Cursors![slot] != null) throw Err.Random($"Attempt to reopen an open cursor {name}");
+        c.Cursors[slot] = new CursorState { Rows = query.ToList(c) };
+        return Flow.Normal;
+    }
+}
+
+public sealed class FetchCursorP(int slot, int stream, Target[] into, string name) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        var cs = c.Cursors![slot] as CursorState ?? throw Err.Random($"Attempt to fetch from a closed cursor {name}");
+        cs.Pos++;
+        if (cs.Pos >= cs.Rows.Count)
+        {
+            c.RowCount = 0;
+            return Flow.Normal;
+        }
+        var row = cs.Rows[cs.Pos];
+        for (var k = 0; k < into.Length; k++) into[k].Set(c, row[k]);
+        if (stream >= 0) c.Rows[stream] = row;
+        c.RowCount = 1;
+        return Flow.Normal;
+    }
+}
+
+public sealed class CloseCursorP(int slot, string name) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        if (c.Cursors![slot] == null) throw Err.Random($"Attempt to close a closed cursor {name}");
+        c.Cursors[slot] = null;
+        return Flow.Normal;
+    }
+}
+
+/// <summary>Runs a compiled DML/SELECT statement inside PSQL, assigning RETURNING/INTO targets.</summary>
+public sealed class StatementP(Prepared stmt, Target[]? into) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        var r = stmt.Execute(c);
+        c.RowCount = r.Inserted + r.Updated + r.Deleted;
+        if (stmt.StmtType == Wire.Isc.stmt_select)
+        {
+            var rows = r.Rows!;
+            c.RowCount = rows.Count;
+            if (into != null)
+            {
+                if (rows.Count > 1) throw Err.MultipleRows();
+                if (rows.Count == 1)
+                    for (var k = 0; k < into.Length; k++) into[k].Set(c, rows[0][k]);
+            }
+        }
+        else if (into != null && r.Rows is { Count: > 0 })
+        {
+            var row = r.Rows[0];
+            for (var k = 0; k < into.Length; k++) into[k].Set(c, row[k]);
+        }
+        return Flow.Normal;
+    }
+}
+
+public sealed class SuspendP(int[] outputs, int varStream) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        if (c.Output == null) return Flow.Exit; // executable procedure: SUSPEND acts like EXIT
+        var vars = c.Rows[varStream];
+        var row = new Value[outputs.Length];
+        for (var i = 0; i < row.Length; i++) row[i] = vars[outputs[i]];
+        c.Output.Add(row);
+        return Flow.Normal;
+    }
+}
+
+public sealed class ExitP : PStmt
+{
+    public override Flow Exec(Ctx c) => Flow.Exit;
+}
+
+public sealed class LeaveP(string? label, bool isContinue) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        c.FlowLabel = label;
+        return isContinue ? Flow.Continue : Flow.Leave;
+    }
+}
+
+public sealed class ReturnP(XNode value, SqlType type) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        c.ReturnValue = Conv.Cast(value.Eval(c), type);
+        return Flow.Exit;
+    }
+}
+
+public sealed class RaiseP(ExceptionDef? def, XNode? message, XNode[]? args) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        if (def == null)
+        {
+            if (c.CurrentError == null) throw Err.Random("EXCEPTION without name is allowed only in a WHEN handler");
+            throw c.CurrentError;
+        }
+        var msg = def.Message;
+        if (message != null)
+        {
+            var v = message.Eval(c);
+            msg = v.IsNull ? "" : Conv.ToStr(v);
+        }
+        else if (args != null)
+        {
+            var vals = args.Select(a => a.Eval(c)).ToArray();
+            for (var i = 0; i < vals.Length; i++)
+                msg = msg.Replace("@" + (i + 1), vals[i].IsNull ? "<null>" : Conv.ToStr(vals[i]));
+        }
+        var e = Err.UserException(def.Name, def.Number, msg);
+        e.UserExceptionName = def.Name;
+        throw e;
+    }
+}
+
+public sealed class ExprP(XNode node) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        node.Eval(c);
+        return Flow.Normal;
+    }
+}
+
+public sealed class SeqP(PStmt[] body) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        foreach (var s in body)
+        {
+            var f = s.Exec(c);
+            if (f != Flow.Normal) return f;
+        }
+        return Flow.Normal;
+    }
+}
+
+public sealed class NoopP : PStmt
+{
+    public override Flow Exec(Ctx c) => Flow.Normal;
+}
+
+/// <summary>IN AUTONOMOUS TRANSACTION DO ...</summary>
+public sealed class AutonomousP(PStmt body) : PStmt
+{
+    public override Flow Exec(Ctx c)
+    {
+        var outer = c.Tx;
+        var tx = outer.Att.StartTransaction(outer.Snapshot, outer.ReadOnly, outer.Wait);
+        c.Tx = tx;
+        try
+        {
+            var f = body.Exec(c);
+            tx.Commit();
+            return f;
+        }
+        catch
+        {
+            if (tx.Active) tx.Rollback();
+            throw;
+        }
+        finally
+        {
+            c.Tx = outer;
+        }
+    }
+}
+
+/// <summary>Invocation of stored routines and triggers.</summary>
+public static class Routines
+{
+    public static Func<Database, Procedure, CompiledRoutine> CompileProcedure = null!;
+    public static Func<Database, Function, CompiledRoutine> CompileFunction = null!;
+    public static Func<Database, Trigger, Table, CompiledRoutine> CompileTrigger = null!;
+
+    public static CompiledRoutine Get(Database db, Procedure p)
+    {
+        if (p.Compiled is CompiledRoutine cr && p.CompiledVersion == db.SchemaVersion) return cr;
+        cr = CompileProcedure(db, p);
+        p.Compiled = cr;
+        p.CompiledVersion = db.SchemaVersion;
+        return cr;
+    }
+
+    static Value[] EvalArgs(Ctx c, XNode[] args)
+    {
+        var vals = new Value[args.Length];
+        for (var i = 0; i < args.Length; i++) vals[i] = args[i].Eval(c);
+        return vals;
+    }
+
+    static Ctx Enter(Ctx caller, CompiledRoutine cr, Value[] args)
+    {
+        var c = cr.NewCtx(caller);
+        var vars = c.Rows[cr.VarStream];
+        for (var i = 0; i < cr.Inputs.Length; i++)
+        {
+            var vi = cr.Inputs[i];
+            var v = Conv.Cast(args[i], cr.VarTypes[vi]);
+            if (cr.VarNotNull[vi] && v.IsNull) throw Err.Random($"parameter {i + 1} of {cr.Name} cannot be NULL");
+            vars[vi] = v;
+        }
+        return c;
+    }
+
+    public static List<Value[]> CallSelectable(Ctx caller, Procedure p, XNode[] args)
+        => RunSelectable(caller, Get(caller.Db, p), EvalArgs(caller, args));
+
+    public static List<Value[]> RunSelectable(Ctx caller, CompiledRoutine cr, Value[] args)
+    {
+        var c = Enter(caller, cr, args);
+        c.Output = new List<Value[]>();
+        cr.Body.Exec(c);
+        return c.Output;
+    }
+
+    /// <summary>EXECUTE PROCEDURE: returns the output parameter values.</summary>
+    public static Value[] CallExecutable(Ctx caller, Procedure p, Value[] args) => RunExecutable(caller, Get(caller.Db, p), args);
+
+    public static Value[] RunExecutable(Ctx caller, CompiledRoutine cr, Value[] args)
+    {
+        var c = Enter(caller, cr, args);
+        cr.Body.Exec(c);
+        var vars = c.Rows[cr.VarStream];
+        var outRow = new Value[cr.Outputs.Length];
+        for (var i = 0; i < outRow.Length; i++) outRow[i] = vars[cr.Outputs[i]];
+        return outRow;
+    }
+
+    public static Value CallFunction(Ctx caller, Function f, Value[] args)
+    {
+        CompiledRoutine cr;
+        if (f.Compiled is CompiledRoutine x && f.CompiledVersion == caller.Db.SchemaVersion) cr = x;
+        else
+        {
+            cr = CompileFunction(caller.Db, f);
+            f.Compiled = cr;
+            f.CompiledVersion = caller.Db.SchemaVersion;
+        }
+        return RunFunction(caller, cr, args);
+    }
+
+    public static Value RunFunction(Ctx caller, CompiledRoutine cr, Value[] args)
+    {
+        var c = Enter(caller, cr, args);
+        c.ReturnValue = Value.Null;
+        cr.Body.Exec(c);
+        return c.ReturnValue;
+    }
+
+    public static void Fire(Ctx caller, Trigger t, Table table, Sql.TriggerEvent ev, Value[]? oldRow, Value[]? newRow)
+    {
+        CompiledRoutine cr;
+        if (t.Compiled is CompiledRoutine x && t.CompiledVersion == caller.Db.SchemaVersion) cr = x;
+        else
+        {
+            cr = CompileTrigger(caller.Db, t, table);
+            t.Compiled = cr;
+            t.CompiledVersion = caller.Db.SchemaVersion;
+        }
+        var c = cr.NewCtx(caller);
+        c.TriggerAction = ev;
+        c.Rows[cr.NewStream] = newRow ?? new Value[cr.NewWidth];
+        c.Rows[cr.OldStream] = oldRow ?? new Value[cr.NewWidth];
+        cr.Body.Exec(c);
+    }
+}
+
+/// <summary>Call of a stored PSQL function from an expression.</summary>
+public sealed class CallFunctionNode : XNode
+{
+    public Function? Function;
+    public CompiledRoutine? Local;
+    public XNode[] Args = [];
+
+    public override Value Eval(Ctx c)
+    {
+        var vals = new Value[Args.Length];
+        for (var i = 0; i < vals.Length; i++) vals[i] = Args[i].Eval(c);
+        return Function != null ? Routines.CallFunction(c, Function, vals) : Routines.RunFunction(c, Local!, vals);
+    }
+}

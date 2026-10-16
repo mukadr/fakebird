@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/bench/">
+    <Project Path="bench/Fakebird.Bench/Fakebird.Bench.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/SampleApi.Tests/SampleApi.Tests.csproj" />
+    <Project Path="samples/SampleApi/SampleApi.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Fakebird/Fakebird.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fakebird.Tests/Fakebird.Tests.csproj" />
+  </Folder>
+</Solution>
