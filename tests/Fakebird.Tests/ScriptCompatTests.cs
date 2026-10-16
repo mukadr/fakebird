@@ -132,4 +132,41 @@ public class ScriptCompatTests(ServerFixture fx)
         var e = Assert.Throws<FbScriptException>(() => db.RunScript("alter table r add e integer not null"));
         Assert.Contains("NULLs present", e.Message);
     }
+
+    [Fact]
+    public void GroupByResolvesSelectListAliasesFirst()
+    {
+        var db = NewDb();
+        db.RunScript("""
+            create table cv (vendedor integer, pessoa integer, x integer);
+            insert into cv values (1, 10, 5);
+            insert into cv values (1, 10, 6);
+            insert into cv values (1, 11, 7);
+            """);
+        Assert.Equal([[1L, 10L], [1L, 11L]], db.Execute("select vendedor, pessoa cliente from cv group by vendedor, cliente order by 2"));
+        Assert.Equal([[6L, 1L], [7L, 1L], [8L, 1L]], db.Execute("select x + 1 y, count(*) from cv group by y order by 1"));
+        // the alias wins over the column with the same name
+        Assert.Equal([[10L, 2L], [11L, 1L]], db.Execute("select pessoa as x, count(*) from cv group by x order by 1"));
+    }
+
+    [Fact]
+    public async Task InsertSelectParametersTakeTheTargetColumnTypes()
+    {
+        var db = NewDb();
+        db.RunScript("create table la (livro integer, autor integer, ordem smallint, percentual numeric(9,2), nome varchar(20))");
+        await using var cn = new FirebirdSql.Data.FirebirdClient.FbConnection(db.ConnectionString());
+        await cn.OpenAsync();
+        const string sql = """
+            insert into la (livro, autor, ordem, percentual, nome)
+            select ?, ?, ?, ?, ? from rdb$database
+            where not exists (select 1 from la where livro = ? and autor = ?)
+            """;
+        for (var i = 0; i < 2; i++)
+        {
+            await using var cmd = new FirebirdSql.Data.FirebirdClient.FbCommand(sql, cn);
+            foreach (var v in new object[] { 1, 2, 3, 12.5m, "abc", 1, 2 }) cmd.Parameters.Add(new FirebirdSql.Data.FirebirdClient.FbParameter { Value = v });
+            Assert.Equal(i == 0 ? 1 : 0, await cmd.ExecuteNonQueryAsync());
+        }
+        Assert.Equal([1L, 2L, 3L, 12.5m, "abc"], db.Execute("select * from la").Single());
+    }
 }

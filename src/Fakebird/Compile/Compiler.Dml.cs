@@ -97,6 +97,7 @@ public sealed partial class Compiler
         }
         else if (st.Query != null)
         {
+            _selectListTypes = cols.Select(c => t.Columns[c].Type).ToArray();
             query = CompileSelect(st.Query, parent ?? RootScope);
             if (query.Columns.Length != cols.Length) throw Err.Dsql(-804, "Count of column list and variable list do not match");
         }

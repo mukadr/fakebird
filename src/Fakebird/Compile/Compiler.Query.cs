@@ -354,7 +354,9 @@ public sealed partial class Compiler
 
     QueryNode CompileUnion(SetOpQuery so, Scope? outer)
     {
+        var selectListTypes = _selectListTypes;
         var l = CompileQueryExpr(so.Left, outer);
+        _selectListTypes = selectListTypes;
         var r = CompileQueryExpr(so.Right, outer);
         if (l.Columns.Length != r.Columns.Length)
             throw Err.Dsql(-104, "Column count mismatch in UNION");
@@ -472,8 +474,16 @@ public sealed partial class Compiler
 
     // ======================================================================== query specification
 
+    /// <summary>
+    /// Types of the target columns of INSERT ... SELECT: they type parameter markers in the select list
+    /// (SELECT ?, ? FROM RDB$DATABASE). Consumed by the next top-level query specification.
+    /// </summary>
+    SqlType[]? _selectListTypes;
+
     QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit)
     {
+        var selectListTypes = _selectListTypes;
+        _selectListTypes = null;
         var s = new Scope(outer ?? RootScope);
         var tree = BuildFrom(qs.From, s);
 
@@ -507,7 +517,10 @@ public sealed partial class Compiler
             foreach (var g in qs.GroupBy)
             {
                 Expr ge = g;
-                // GROUP BY may reference select list positions/aliases
+                // GROUP BY may reference select list positions/aliases (an alias wins over a column, like Firebird)
+                if (g is ColumnRefExpr { Qualifier: null } byName
+                    && qs.Items.Where(i => i.Alias == byName.Name && i.Expr is not StarExpr).Take(2).ToList() is [var aliased])
+                    ge = aliased.Expr;
                 if (g is LiteralExpr { Value.Tag: VTag.Int } pos && pos.Value.Scale == 0)
                 {
                     var p = (int)pos.Value.L;
@@ -586,7 +599,8 @@ public sealed partial class Compiler
                 if (!any) throw Err.TableUnknown(star.Qualifier ?? "*");
                 continue;
             }
-            var node = Bind(item.Expr, s, null);
+            var expected = selectListTypes != null && proj.Count < selectListTypes.Length ? selectListTypes[proj.Count] : null;
+            var node = Bind(item.Expr, s, expected);
             if (item.Alias != null) aliasIndex.TryAdd(item.Alias, proj.Count);
             proj.Add(node);
             outCols.Add(OutColOf(node, item.Alias));
