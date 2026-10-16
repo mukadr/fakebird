@@ -453,10 +453,15 @@ public sealed partial class Compiler
     {
         var root = RootScope!;
         var sql = Bind(es.Sql, root, SqlType.VarChar(8191));
-        if (es.ArgNames.Any(n => n != null)) throw Err.Unsupported("named parameters in EXECUTE STATEMENT");
+        string[]? names = null;
+        if (es.ArgNames.Any(n => n != null))
+        {
+            if (es.ArgNames.Any(n => n == null)) throw Err.Dsql(-104, "Cannot mix named and positional parameters in EXECUTE STATEMENT");
+            names = es.ArgNames.Select(n => n!).ToArray();
+        }
         var args = es.Args.Select(a => Bind(a, root, SqlType.VarChar(8191))).ToArray();
         var into = es.Into == null ? null : Targets(es.Into);
-        return new ExecStatementP(sql, args, into, loopBody, es.Autonomous) { Label = label };
+        return new ExecStatementP(sql, args, names, into, loopBody, es.Autonomous) { Label = label };
     }
 
     // ------------------------------------------------------------------ sub-routines (FB3 DECLARE PROCEDURE/FUNCTION)
@@ -526,16 +531,21 @@ public sealed partial class Compiler
 }
 
 /// <summary>EXECUTE STATEMENT / FOR EXECUTE STATEMENT: dynamic SQL compiled through the plan cache.</summary>
-public sealed class ExecStatementP(XNode sql, XNode[] args, Target[]? into, PStmt? body, bool autonomous) : LoopP
+public sealed class ExecStatementP(XNode sql, XNode[] args, string[]? names, Target[]? into, PStmt? body, bool autonomous) : LoopP
 {
     public override Flow Exec(Ctx c)
     {
         var text = sql.Eval(c);
         if (text.IsNull) throw Err.Random("EXECUTE STATEMENT: SQL text is NULL");
-        var p = Compiler.Prepare(c.Db, Conv.ToStr(text));
-        if (p.ParamTypes.Length != args.Length) throw Err.Random("Input parameters mismatch in EXECUTE STATEMENT");
-        var vals = new Value[args.Length];
-        for (var i = 0; i < vals.Length; i++) vals[i] = Conv.Cast(args[i].Eval(c), p.ParamTypes[i]);
+        var sqlText = Conv.ToStr(text);
+        int[]? order = null; // named parameters: the argument used by each positional marker
+        if (names != null) (sqlText, order) = NamedParams.Rewrite(sqlText, names);
+        var p = Compiler.Prepare(c.Db, sqlText);
+        if (p.ParamTypes.Length != (order?.Length ?? args.Length)) throw Err.Random("Input parameters mismatch in EXECUTE STATEMENT");
+        var vals = new Value[p.ParamTypes.Length];
+        var argVals = new Value[args.Length];
+        for (var i = 0; i < argVals.Length; i++) argVals[i] = args[i].Eval(c);
+        for (var i = 0; i < vals.Length; i++) vals[i] = Conv.Cast(argVals[order?[i] ?? i], p.ParamTypes[i]);
         var outer = c.Tx;
         var tx = autonomous ? outer.Att.StartTransaction(outer.Snapshot, outer.ReadOnly, outer.Wait) : outer;
         ExecResult r;
@@ -569,5 +579,56 @@ public sealed class ExecStatementP(XNode sql, XNode[] args, Target[]? into, PStm
             if (Handle(c, body.Exec(c), out var res)) return res;
         }
         return Flow.Normal;
+    }
+}
+
+/// <summary>Rewrites the :name markers of EXECUTE STATEMENT ('...') (name := value) into positional markers.</summary>
+static class NamedParams
+{
+    public static (string Sql, int[] Order) Rewrite(string sql, string[] names)
+    {
+        var sb = new System.Text.StringBuilder(sql.Length);
+        var order = new List<int>();
+        var i = 0;
+        while (i < sql.Length)
+        {
+            var ch = sql[i];
+            if (ch is '\'' or '"')
+            {
+                var end = sql.IndexOf(ch, i + 1);
+                while (end >= 0 && end + 1 < sql.Length && sql[end + 1] == ch) end = sql.IndexOf(ch, end + 2);
+                end = end < 0 ? sql.Length : end + 1;
+                sb.Append(sql, i, end - i);
+                i = end;
+            }
+            else if (ch == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
+            {
+                var end = sql.IndexOf('\n', i);
+                end = end < 0 ? sql.Length : end;
+                sb.Append(sql, i, end - i);
+                i = end;
+            }
+            else if (ch == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
+            {
+                var end = sql.IndexOf("*/", i + 2, StringComparison.Ordinal);
+                end = end < 0 ? sql.Length : end + 2;
+                sb.Append(sql, i, end - i);
+                i = end;
+            }
+            else if (ch == ':' && i + 1 < sql.Length && (char.IsLetter(sql[i + 1]) || sql[i + 1] == '_'))
+            {
+                var start = i + 1;
+                var end = start;
+                while (end < sql.Length && (char.IsLetterOrDigit(sql[end]) || sql[end] is '_' or '$')) end++;
+                var name = sql[start..end].ToUpperInvariant();
+                var idx = Array.FindIndex(names, n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+                if (idx < 0) throw Err.Random("EXECUTE STATEMENT: parameter " + name + " is not defined");
+                order.Add(idx);
+                sb.Append('?');
+                i = end;
+            }
+            else sb.Append(sql[i++]);
+        }
+        return (sb.ToString(), order.ToArray());
     }
 }

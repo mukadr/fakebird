@@ -124,6 +124,21 @@ public sealed partial class Parser
         return l;
     }
 
+    /// <summary>A column list of INSERT/UPDATE OR INSERT/MERGE: columns may be qualified (t.col).</summary>
+    List<string> ParenColumnList()
+    {
+        ExpectOp("(");
+        var l = new List<string>();
+        do
+        {
+            var name = Ident();
+            while (AcceptOp(".")) name = Ident();
+            l.Add(name);
+        } while (AcceptOp(","));
+        ExpectOp(")");
+        return l;
+    }
+
     List<string> ParenIdentList()
     {
         ExpectOp("(");
@@ -708,7 +723,7 @@ public sealed partial class Parser
                 return FunctionCall(second, name, pos); // package.function
             return new ColumnRefExpr(name, second) { Pos = pos };
         }
-        if (Reserved.Contains(name) && _t[_i - 1].Kind == Tok.Ident && name != "VALUE")
+        if (Reserved.Contains(name) && _t[_i - 1].Kind == Tok.Ident && name is not ("VALUE" or "RDB$DB_KEY"))
         {
             _i--;
             throw Unexpected();

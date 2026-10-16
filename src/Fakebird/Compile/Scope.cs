@@ -49,7 +49,10 @@ public sealed class AggBinding
 {
     public int Stream;
     public readonly List<string> KeyCanon = new();
+    public readonly List<SqlType> KeyTypes = new();
     public readonly Dictionary<string, int> AggIndex = new(StringComparer.Ordinal);
+    /// <summary>Aggregate calls by AST node (covers expressions without a canonical form).</summary>
+    public readonly Dictionary<FuncExpr, int> AggByNode = new(ReferenceEqualityComparer.Instance);
     public readonly List<AggSpec> Aggs = new();
     public readonly List<FuncExpr> AggExprs = new();
     public readonly HashSet<(int, int)> GroupedColumns = new();

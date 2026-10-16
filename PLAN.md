@@ -15,7 +15,7 @@ Decisions (confirmed with user):
 - Test isolation: **snapshot & restore** (run schema/seed once, clone cheaply per test).
 - Philosophy: simple, fast, **fail on the first error** — anything unsupported throws an
   `FbException`-visible error naming the construct and SQL position; no silent fallbacks.
-- Directory `/home/mukadr/repos/fakebird` is empty; .NET SDK 10.0.401 is installed.
+- Starting from an empty directory; .NET SDK 10.0.401 is installed.
 
 ## Solution layout
 ```
@@ -247,6 +247,11 @@ Phases 1–6 implemented; phase 7 partially (index maintenance fix, measurements
   fetch, wire SQLSTATE from the primary code (PSQL handlers still see the specific one), LIST CHAR
   padding, `_charset 'x'` with a space, INSERT DEFAULT VALUES with identity columns.
 
+- A large real-world schema (about 4,400 DDL statements, 640 tables, 560 procedures, plus seed data
+  and patch scripts) loads completely through the client's FbScript/FbBatchExecution.
+  `dotnet run --project bench/Fakebird.Bench -- script a.sql b.sql` runs scripts in-process past
+  errors and groups the failures (fast way to find gaps in a new schema).
+
 Remaining / known gaps: packages, database-level triggers, WHERE CURRENT OF, DML through views,
-named parameters in EXECUTE STATEMENT, RANGE window frames with offsets, sharing compiled plans
+RANGE window frames with offsets, sharing compiled plans
 across snapshot clones.

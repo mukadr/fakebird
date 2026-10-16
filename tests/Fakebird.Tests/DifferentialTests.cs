@@ -120,6 +120,15 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         "execute block as declare x smallint; begin x = 40000; end",
         "execute block returns (x char(3)) as begin x = 'abcd'; suspend; end",
         "select id from t order by id offset 1 rows fetch next 1 rows only",
+        // found while loading a real-world schema (create/populate/patch scripts)
+        "select date '2024-02-29' + time '13:14:15', time '01:00:00' + date '2024-01-01' from rdb$database",
+        "select dt + cast(ts as time) from t where id = 1",
+        "select 'V' tipo, b, coalesce(s, 'x') m, count(*) q from t group by 1, 2, 3 order by 2, 3",
+        "select sum(iif(s is null, id, 0)), count(iif(c is null, 1, null)) from t",
+        "insert into child (child.id, child.t_id) values (7, 1) returning id, v",
+        "execute block returns (r varchar(20)) as begin execute statement ('select s from t where id = :x and :x > 0') (x := 1) into :r; suspend; end",
+        "execute block returns (r varchar(20)) as begin execute statement 'select s from t where id = ' || 1 into :r; suspend; end",
+        "select count(*), min(octet_length(rdb$db_key)) from t",
     ];
 
     static string Describe(FbConnection cn, FbTransaction tx, string sql)

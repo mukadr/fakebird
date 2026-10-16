@@ -106,6 +106,43 @@ public static partial class ScriptRunner
         return sb.ToString();
     }
 
+    /// <summary>Runs every statement, reporting failures to <paramref name="onError"/> instead of stopping.</summary>
+    /// <returns>The number of statements executed.</returns>
+    public static int RunAll(Database db, string script, Action<string, FbError> onError)
+    {
+        var att = new Attachment(db);
+        var count = 0;
+        try
+        {
+            foreach (var stmt in Split(script))
+            {
+                var bare = StripComments(stmt).Trim();
+                if (ClientCommand().IsMatch(bare)) continue;
+                if (bare.ToUpperInvariant() is "COMMIT" or "COMMIT WORK" or "ROLLBACK" or "ROLLBACK WORK") continue;
+                count++;
+                lock (db.Sync)
+                {
+                    var tx = att.StartTransaction();
+                    try
+                    {
+                        Executor.Execute(tx, stmt);
+                        if (tx.Active) tx.Commit();
+                    }
+                    catch (FbError e)
+                    {
+                        if (tx.Active) tx.Rollback();
+                        onError(stmt, e);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            lock (db.Sync) att.Detach();
+        }
+        return count;
+    }
+
     public static void Run(Database db, string script)
     {
         var att = new Attachment(db);

@@ -84,7 +84,7 @@ public sealed partial class Database
                 {
                     var data = slot.LatestCommitted;
                     if (data == null) continue;
-                    rows.Add(new RowSlot { Committed = new RowVersion { Data = data, Seq = 0 }, Frozen = true });
+                    rows.Add(new RowSlot { Key = slot.Key, Committed = new RowVersion { Data = data, Seq = 0 }, Frozen = true });
                 }
                 nt.Rows = rows;
             }
@@ -147,6 +147,7 @@ public sealed partial class Database
         foreach (var s in t.Rows)
             rows.Add(new RowSlot
             {
+                Key = s.Key,
                 Committed = s.Committed == null ? null : new RowVersion { Data = s.Committed.Data, Seq = s.Committed.Seq },
                 Attachment = s.Attachment,
             });

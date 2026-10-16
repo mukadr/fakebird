@@ -125,8 +125,9 @@ public sealed partial class Compiler
     {
         if (s.Agg == null || !s.AggMode)
             throw Err.Dsql(-104, "Cannot use an aggregate or window function in a WHERE clause, use HAVING (for aggregate only) instead");
-        var key = Canon(f, s) ?? throw Err.Unsupported("aggregate expression");
-        if (!s.Agg.AggIndex.TryGetValue(key, out var idx)) throw Err.Dsql(-104, "Invalid aggregate reference");
+        if (!s.Agg.AggByNode.TryGetValue(f, out var idx)
+            && !(Canon(f, s) is { } key && s.Agg.AggIndex.TryGetValue(key, out idx)))
+            throw Err.Dsql(-104, "Invalid aggregate reference");
         var spec = s.Agg.Aggs[idx];
         var n = Col(s.Agg.Stream, s.Agg.KeyCount + idx, spec.Type, f.Name);
         n.NotNull = spec.Kind is AggKind.Count or AggKind.CountStar;
@@ -517,16 +518,22 @@ public sealed partial class Compiler
                 var kn = Bind(ge, s);
                 keys.Add(kn);
                 ab.KeyCanon.Add(Canon(ge, s) ?? Guid.NewGuid().ToString());
+                ab.KeyTypes.Add(kn.Type);
                 if (kn is ColNode cn) ab.GroupedColumns.Add((cn.Stream, cn.Index));
             }
             ab.KeyCount = keys.Count;
             foreach (var a in aggs)
             {
-                var key = Canon(a, s) ?? throw Err.Unsupported("aggregate expression");
-                if (ab.AggIndex.ContainsKey(key)) continue;
+                var key = Canon(a, s);
+                if (key != null && ab.AggIndex.TryGetValue(key, out var same))
+                {
+                    ab.AggByNode[a] = same;
+                    continue;
+                }
                 if (ContainsAggregate(a.Args.Count > 0 ? new FuncExpr("X", a.Args) : null))
                     throw Err.Dsql(-104, "Nested aggregate functions are not allowed");
-                ab.AggIndex[key] = ab.Aggs.Count;
+                if (key != null) ab.AggIndex[key] = ab.Aggs.Count;
+                ab.AggByNode[a] = ab.Aggs.Count;
                 ab.Aggs.Add(MakeAggSpec(a, s));
                 ab.AggExprs.Add(a);
             }

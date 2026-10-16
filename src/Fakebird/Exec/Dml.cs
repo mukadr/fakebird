@@ -224,6 +224,9 @@ public static class Dml
         return false;
     }
 
+    /// <summary>A self-referencing row (FK value equal to its own key) satisfies its constraint, like Firebird.</summary>
+    static bool ReferencesItself(Engine.Index parentIndex, Value[] row, in IndexKey key) => parentIndex.RowHasKey(row, key);
+
     static void CheckForeignKeys(Ctx c, TableRuntime rt, Value[] row, Value[]? oldRow)
     {
         foreach (var fk in rt.Fks)
@@ -239,6 +242,7 @@ public static class Dml
             }
             if (hasNull) continue;
             var key = fk.ParentIndex.MakeKey(vals);
+            if (ReferenceEquals(fk.Parent, rt.Table) && ReferencesItself(fk.ParentIndex, row, key)) continue;
             if (!ExistsVisible(c, fk.ParentIndex, fk.Parent, key))
                 throw Err.ForeignKeyMissing(fk.Constraint.Name, rt.Table.Name, KeyText(rt.Table, fk.Columns, row));
         }

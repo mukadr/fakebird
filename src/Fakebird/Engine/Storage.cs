@@ -17,6 +17,9 @@ public sealed class RowVersion
 /// </summary>
 public sealed class RowSlot
 {
+    static long _nextKey;
+    /// <summary>RDB$DB_KEY: increases with insertion order and survives snapshots and clones.</summary>
+    public long Key = Interlocked.Increment(ref _nextKey);
     public RowVersion? Committed;
     public Value[]? Pending;
     public Transaction? Owner;

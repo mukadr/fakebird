@@ -78,9 +78,9 @@ public static class Ddl
         {
             col.Default = def.Default;
             col.DefaultSource = def.DefaultSource;
-            // validate the default
-            var node = comp.Bind(def.Default, new Scope(null), col.Type);
-            if (node is ConstNode k) Conv.Cast(k.Value, col.Type);
+            // the expression must bind, but like Firebird a default that does not convert to the column type
+            // (TIMESTAMP DEFAULT 0) only fails when an insert uses it
+            comp.Bind(def.Default, new Scope(null), col.Type);
         }
         if (def.Identity)
         {
@@ -453,14 +453,17 @@ public static class Ddl
                     var newCols = t.Columns.ToList();
                     newCols.Add(col);
                     var map = Enumerable.Range(0, t.Columns.Count).Append(-1).ToArray();
+                    // existing rows read the (column or domain) default only when the new column is NOT NULL
                     Value fill = Value.Null;
-                    if (col.Default != null && col.ComputedBy == null)
+                    var def = col.Default ?? (col.Domain != null && db.Domains.TryGetValue(col.Domain, out var dd) ? dd.Default : null);
+                    if (col.NotNull && def != null && col.ComputedBy == null)
                     {
-                        var node = Comp(db).Bind(col.Default, new Scope(null), col.Type);
+                        var node = Comp(db).Bind(def, new Scope(null), col.Type);
                         fill = Conv.Cast(node.Eval(c), col.Type);
                     }
-                    if (col.NotNull && fill.IsNull && t.Rows.Any(r => !r.IsDead))
-                        if (VisibleRows(t, c).Any()) throw Err.MetaUpdate($"Cannot add NOT NULL column {col.Name} without a default to a table with data");
+                    if (col.NotNull && fill.IsNull && t.Rows.Any(r => !r.IsDead) && VisibleRows(t, c).Any())
+                        throw new StatusBuilder().Gds(Err.isc_no_meta_update).Gds(Err.isc_random)
+                            .Str($"Cannot make field {col.Name} of table {t.Name} NOT NULL because there are NULLs present").Build("22006");
                     Relayout(db, t, newCols, map, _ => fill, c);
                     if (col.ComputedBy != null)
                     {

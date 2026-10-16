@@ -4,6 +4,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 // Quick throughput check of common integration-test operations through the real client.
 if (args.Length > 0 && args[0] == "compile") { CompileBench.Run(); return; }
+if (args.Length > 0 && args[0] == "script") { ScriptCheck.Run(args[1..]); return; }
 using var server = FakebirdServer.Start();
 var template = server.CreateDatabase("template");
 template.RunScript("""

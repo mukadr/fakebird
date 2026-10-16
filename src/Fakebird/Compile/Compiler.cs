@@ -207,6 +207,20 @@ public sealed partial class Compiler
     /// <summary>Binds an expression. <paramref name="expected"/> types parameter markers.</summary>
     public XNode Bind(Expr e, Scope s, SqlType? expected = null)
     {
+        // in a grouped select list an expression equal to a GROUP BY key reads the key itself
+        if (s is { AggMode: true, Agg: { } agg } && e is not (LiteralExpr or ColumnRefExpr or ParamExpr or VariableExpr)
+            && agg.KeyCanon.Count > 0 && Canon(e, s) is { } canon)
+        {
+            var k = agg.KeyCanon.IndexOf(canon);
+            if (k >= 0)
+            {
+                s.AggMode = false; // bound only for its describe name
+                XNode named;
+                try { named = Bind(e, s, expected); }
+                finally { s.AggMode = true; }
+                return new ColNode(agg.Stream, k, agg.KeyTypes[k]) { Name = named.Name, Field = named.Field, Relation = named.Relation };
+            }
+        }
         switch (e)
         {
             case LiteralExpr l:
@@ -558,6 +572,8 @@ public sealed partial class Compiler
         {
             if (op == ArithOp.Add)
             {
+                if (a.Kind == TypeKind.Date && b.Kind == TypeKind.Time || a.Kind == TypeKind.Time && b.Kind == TypeKind.Date)
+                    return SqlType.Timestamp;
                 if (a.IsDateTime && b.IsDateTime) throw Err.Dsql(-104, "Arithmetic on two date/time values is not allowed");
                 return a.IsDateTime ? a : b;
             }
@@ -688,6 +704,7 @@ public sealed partial class Compiler
                 {
                     if (!item.Matches(r.Qualifier)) continue;
                     var idx = item.Find(r.Name);
+                    if (idx < 0 && r.Name == "RDB$DB_KEY" && item.Table is { IsSystem: false }) return new DbKeyNode(item.Stream);
                     if (idx < 0) throw Err.ColumnUnknown(r.Qualifier + "." + r.Name);
                     return MakeCol(s, sc, item, idx);
                 }
@@ -707,6 +724,8 @@ public sealed partial class Compiler
                     fi = idx;
                 }
                 if (found != null) return MakeCol(s, sc, found, fi);
+                if (r.Name == "RDB$DB_KEY" && sc.Items.Count(i => !i.QualifiedOnly) == 1 && sc.Items.First(i => !i.QualifiedOnly) is { Table.IsSystem: false } only)
+                    return new DbKeyNode(only.Stream);
             }
         }
         if (Routine != null)
@@ -830,6 +849,41 @@ public sealed partial class Compiler
                 return true;
             case ContextVarExpr cv:
                 sb.Append("CV").Append(cv.Name);
+                return true;
+            case IsNullExpr isn:
+                sb.Append(isn.Not ? "NN(" : "N(");
+                if (!CanonInto(isn.Operand, s, sb)) return false;
+                sb.Append(')');
+                return true;
+            case IsDistinctExpr d:
+                sb.Append(d.Not ? "ND(" : "D(");
+                if (!CanonInto(d.Left, s, sb)) return false;
+                sb.Append(',');
+                if (!CanonInto(d.Right, s, sb)) return false;
+                sb.Append(')');
+                return true;
+            case IsBoolExpr ib:
+                sb.Append("IS").Append(ib.Not ? "N" : "").Append(ib.Value?.ToString() ?? "U").Append('(');
+                if (!CanonInto(ib.Operand, s, sb)) return false;
+                sb.Append(')');
+                return true;
+            case BetweenExpr bt:
+                sb.Append(bt.Not ? "NBT(" : "BT(");
+                if (!CanonInto(bt.Operand, s, sb) || !CanonInto(bt.Low, s, sb.Append(',')) || !CanonInto(bt.High, s, sb.Append(','))) return false;
+                sb.Append(')');
+                return true;
+            case LikeExpr lk:
+                sb.Append("LK").Append(lk.Kind).Append(lk.Not ? "N(" : "(");
+                if (!CanonInto(lk.Operand, s, sb) || !CanonInto(lk.Pattern, s, sb.Append(','))) return false;
+                if (lk.Escape != null && !CanonInto(lk.Escape, s, sb.Append(','))) return false;
+                sb.Append(')');
+                return true;
+            case InListExpr il:
+                sb.Append(il.Not ? "NIN(" : "IN(");
+                if (!CanonInto(il.Operand, s, sb)) return false;
+                foreach (var x in il.List)
+                    if (!CanonInto(x, s, sb.Append(','))) return false;
+                sb.Append(')');
                 return true;
             default:
                 return false;

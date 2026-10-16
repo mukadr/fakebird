@@ -117,7 +117,7 @@ public sealed partial class Parser
         Expect("INTO");
         s.Table = Ident();
         if (IsAliasStart && !Is("DEFAULT") && !Is("VALUES") && !Is("SELECT") && !Is("WITH")) s.Alias = Ident();
-        if (IsOp("(") && !(IsAt(1, "SELECT") || IsAt(1, "WITH"))) s.Columns = ParenIdentList();
+        if (IsOp("(") && !(IsAt(1, "SELECT") || IsAt(1, "WITH"))) s.Columns = ParenColumnList();
         if (Accept("OVERRIDING"))
         {
             s.Overriding = AnyIdent();
@@ -231,13 +231,13 @@ public sealed partial class Parser
         Expect("INSERT");
         Expect("INTO");
         s.Table = Ident();
-        if (IsOp("(")) s.Columns = ParenIdentList();
+        if (IsOp("(")) s.Columns = ParenColumnList();
         Expect("VALUES");
         ExpectOp("(");
         s.Values.Add(ValueOrDefault());
         while (AcceptOp(",")) s.Values.Add(ValueOrDefault());
         ExpectOp(")");
-        if (Accept("MATCHING")) s.Matching = ParenIdentList();
+        if (Accept("MATCHING")) s.Matching = ParenColumnList();
         s.Returning = Returning();
         return s;
     }
@@ -281,7 +281,7 @@ public sealed partial class Parser
             else
             {
                 Expect("INSERT");
-                if (IsOp("(")) w.InsertColumns = ParenIdentList();
+                if (IsOp("(")) w.InsertColumns = ParenColumnList();
                 Expect("VALUES");
                 ExpectOp("(");
                 w.InsertValues = new List<Expr> { ValueOrDefault() };
@@ -1333,7 +1333,7 @@ public sealed partial class Parser
                 ExpectOp(")");
             }
         }
-        else s.Sql = Primary();
+        else s.Sql = Expression();
         while (true)
         {
             if (Accept("WITH"))

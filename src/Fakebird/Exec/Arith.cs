@@ -29,6 +29,8 @@ public static class Arith
         }
         switch (a.Tag)
         {
+            case VTag.Date when b.Tag == VTag.Time: return Value.Timestamp(a.L * Value.TicksPerDay + b.L);
+            case VTag.Time when b.Tag == VTag.Date: return Value.Timestamp(b.L * Value.TicksPerDay + a.L);
             case VTag.Date: return Value.Date(a.L + DaysOf(b));
             case VTag.Timestamp: return Value.Timestamp(a.L + TicksOf(b));
             case VTag.Time: return Value.Time(WrapTime(a.L + SecondsTicks(b)));

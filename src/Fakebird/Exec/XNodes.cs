@@ -432,3 +432,18 @@ public static class Coercion
         return Conv.Cast(v, t.IsString ? t.WithLength(Math.Max(t.Length, 32765 / Math.Max(1, t.BytesPerChar))) : t);
     }
 }
+
+/// <summary>RDB$DB_KEY of the current row of a table stream: 8 bytes, ordered like insertion.</summary>
+public sealed class DbKeyNode : XNode
+{
+    readonly int _stream;
+    public DbKeyNode(int stream) { _stream = stream; Type = SqlType.Char(8, Charset.Octets); Name = "DB_KEY"; }
+    public override Value Eval(Ctx c)
+    {
+        var slot = c.Slots[_stream];
+        if (slot == null) return Value.Null;
+        var bytes = new byte[8];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt64BigEndian(bytes, slot.Key);
+        return Value.Bytes(bytes);
+    }
+}
