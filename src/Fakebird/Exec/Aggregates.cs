@@ -103,7 +103,11 @@ public sealed class AggState
                 {
                     _list ??= new StringBuilder();
                     if (_any) _list.Append(sep);
-                    _list.Append(Conv.ToStr(v));
+                    var str = Conv.ToStr(v);
+                    _list.Append(str);
+                    // Firebird concatenates the stored CHAR bytes: multi-byte charsets pad to the byte length
+                    if (_spec.Arg!.Type is { Kind: TypeKind.Char, BytesPerChar: > 1 } ct)
+                        _list.Append(' ', Math.Max(0, ct.Length * ct.BytesPerChar - Conv.Utf8.GetByteCount(str)));
                 }
                 _any = true;
                 break;

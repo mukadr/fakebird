@@ -110,8 +110,11 @@ public sealed class Lexer
             _pos++;
             while (_pos < _s.Length && (char.IsLetterOrDigit(_s[_pos]) || _s[_pos] == '_' || _s[_pos] == '$')) _pos++;
             // character set introducer: _UTF8'text' (the charset is irrelevant for in-memory strings)
-            if (c == '_' && _pos < _s.Length && _s[_pos] == '\'')
+            var q = _pos;
+            while (c == '_' && q < _s.Length && _s[q] is ' ' or '\t') q++;
+            if (c == '_' && q < _s.Length && _s[q] == '\'')
             {
+                _pos = q;
                 var lit = Next();
                 return lit with { Pos = start, Line = line, Col = col };
             }

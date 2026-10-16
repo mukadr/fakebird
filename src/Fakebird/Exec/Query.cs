@@ -11,6 +11,8 @@ public sealed class OutCol
     public string Relation = "";  // source table
     public SqlType Type = SqlType.Null;
     public bool Nullable = true;
+    /// <summary>Name derived from an expression (no alias, not a column): a UNION does not inherit it.</summary>
+    public bool Derived;
 }
 
 public abstract class QCursor
@@ -74,7 +76,8 @@ public sealed class SpecQuery : QueryNode
             {
                 var p = q.Projection;
                 var row = new Value[p.Length];
-                for (var i = 0; i < p.Length; i++) row[i] = p[i].Eval(c);
+                // Firebird evaluates the select list right to left (visible with side effects such as GEN_ID)
+                for (var i = p.Length - 1; i >= 0; i--) row[i] = p[i].Eval(c);
                 if (_cols != null)
                 {
                     _seen ??= new();
@@ -228,7 +231,7 @@ public sealed class RecursiveCteQuery : QueryNode
                 foreach (var r0 in rows)
                 {
                     var r = new Value[r0.Length];
-                    for (var i = 0; i < r.Length; i++) r[i] = Coercion.ToType(r0[i], Columns[i].Type);
+                    for (var i = 0; i < r.Length; i++) r[i] = Conv.Cast(r0[i], Columns[i].Type); // rows take the anchor types (string truncation errors included)
                     if (seen != null && !seen.Add(new IndexKey(r, cols))) continue;
                     outRows.Add(r);
                 }

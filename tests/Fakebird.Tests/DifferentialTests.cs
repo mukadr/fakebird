@@ -75,6 +75,51 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         "select uuid_to_char(char_to_uuid('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11')) from rdb$database",
         "select 2147483647 + 1, 9223372036854775807 from rdb$database",
         "select sm * sm, sm + 1, big + 1 from t where id = 1",
+        // found by probing a real Firebird 3.0
+        "select ts - dt from t where id = 1",
+        "select dt - date '2000-01-01', time '10:00:00' - time '09:00:00' from t where id = 1",
+        "select '1' + 1 from rdb$database",
+        "select '1' * 2 from rdb$database",
+        "select date '2024-01-01' + '1' from rdb$database",
+        "select null + 1, 1 + null, null * 1.5, null || 'a' from rdb$database",
+        "select gen_id(seq1, 1), gen_id(seq1, 10) from rdb$database",
+        "select n - 1, n + 1, -n, n * n, n * 1.5, 1.5, 1.50 * 2, n / n, -id, -1, +n from t where id = 1",
+        "select abs(id), abs(d), abs(sm), abs(big), abs(n) from t where id = 1",
+        "select cast(1 as decimal(9,2)), cast(1 as numeric(18,4)), cast(n as decimal(9,2)) from t where id = 1",
+        "select sum(n * 2), avg(n * 1), min(n + 0), sum(1.5) from t",
+        "select coalesce(n, 0), coalesce(n, 1.5), coalesce(id, 2.5) from t where id = 1",
+        "select iif(1 = 1, 1, 2), nullif('a', 'b'), case id when 1 then 'x' end from t where id = 1",
+        "select 1, 'a', null, 1.5, 1e1, true, date '2024-01-01' from rdb$database",
+        "select extract(second from ts), extract(millisecond from ts), datediff(millisecond, ts, ts + 1) from t where id = 1",
+        "select list(id), list(id, ';'), list(distinct c) from t",
+        "select upper(_utf8 'é'), lower('ÀÉ'), 'a' collate unicode_ci = 'A' from rdb$database",
+        "select cast('x' as date) from rdb$database",
+        "select cast(9999999999 as integer) from rdb$database",
+        "select cast('abcdef' as varchar(3)) from rdb$database",
+        "select (select max(id) from t), exists(select 1 from child), singular(select 1 from child), 1 in (select id from t) from rdb$database",
+        "with recursive r(n) as (select 1 from rdb$database union all select n + 1 from r where n < 3) select * from r",
+        "with recursive r(x) as (select 'a' from rdb$database union all select x || 'a' from r where char_length(x) < 3) select * from r",
+        "select 1 from rdb$database union all select 1.5 from rdb$database",
+        "select 'a' from rdb$database union all select 'abc' from rdb$database",
+        "select id, sum(id) over (), avg(n) over (order by id), lag(id) over (order by id), first_value(s) over (order by id) from t order by id",
+        "select 5 / 2.0, 5.0 / 3, 1.000 * 1.000, cast(1 as numeric(18,18)) from rdb$database",
+        "select cast(1.5 as smallint), cast(2.5 as smallint), cast(-1.5 as bigint), cast(1.49999 as integer) from rdb$database",
+        "select rdb$get_context('NOPE', 'nope') from rdb$database",
+        "select * from nonexistent",
+        "select nonexistent from t",
+        "create table t (x integer)",
+        "create index ix on nonexistent (x)",
+        "update or insert into t (id, s) values (1, 'upd') matching (id) returning id, s, old.s",
+        "merge into t using (select 60 as id, 'm' as s from rdb$database) src on t.id = src.id when matched then update set s = src.s when not matched then insert (id, s) values (src.id, src.s)",
+        "update t set s = 'x' where id = 2 returning id, old.s, new.s",
+        "insert into ident default values returning id, v",
+        "execute block returns (x varchar(50)) as begin begin x = 1 / 0; when any do x = 'any ' || sqlcode || ' ' || gdscode || ' ' || sqlstate; end suspend; end",
+        "execute block returns (x varchar(80)) as begin begin execute statement 'create table t (a integer)'; when sqlstate '42S01' do x = 'exists'; end suspend; end",
+        "execute block returns (x varchar(80)) as begin begin x = cast('abcdef' as varchar(3)); when sqlstate '22001' do x = 'trunc'; end suspend; end",
+        "execute block returns (x varchar(80)) as begin begin x = 1/0; when sqlstate '22012' do x = 'div'; end suspend; end",
+        "execute block as declare x smallint; begin x = 40000; end",
+        "execute block returns (x char(3)) as begin x = 'abcd'; suspend; end",
+        "select id from t order by id offset 1 rows fetch next 1 rows only",
     ];
 
     static string Describe(FbConnection cn, FbTransaction tx, string sql)
@@ -111,12 +156,14 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         return sb.ToString().Replace("\r", "");
     }
 
-    static List<string> Run(string cs)
+    static List<string> Run(string cs) => Run(cs, Corpus);
+
+    static List<string> Run(string cs, string[] corpus)
     {
         using var cn = new FbConnection(cs);
         cn.Open();
         using var tx = cn.BeginTransaction();
-        var results = Corpus.Select(sql => Describe(cn, tx, sql)).ToList();
+        var results = corpus.Select(sql => Describe(cn, tx, sql)).ToList();
         tx.Rollback();
         return results;
     }
@@ -129,6 +176,33 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         {
             using var cmd = new FbCommand(stmt, cn);
             cmd.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>Exploration helper: runs the statements in FAKEBIRD_PROBE (a file, one per line) on both servers.</summary>
+    [Fact]
+    public void Probe()
+    {
+        var file = Environment.GetEnvironmentVariable("FAKEBIRD_PROBE");
+        if (RealCs == null || file == null) return;
+        var stmts = File.ReadAllLines(file).Where(l => l.Trim().Length > 0 && !l.StartsWith("--")).ToArray();
+        var dbName = "probe_" + Guid.NewGuid().ToString("N")[..8];
+        var realCs = RealCs.Replace("{db}", dbName);
+        FbConnection.CreateDatabase(realCs, pageSize: 8192, forcedWrites: false, overwrite: true);
+        try
+        {
+            RunScript(realCs, Setup);
+            var fake = fx.Server.CreateDatabase(dbName);
+            fake.RunScript(Setup);
+            var real = Run(realCs, stmts);
+            var mine = Run(fake.ConnectionString(), stmts);
+            for (var i = 0; i < stmts.Length; i++)
+                output.WriteLine($"{(real[i] == mine[i] ? "SAME" : "DIFF")} --- {stmts[i]}\nreal:\n{real[i]}\nfake:\n{mine[i]}\n");
+        }
+        finally
+        {
+            FbConnection.ClearAllPools();
+            FbConnection.DropDatabase(realCs);
         }
     }
 

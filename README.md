@@ -75,9 +75,24 @@ INT128 / DECFLOAT types (Firebird 4), DML on views.
 ## Differences from a real server
 
 * DDL is applied immediately (not transactional) and is never cached as a plan.
-* Statement results are materialized at execute time.
+* Statement results are materialized at execute time (errors of a SELECT are still reported on
+  the first fetch, like Firebird).
 * NO ACTION foreign keys are verified at the end of each statement.
 * All text is treated as Unicode; columns are described to the client as UTF8.
+
+## Checking against a real Firebird
+
+`DifferentialTests` runs a corpus of SQL against a real Firebird 3 and against Fakebird, and
+compares column names, client types, values, error codes and SQLSTATEs:
+
+```
+docker run -d --name fakebird-fb3 -p 127.0.0.1:3051:3050 -e ISC_PASSWORD=masterkey jacobalberty/firebird:v3
+FAKEBIRD_REAL_CS='DataSource=127.0.0.1;Port=3051;Database=/firebird/data/{db}.fdb;User=SYSDBA;Password=masterkey' \
+  dotnet test tests/Fakebird.Tests --filter DifferentialTests
+```
+
+To explore, put statements in a file (one per line) and add `FAKEBIRD_PROBE=/path/to/file`: the
+`Probe` test prints both servers' answers per statement, marked SAME or DIFF.
 
 ## Debugging
 

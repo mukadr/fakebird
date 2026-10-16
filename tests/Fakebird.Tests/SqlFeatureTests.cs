@@ -111,7 +111,7 @@ public class SqlFeatureTests(ServerFixture fx)
             """);
         Assert.Equal(5, h.Count);
         Assert.Equal("Eve", h[^1][0]);
-        Assert.Equal(2L, h[^1][1]);
+        Assert.Equal(2, h[^1][1]);
         // derived table + CTE
         Assert.Equal(2L, Scalar(cn, "with big as (select * from emp where salary > 6000) select count(*) from big b where b.dept_id = 1 and b.name <> 'Alice'"));
     }
@@ -178,7 +178,7 @@ public class SqlFeatureTests(ServerFixture fx)
         Assert.Equal(1, r[19]);
         Assert.Equal(2.570m, r[20]);
         Assert.Equal(2.500m, r[21]);
-        Assert.Equal(5, r[22]);
+        Assert.Equal(5L, r[22]);
         Assert.Equal(2L, r[23]);
         Assert.Equal(-2L, r[24]);
         Assert.Equal(1024d, r[25]);

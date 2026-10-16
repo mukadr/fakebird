@@ -83,6 +83,7 @@ public sealed partial class Compiler
             cols = st.Columns.Select(c => ColumnOf(t, c)).ToArray();
             if (cols.Distinct().Count() != cols.Length) throw Err.Dsql(-206, "Column used more than once in INSERT");
         }
+        else if (st.DefaultValues) cols = [];
         else cols = Enumerable.Range(0, t.Columns.Count).Where(i => !t.Columns[i].IsComputed).ToArray();
         foreach (var ci in cols)
             if (t.Columns[ci].IsComputed) throw Err.Random($"attempted update of read-only column {t.Name}.{t.Columns[ci].Name}");
@@ -314,6 +315,11 @@ public sealed partial class Compiler
         var newStream = NewStream(t.Columns.Count);
         var oldStream = NewStream(t.Columns.Count);
         var ret = BindReturning(st.Returning, t, null, newStream, newStream, oldStream, parent);
+        // Firebird describes unaliased OLD.<col> of UPDATE OR INSERT ... RETURNING as CONSTANT
+        if (ret != null && st.Returning!.Items.Count == ret.Value.Cols.Length)
+            for (var i = 0; i < ret.Value.Cols.Length; i++)
+                if (st.Returning.Items[i] is { Alias: null, Expr: ColumnRefExpr { Qualifier: "OLD" } })
+                    (ret.Value.Cols[i].Name, ret.Value.Cols[i].Field, ret.Value.Cols[i].Relation) = ("CONSTANT", "", "");
         var width = t.Columns.Count;
         return new DelegatePrepared(c =>
         {

@@ -226,7 +226,7 @@ public sealed partial class Compiler
                     {
                         var x = Bind(u.Operand, s, expected);
                         if (x is ConstNode k && !k.Value.IsNull) return new ConstNode(Arith.Neg(k.Value), k.Type);
-                        return new NegNode(x) { Type = x.Type, Name = "NEGATE" };
+                        return new NegNode(x) { Type = x.Type, Name = "" };
                     }
                     case UnaryOp.Plus: return Bind(u.Operand, s, expected);
                     default: return new NotNode(BindBool(u.Operand, s));
@@ -294,7 +294,7 @@ public sealed partial class Compiler
             }
             case ExistsExpr ex:
             {
-                var node = new ExistsNode { Singular = ex.Singular, Name = ex.Singular ? "SINGULAR" : "EXISTS" };
+                var node = new ExistsNode { Singular = ex.Singular, Name = "" };
                 BindSubquery(node, ex.Query, s, -1);
                 return node;
             }
@@ -316,8 +316,7 @@ public sealed partial class Compiler
                 var t = ResolveType(ca.Type);
                 var x = Bind(ca.Operand, s, t);
                 if (x is ParamNode) return x;
-                if (x is ConstNode k) return new ConstNode(Conv.Cast(k.Value, t), t) { Name = "CAST" };
-                return new CastNode(x, t);
+                return Fold(new CastNode(x, t));
             }
             case CollateExpr co:
             {
@@ -545,8 +544,16 @@ public sealed partial class Compiler
 
     public static SqlType ArithType(ArithOp op, SqlType a, SqlType b)
     {
-        if (a.Kind == TypeKind.Null) return b.Kind == TypeKind.Null ? SqlType.Null : b.IsString ? SqlType.Double : b;
-        if (b.Kind == TypeKind.Null) return a.IsString ? SqlType.Double : a;
+        if (a.Kind == TypeKind.Null && b.Kind == TypeKind.Null) return SqlType.Null;
+        if (a.Kind == TypeKind.Null || b.Kind == TypeKind.Null)
+        {
+            var other = a.Kind == TypeKind.Null ? b : a;
+            if (other.IsExact) return SqlType.ExactExpr(TypeKind.BigInt, other.Scale);
+            return other.IsString ? SqlType.Double : other;
+        }
+        if (a.IsTextual || b.IsTextual)
+            throw Err.Dsql(-104, op is ArithOp.Add or ArithOp.Sub
+                ? "Strings cannot be added or subtracted in dialect 3" : "Strings cannot be multiplied or divided in dialect 3");
         if (a.IsDateTime || b.IsDateTime)
         {
             if (op == ArithOp.Add)
@@ -558,7 +565,7 @@ public sealed partial class Compiler
             {
                 if (a.IsDateTime && b.IsDateTime)
                 {
-                    if (a.Kind == TypeKind.Date && b.Kind == TypeKind.Date) return SqlType.BigInt;
+                    if (a.Kind == TypeKind.Date && b.Kind == TypeKind.Date) return SqlType.Integer;
                     if (a.Kind == TypeKind.Time && b.Kind == TypeKind.Time) return new SqlType(TypeKind.Integer, scale: 4, precision: 9, subType: 1);
                     if (a.Kind == TypeKind.Time || b.Kind == TypeKind.Time) throw Err.Dsql(-104, "Invalid date/time subtraction");
                     return new SqlType(TypeKind.BigInt, scale: 9, precision: 18, subType: 1);
@@ -568,12 +575,12 @@ public sealed partial class Compiler
             throw Err.Dsql(-104, "Invalid arithmetic operation on date/time values");
         }
         if (a.Kind == TypeKind.Boolean || b.Kind == TypeKind.Boolean) throw Err.Dsql(-104, "Invalid arithmetic on BOOLEAN");
-        if (a.IsApprox || b.IsApprox || a.IsTextual || b.IsTextual) return SqlType.Double;
+        if (a.IsApprox || b.IsApprox) return SqlType.Double;
         if (a.Kind == TypeKind.Blob || b.Kind == TypeKind.Blob) throw Err.Dsql(-104, "Invalid arithmetic on BLOB");
         return op switch
         {
-            ArithOp.Add or ArithOp.Sub => SqlType.Exact(TypeKind.BigInt, Math.Max(a.Scale, b.Scale)),
-            _ => SqlType.Exact(TypeKind.BigInt, Math.Min(18, a.Scale + b.Scale)),
+            ArithOp.Add or ArithOp.Sub => SqlType.ExactExpr(TypeKind.BigInt, Math.Max(a.Scale, b.Scale)),
+            _ => SqlType.ExactExpr(TypeKind.BigInt, Math.Min(18, a.Scale + b.Scale)),
         };
     }
 

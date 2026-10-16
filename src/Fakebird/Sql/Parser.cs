@@ -426,7 +426,7 @@ public sealed partial class Parser
                 if (v.Tag == VTag.Double) return new LiteralExpr(v, SqlType.Double) { Pos = t.Pos };
                 var digits = text.TrimStart('-').Replace(".", "").TrimStart('0').Length;
                 var kind = Math.Abs(v.L) <= int.MaxValue ? TypeKind.Integer : TypeKind.BigInt;
-                return new LiteralExpr(v, new SqlType(kind, scale: v.Scale, precision: kind == TypeKind.Integer ? 9 : 18, subType: 1)) { Pos = t.Pos };
+                return new LiteralExpr(v, SqlType.ExactExpr(kind, v.Scale)) { Pos = t.Pos };
             }
             default:
                 return new LiteralExpr(Value.Dbl(double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture)), SqlType.Double) { Pos = t.Pos };

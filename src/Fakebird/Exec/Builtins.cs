@@ -169,8 +169,8 @@ public static class Builtins
 
     public static SqlType ExtractType(string part) => part switch
     {
-        "SECOND" => new SqlType(TypeKind.Integer, scale: 4, precision: 9, subType: 1),
-        "MILLISECOND" => new SqlType(TypeKind.Integer, scale: 1, precision: 9, subType: 1),
+        "SECOND" => SqlType.ExactExpr(TypeKind.Integer, 4),
+        "MILLISECOND" => SqlType.ExactExpr(TypeKind.Integer, 1),
         _ => SqlType.SmallInt,
     };
 
@@ -486,7 +486,8 @@ public static class Builtins
         }, HintString);
 
         // ---- math
-        Def("ABS", 1, 1, a => a[0].Type.IsNumeric ? a[0].Type : SqlType.Double, (c, a, f) =>
+        Def("ABS", 1, 1, a => a[0].Type.IsExact
+            ? SqlType.ExactExpr(a[0].Type.Kind == TypeKind.SmallInt ? TypeKind.Integer : TypeKind.BigInt, a[0].Type.Scale) : a[0].Type.IsNumeric ? a[0].Type : SqlType.Double, (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
@@ -619,7 +620,7 @@ public static class Builtins
             return Coercion.ToType(DateAdd(part, amount, d), f.Type);
         }, (i, a) => i == 1 ? SqlType.BigInt : SqlType.Timestamp);
         Def("DATEDIFF", 3, 3, a => ((ConstNode)a[0]).Value.AsString == "MILLISECOND"
-            ? new SqlType(TypeKind.BigInt, scale: 1, precision: 18, subType: 1) : SqlType.BigInt, (c, a, f) =>
+            ? SqlType.ExactExpr(TypeKind.BigInt, 1) : SqlType.BigInt, (c, a, f) =>
         {
             var part = ((ConstNode)a[0]).Value.AsString;
             var x = a[1].Eval(c);
@@ -663,7 +664,7 @@ public static class Builtins
                 "USER_SESSION" => c.Att.SessionContext,
                 "USER_TRANSACTION" => c.Tx.Context,
                 "SYSTEM" => throw Err.Random("Cannot change read-only variable " + name),
-                _ => throw Err.Random("Invalid namespace name " + ns + " passed to RDB$SET_CONTEXT"),
+                _ => throw Err.CtxNamespace(ns, "RDB$SET_CONTEXT"),
             };
             var existed = dict.ContainsKey(name);
             if (val.IsNull) dict.Remove(name);
@@ -704,7 +705,7 @@ public static class Builtins
             case "DDL_TRIGGER":
                 return Value.Null;
         }
-        throw Err.Random("Invalid namespace name " + ns + " passed to RDB$GET_CONTEXT");
+        throw Err.CtxNamespace(ns, "RDB$GET_CONTEXT");
     }
 
     static SqlType PadType(XNode[] a)
@@ -855,7 +856,9 @@ public static class Builtins
         {
             var scale = Math.Max(a.Scale, b.Scale);
             var kind = (TypeKind)Math.Max((int)a.Kind, (int)b.Kind);
-            return SqlType.Exact(scale > 0 ? TypeKind.BigInt : kind, scale);
+            if (scale == 0) return SqlType.Exact(kind, 0);
+            // NUMERIC vs DECIMAL follows the operand with the larger scale (the first one on ties)
+            return (b.Scale > a.Scale ? b : a).SubType == 1 ? SqlType.Exact(TypeKind.BigInt, scale) : SqlType.ExactExpr(TypeKind.BigInt, scale);
         }
         if (a.IsDateTime && b.IsDateTime)
         {

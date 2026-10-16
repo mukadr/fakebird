@@ -92,6 +92,10 @@ public sealed class SqlType : IEquatable<SqlType>
         return new SqlType(kind, scale: scale, precision: prec, subType: 1);
     }
 
+    /// <summary>Exact numeric produced by an expression: Firebird leaves the subtype 0 (clients show DECIMAL).</summary>
+    public static SqlType ExactExpr(TypeKind kind, int scale)
+        => scale == 0 ? Exact(kind, 0) : new SqlType(kind, scale: scale, precision: kind == TypeKind.Integer ? 9 : 18);
+
     public bool IsExact => Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt;
     public bool IsApprox => Kind is TypeKind.Float or TypeKind.Double;
     public bool IsNumeric => IsExact || IsApprox;

@@ -42,6 +42,8 @@ internal sealed class Connection
         public bool Open;
         public ExecResult? Last;
         public Transaction? Tx;
+        /// <summary>Error of an open cursor: Firebird reports execution errors of a SELECT on fetch.</summary>
+        public FbError? FetchError;
     }
 
     sealed class BlobHandle
@@ -114,7 +116,7 @@ internal sealed class Connection
             else _xdr.WriteInt32(a.Number);
         }
         _xdr.WriteInt32(Isc.arg_sql_state);
-        _xdr.WriteString(e.SqlState, _enc);
+        _xdr.WriteString(e.WireSqlState, _enc);
         _xdr.WriteInt32(Isc.arg_end);
     }
 
@@ -719,7 +721,18 @@ internal sealed class Connection
                     var pars = BindParams(p, rawParams ?? [], descs, tx);
                     s.Rows = null;
                     s.Open = false;
-                    result = Executor.Run(p, tx, pars);
+                    s.FetchError = null;
+                    if (!execute2 && p.StmtType is Isc.stmt_select or Isc.stmt_select_for_upd)
+                    {
+                        try { result = Executor.Run(p, tx, pars); }
+                        catch (FbError e)
+                        {
+                            if (_server.Logging) _server.Log($"[fakebird] execute failed: {e.Message.ReplaceLineEndings(" | ")}\n{s.Sql}");
+                            s.FetchError = e;
+                            result = new ExecResult { Rows = [] };
+                        }
+                    }
+                    else result = Executor.Run(p, tx, pars);
                     s.Last = result;
                     s.Tx = tx;
                     if (p.StmtType is Isc.stmt_select or Isc.stmt_select_for_upd)
@@ -801,6 +814,13 @@ internal sealed class Connection
         catch (FbError e)
         {
             Error(e);
+            return;
+        }
+        if (s.FetchError is { } fe)
+        {
+            s.FetchError = null;
+            s.Open = false;
+            Error(fe);
             return;
         }
         if (count <= 0) count = 200;

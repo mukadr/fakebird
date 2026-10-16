@@ -12,7 +12,15 @@ public readonly record struct StatusArg(int Type, int Number, string? Text);
 public sealed class FbError : Exception
 {
     public IReadOnlyList<StatusArg> Status { get; }
+    /// <summary>The most specific SQLSTATE of the vector (what PSQL WHEN SQLSTATE and the SQLSTATE variable see).</summary>
     public string SqlState { get; }
+    /// <summary>SQLSTATE reported to the client: Firebird derives it from the primary (first) code.</summary>
+    public string WireSqlState => GdsCode switch
+    {
+        335544321 or 335544779 => "22000",
+        335544569 or 335544351 => "42000",
+        _ => SqlState,
+    };
     public int GdsCode => Status.Count > 0 ? Status[0].Number : 0;
     /// <summary>Name of the user exception (CREATE EXCEPTION) when raised by PSQL.</summary>
     public string? UserExceptionName { get; set; }
@@ -49,6 +57,7 @@ public sealed class FbError : Exception
         [335544573] = "Data type unknown",
         [335544578] = "Column unknown",
         [335544580] = "Table unknown",
+        [335544606] = "expression evaluation not supported",
         [335544634] = "Token unknown - line {0}, column {1}",
         [335544652] = "multiple rows in singleton select",
         [335544665] = "violation of PRIMARY or UNIQUE KEY constraint \"{0}\" on table \"{1}\"",
@@ -57,6 +66,7 @@ public sealed class FbError : Exception
         [335544838] = "Foreign key reference target does not exist",
         [335544839] = "Foreign key references are present for the record",
         [335544843] = "Context variable '{0}' is not found in namespace '{1}'",
+        [335544844] = "Invalid namespace name {0} passed to {1}",
         [335544878] = "concurrent transaction number is {0}",
         [335544914] = "string right truncation",
         [335544916] = "numeric value is out of range",
@@ -126,6 +136,8 @@ internal static class Err
     public const int isc_integer_overflow = 335544779;
     public const int isc_fk_target_missing = 335544838;
     public const int isc_fk_references_present = 335544839;
+    public const int isc_ctx_namespace_invalid = 335544844;
+    public const int isc_expression_eval_err = 335544606;
     public const int isc_ctx_var_not_found = 335544843;
     public const int isc_concurrent_transaction = 335544878;
     public const int isc_string_truncation = 335544914;
@@ -218,4 +230,10 @@ internal static class Err
 
     public static FbError ContextVarNotFound(string name, string ns)
         => new StatusBuilder().Gds(isc_ctx_var_not_found).Str(name).Str(ns).Build("HY000");
+
+    public static FbError CtxNamespace(string ns, string func)
+        => new StatusBuilder().Gds(isc_ctx_namespace_invalid).Str(ns).Str(func).Build("HY000");
+
+    public static FbError ExpressionEval(string message)
+        => new StatusBuilder().Gds(isc_expression_eval_err).Gds(isc_random).Str(message).Build("42000");
 }

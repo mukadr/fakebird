@@ -42,7 +42,7 @@ public sealed partial class Compiler
                 if (f.Args.Count != 2) throw Err.Dsql(-104, "NULLIF requires 2 arguments");
                 var (a, b) = BindPair(f.Args[0], f.Args[1], s);
                 var col = MergeCollation(a.Type, b.Type);
-                return new FuncNode("NULLIF", (c, args, fn) =>
+                return new FuncNode("CASE", (c, args, fn) =>
                 {
                     var x = args[0].Eval(c);
                     if (x.IsNull) return x;
@@ -56,7 +56,7 @@ public sealed partial class Compiler
                 if (f.Args.Count != 3) throw Err.Dsql(-104, "IIF requires 3 arguments");
                 var cond = BindBool(f.Args[0], s);
                 var results = BindCommon(f.Args.Skip(1).ToList(), s, expected, out var type);
-                return new CaseNode([(cond, results[0])], results[1]) { Type = type, Name = "IIF" };
+                return new CaseNode([(cond, results[0])], results[1]) { Type = type, Name = "CASE" };
             }
             case "DECODE":
             {
@@ -155,7 +155,7 @@ public sealed partial class Compiler
                 if (f.Star || f.Args.Count != 1) throw Err.Dsql(-104, f.Name + " requires 1 argument");
                 spec.Arg = Bind(f.Args[0], s, SqlType.Double);
                 var t = spec.Arg.Type;
-                if (t.IsExact) spec.Type = SqlType.Exact(TypeKind.BigInt, t.Scale);
+                if (t.IsExact) spec.Type = t.SubType == 1 ? SqlType.Exact(TypeKind.BigInt, t.Scale) : SqlType.ExactExpr(TypeKind.BigInt, t.Scale);
                 else if (t.IsApprox || t.IsTextual || t.Kind == TypeKind.Null) spec.Type = SqlType.Double;
                 else throw Err.Dsql(-104, "Invalid argument for " + f.Name);
                 return spec;
@@ -363,7 +363,8 @@ public sealed partial class Compiler
             var t = Builtins.CommonType([l.Columns[i].Type, r.Columns[i].Type]);
             cols[i] = new OutCol
             {
-                Name = l.Columns[i].Name, Field = l.Columns[i].Field, Relation = "", Type = t,
+                Name = l.Columns[i].Derived ? "" : l.Columns[i].Name, Field = l.Columns[i].Derived ? "" : l.Columns[i].Field,
+                Relation = "", Type = t,
                 Nullable = l.Columns[i].Nullable || r.Columns[i].Nullable,
             };
         }
@@ -438,7 +439,8 @@ public sealed partial class Compiler
             }
             if (rq.Recursive.Columns.Length != anchor.Columns.Length) throw Err.Dsql(-104, "Column count mismatch in recursive CTE");
             for (var i = 0; i < rq.Columns.Length; i++)
-                rq.Columns[i].Type = Builtins.CommonType([anchor.Columns[i].Type, rq.Recursive.Columns[i].Type]);
+                if (rq.Columns[i].Type.Kind == TypeKind.Null) // otherwise the anchor's types rule, like Firebird
+                    rq.Columns[i].Type = rq.Recursive.Columns[i].Type;
             node = rq;
             if (def.Query.OrderBy.Count > 0 || !def.Query.Limit.IsEmpty) throw Err.Unsupported("ORDER BY / limits on recursive CTE");
         }
@@ -633,6 +635,7 @@ public sealed partial class Compiler
         // a bare NULL is described as CHAR(1) like Firebird (clients cannot handle SQL_NULL columns)
         Type = n.Type.Kind == TypeKind.Null ? SqlType.Char(1, Charset.None) : n.Type,
         Nullable = !n.NotNull,
+        Derived = alias == null && n.Field is not { Length: > 0 },
     };
 
     WinSpec MakeWinSpec(WindowExpr w, Scope s)

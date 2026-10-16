@@ -239,8 +239,13 @@ Phases 1–6 implemented; phase 7 partially (index maintenance fix, measurements
 - Measured (Release, localhost): ~50 µs per INSERT and ~130 µs per trivial query through the
   client (round-trip bound), ~150 µs per COW clone of a 60k-row database, ~31 µs to compile an
   EF-style query (so plan sharing across clones is deferred).
-- Differential harness ready (`DifferentialTests`, env `FAKEBIRD_REAL_CS`); not yet run against
-  a real Firebird 3 server.
+- Differential run against a real Firebird 3.0 (docker `jacobalberty/firebird:v3`): all 87 corpus
+  statements match (names, types, values, error codes, SQLSTATEs). Fixed from that run:
+  right-to-left select-list evaluation, string arithmetic rejected in dialect 3, DATE-DATE is
+  INTEGER, TIMESTAMP-DATE fails, DECIMAL subtype of expressions, ABS widening, CASE names for
+  IIF/NULLIF, unnamed EXISTS/union columns, recursive CTE takes the anchor types, SELECT errors on
+  fetch, wire SQLSTATE from the primary code (PSQL handlers still see the specific one), LIST CHAR
+  padding, `_charset 'x'` with a space, INSERT DEFAULT VALUES with identity columns.
 
 Remaining / known gaps: packages, database-level triggers, WHERE CURRENT OF, DML through views,
 named parameters in EXECUTE STATEMENT, RANGE window frames with offsets, sharing compiled plans

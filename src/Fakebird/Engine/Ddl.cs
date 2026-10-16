@@ -618,7 +618,7 @@ public static class Ddl
 
     static void CreateIndex(Database db, CreateIndexStmt st, Ctx c)
     {
-        var t = db.Tables.TryGetValue(st.Table, out var x) ? x : throw Err.TableUnknown(st.Table);
+        var t = db.Tables.TryGetValue(st.Table, out var x) ? x : throw Missing("Table", st.Table);
         if (db.Indexes.ContainsKey(st.Name)) throw Exists("Index", st.Name);
         if (st.ComputedBy != null)
         {
