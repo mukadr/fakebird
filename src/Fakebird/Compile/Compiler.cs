@@ -737,6 +737,32 @@ public sealed partial class Compiler
 
     static string Describe(SourceItem i) => (i.Table != null ? "table " : "") + (i.Alias ?? i.Name);
 
+    HashSet<(Table, int)>? _computing;
+
+    /// <summary>
+    /// COMPUTED BY columns are evaluated when read (like Firebird), against the row of their stream: inside
+    /// the expression the bare table name is that row, even in subqueries over the same table (aliased).
+    /// </summary>
+    XNode BindComputed(SourceItem item, Table table, int idx, Expr computedBy, ColInfo ci)
+    {
+        _computing ??= new();
+        if (!_computing.Add((table, idx)))
+            throw Err.Dsql(-104, $"Column {table.Name}.{table.Columns[idx].Name} is computed from itself");
+        try
+        {
+            var s = new Scope(null);
+            s.Add(new SourceItem { Name = table.Name, Stream = item.Stream, Table = table, Cols = item.Cols });
+            var node = Bind(computedBy, s);
+            var type = table.Columns[idx].Type;
+            if (!node.Type.Equals(type)) node = new CastNode(node, type);
+            return new ComputedColNode(node, item.Stream, idx) { Type = type, Name = ci.Name, Field = ci.Field, Relation = ci.Relation };
+        }
+        finally
+        {
+            _computing.Remove((table, idx));
+        }
+    }
+
     XNode MakeCol(Scope from, Scope owner, SourceItem item, int idx)
     {
         if (!ReferenceEquals(from, owner))
@@ -753,6 +779,8 @@ public sealed partial class Compiler
                 throw Err.Dsql(-104, "Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)");
         }
         var ci = item.Cols[idx];
+        if (item.Table is { IsSystem: false } table && idx < table.Columns.Count && table.Columns[idx].ComputedBy is { } computedBy)
+            return BindComputed(item, table, idx, computedBy, ci);
         var n = Col(item.Stream, idx, ci.Type, ci.Name, ci.Relation);
         n.Field = ci.Field;
         n.Relation = ci.Relation;

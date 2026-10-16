@@ -447,3 +447,11 @@ public sealed class DbKeyNode : XNode
         return Value.Bytes(bytes);
     }
 }
+
+/// <summary>A COMPUTED BY column, evaluated from its row when read.</summary>
+public sealed class ComputedColNode(XNode expr, int stream, int index) : XNode
+{
+    public readonly int Stream = stream;
+    public readonly int Index = index;
+    public override Value Eval(Ctx c) => c.Rows[Stream] == null ? Value.Null : expr.Eval(c);
+}

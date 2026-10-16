@@ -533,6 +533,7 @@ public sealed partial class Compiler
                 ab.KeyCanon.Add(Canon(ge, s) ?? Guid.NewGuid().ToString());
                 ab.KeyTypes.Add(kn.Type);
                 if (kn is ColNode cn) ab.GroupedColumns.Add((cn.Stream, cn.Index));
+                else if (kn is ComputedColNode cc) ab.GroupedColumns.Add((cc.Stream, cc.Index));
             }
             ab.KeyCount = keys.Count;
             foreach (var a in aggs)

@@ -169,4 +169,28 @@ public class ScriptCompatTests(ServerFixture fx)
         }
         Assert.Equal([1L, 2L, 3L, 12.5m, "abc"], db.Execute("select * from la").Single());
     }
+
+    [Fact(Timeout = 10000)]
+    public async Task ComputedColumnSubqueryOverItsOwnTable()
+    {
+        await Task.Yield();
+        var db = NewDb();
+        // inside the subquery the table is aliased (tr2): the bare table name is the row being computed
+        db.RunScript("""
+            create table produto (cod_produto varchar(20) primary key);
+            create table ti (cod_transacao integer, cod_item varchar(20), seq integer, quantidade numeric(18,4));
+            alter table ti add qp computed by (coalesce((select coalesce(tr2.quantidade, 0) from ti tr2
+                join produto on (ti.cod_item = produto.cod_produto)
+                where tr2.cod_transacao = ti.cod_transacao and tr2.seq = ti.seq), 0));
+            insert into produto values ('111668');
+            insert into ti values (1, '111668', 1, 2);
+            insert into ti values (1, 'X', 2, 3);
+            """);
+        Assert.Equal([["111668", 2m], ["X", 0m]], db.Execute("select cod_item, qp from ti order by seq"));
+        Assert.Equal([2m, 0m], db.Execute("select coalesce(t.qp, t.quantidade, 0) from ti t order by t.seq").Select(r => r[0]));
+        // evaluated when read: follows later changes to the tables it reads
+        db.RunScript("insert into produto values ('X')");
+        Assert.Equal([2m, 3m], db.Execute("select qp from ti order by seq").Select(r => r[0]));
+        Assert.Equal([[3m, 1L]], db.Execute("select qp, count(*) from ti where seq = 2 group by qp"));
+    }
 }
