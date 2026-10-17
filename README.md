@@ -24,6 +24,16 @@ server.Restore("app", snapshot);
 
 See `samples/SampleApi.Tests` for an ASP.NET Core `WebApplicationFactory` setup.
 
+If your application builds its own connection string and has no port setting, put the port in the
+database name, as the client allows: `DataSource=127.0.0.1;Database=127.0.0.1/<port>:<name>`.
+
+## Built for isolated tests
+
+Fakebird exists to turn integration tests into unit-test-like tests: every test gets its own
+database (a clone or a `Restore`), so no test ever sees another test's data. Tests need no cleanup
+code, can run fully in parallel (one database per test class or per test), and the engine favours
+simplicity and speed over the machinery a shared production server needs.
+
 ## Why it is fast
 
 * No disk I/O; rows are immutable `Value[]` arrays, values are unboxed structs.
@@ -43,19 +53,27 @@ Firebird 3, dialect 3 semantics:
   ACTION, CHECK, NOT NULL), defaults, identity and computed columns, ALTER TABLE (add/drop/alter
   column, constraints), indexes, views, domains, sequences/generators, exceptions, procedures,
   functions, triggers, CREATE OR ALTER / RECREATE / DROP. GRANT/REVOKE/COMMENT are accepted as no-ops.
+  COMPUTED BY columns are evaluated when read (they follow later changes to the rows and tables they
+  read, including subqueries over their own table).
 * **Queries**: joins (inner/left/right/full/cross/natural/USING), derived tables, CTEs (incl.
-  recursive), UNION [ALL], subqueries (scalar, IN, EXISTS, SINGULAR, ANY/ALL), GROUP BY/HAVING,
+  recursive), UNION [ALL], subqueries (scalar, IN, EXISTS, SINGULAR, ANY/ALL), GROUP BY/HAVING
+  (by column, expression, position or select-list alias),
   aggregates (COUNT/SUM/AVG/MIN/MAX/LIST with DISTINCT), window functions, ORDER BY with NULLS
-  FIRST/LAST, FIRST/SKIP, ROWS, OFFSET/FETCH, selectable procedures in FROM, RDB$ system tables.
+  FIRST/LAST, FIRST/SKIP, ROWS, OFFSET/FETCH, selectable procedures in FROM, RDB$ system tables,
+  RDB$DB_KEY, STARTING/STARTS [WITH], `SELECT ... WITH LOCK` (locks the returned rows like Firebird's
+  dummy update, so concurrent writers wait or conflict).
 * **DML**: INSERT (VALUES/SELECT/DEFAULT VALUES), UPDATE, DELETE, UPDATE OR INSERT, MERGE,
-  RETURNING, EXECUTE PROCEDURE, EXECUTE BLOCK.
+  RETURNING, EXECUTE PROCEDURE, EXECUTE BLOCK. Parameters in the select list of INSERT ... SELECT take
+  the types of the target columns.
 * **PSQL**: variables, cursors, IF/WHILE/FOR SELECT/FOR EXECUTE STATEMENT, LEAVE/CONTINUE/EXIT,
   SUSPEND, exceptions with WHEN handlers (EXCEPTION/SQLCODE/GDSCODE/SQLSTATE/ANY, with undo of the
-  block), EXECUTE STATEMENT, IN AUTONOMOUS TRANSACTION, sub-procedures/functions, NEW/OLD,
+  block), EXECUTE STATEMENT (with expressions and named parameters `(name := value)`), IN AUTONOMOUS
+  TRANSACTION, sub-procedures/functions, NEW/OLD,
   INSERTING/UPDATING/DELETING, ROW_COUNT, context variables, RDB$GET_CONTEXT/RDB$SET_CONTEXT.
 * **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...
 * **Transactions**: read committed (default) and snapshot isolation, no dirty reads, statement
-  atomicity, savepoints, WAIT/NOWAIT lock conflicts with deadlock detection and lock timeouts.
+  atomicity, savepoints, WAIT/NOWAIT lock conflicts with deadlock detection and lock timeouts. A NOWAIT
+  conflict is reported like Firebird 3: deadlock / update conflicts with concurrent update.
 * **Errors** carry real Firebird GDS codes and SQLSTATEs (unique/FK/check/not-null violations,
   string truncation, conversion errors, update conflicts, user exceptions), so `catch (FbException)`
   logic in your application behaves the same.
@@ -93,6 +111,12 @@ FAKEBIRD_REAL_CS='DataSource=127.0.0.1;Port=3051;Database=/firebird/data/{db}.fd
 
 To explore, put statements in a file (one per line) and add `FAKEBIRD_PROBE=/path/to/file`: the
 `Probe` test prints both servers' answers per statement, marked SAME or DIFF.
+
+## Loading a real-world schema
+
+`dotnet run --project bench/Fakebird.Bench -- script create.sql patch.sql ...` runs the scripts
+in-process, continues past errors and prints the distinct failures with a sample statement each:
+the quickest way to find what a new schema needs.
 
 ## Debugging
 
