@@ -282,8 +282,9 @@ public sealed class Transaction
     /// <summary>Blocks (releasing the database lock) until <paramref name="other"/> ends, like a WAIT transaction.</summary>
     internal void WaitFor(Transaction other)
     {
+        // NOWAIT: Firebird reports the conflict as deadlock / update conflict / concurrent transaction
         if (!Wait)
-            throw new StatusBuilder().Gds(335544345).Gds(Err.isc_concurrent_transaction).Num((int)other.Id).Build("40001"); // lock_conflict
+            throw Err.UpdateConflict(other.Id);
         for (var t = other; t != null; t = t.WaitingFor)
             if (t == this) throw Err.UpdateConflict(other.Id); // deadlock
         WaitingFor = other;
@@ -318,6 +319,23 @@ public sealed class Transaction
         slot.Pending = row;
         slot.PendingDelete = false;
         foreach (var ix in t.Indexes) Db.Indexes[ix].AddChanged(slot, previous, row);
+    }
+
+    /// <summary>
+    /// SELECT ... WITH LOCK: a dummy update of the row (same values, no triggers), so concurrent writers wait
+    /// or conflict exactly as with a real UPDATE.
+    /// </summary>
+    internal void Lock(Table t, RowSlot slot)
+    {
+        if (slot.Owner == this) return;
+        EnsureWritable();
+        CheckConflict(slot);
+        var current = slot.LatestCommitted;
+        if (current == null) return;
+        Undo.Add(new UndoEntry { Table = t, Slot = slot, PrevPending = slot.Pending, PrevOwner = slot.Owner, PrevDelete = slot.PendingDelete });
+        slot.Owner = this;
+        slot.Pending = current;
+        slot.PendingDelete = false;
     }
 
     internal void Delete(Table t, RowSlot slot)

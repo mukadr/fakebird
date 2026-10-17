@@ -276,7 +276,7 @@ public sealed partial class Compiler
         {
             if (q.Body is QuerySpec qs)
             {
-                var spec = CompileSpec(qs, outer, q.OrderBy, q.Limit);
+                var spec = CompileSpec(qs, outer, q.OrderBy, q.Limit, q.WithLock);
                 return spec;
             }
             var body = CompileQueryExpr(q.Body, outer);
@@ -480,7 +480,7 @@ public sealed partial class Compiler
     /// </summary>
     SqlType[]? _selectListTypes;
 
-    QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit)
+    QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit, bool withLock = false)
     {
         var selectListTypes = _selectListTypes;
         _selectListTypes = null;
@@ -502,6 +502,15 @@ public sealed partial class Compiler
                 rel = new FilterRel(rel, c.Node);
                 c.Used = true;
             }
+
+        // WITH LOCK: every row that passes WHERE is locked like a dummy update (single base table only)
+        if (withLock)
+        {
+            var tables = s.Items.Where(i => !i.Hidden && !i.QualifiedOnly).ToList();
+            if (tables is not [{ Table: { IsSystem: false } lockTable } only] || qs.GroupBy.Count > 0 || qs.Distinct)
+                throw Err.Dsql(-104, "WITH LOCK can be used only with a single physical table");
+            rel = new LockRel(rel, lockTable, only.Stream);
+        }
 
         // aggregation
         var aggs = new List<FuncExpr>();

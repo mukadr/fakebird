@@ -278,6 +278,38 @@ public sealed class FilterRel : RelNode
     }
 }
 
+/// <summary>SELECT ... WITH LOCK: locks the current row of a table stream as rows flow past.</summary>
+public sealed class LockRel : RelNode
+{
+    public readonly RelNode Input;
+    readonly Table _table;
+    readonly int _stream;
+
+    public LockRel(RelNode input, Table table, int stream)
+    {
+        Input = input;
+        _table = table;
+        _stream = stream;
+        Streams = input.Streams;
+    }
+
+    public override RowCursor Open(Ctx c)
+    {
+        c.Db.EnsureOwned(_table); // the lock writes to the slots: copy-on-write first
+        return new Cursor(Input.Open(c), this, c);
+    }
+
+    sealed class Cursor(RowCursor input, LockRel n, Ctx c) : RowCursor
+    {
+        public override bool Next()
+        {
+            if (!input.Next()) return false;
+            if (c.Slots[n._stream] is { } slot) c.Tx.Lock(n._table, slot);
+            return true;
+        }
+    }
+}
+
 /// <summary>Nested loop join (inner / left outer). The right side is re-opened for each left row.</summary>
 public sealed class NestedLoopJoinRel : RelNode
 {

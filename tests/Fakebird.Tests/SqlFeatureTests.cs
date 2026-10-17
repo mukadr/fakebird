@@ -360,7 +360,7 @@ public class SqlFeatureTests(ServerFixture fx)
                 using var cmd = new FbCommand("update emp set name = 'Other' where id = 1", cn2, tx2);
                 cmd.ExecuteNonQuery();
             });
-            Assert.Equal(335544345, ex.ErrorCode);
+            Assert.Equal(335544336, ex.ErrorCode); // NOWAIT conflict: deadlock / update conflict, like Firebird 3
             // WAIT: blocks until tx1 ends; tx1 commits -> update conflict
             var waiter = Task.Run(() =>
             {
