@@ -86,6 +86,8 @@ internal static class SystemTables
             ("RDB$FIELD_SUB_TYPE", Small), ("RDB$DESCRIPTION", Text), ("RDB$SYSTEM_FLAG", Small), ("RDB$SEGMENT_LENGTH", Small),
             ("RDB$NULL_FLAG", Small), ("RDB$CHARACTER_LENGTH", Small), ("RDB$COLLATION_ID", Small), ("RDB$CHARACTER_SET_ID", Small),
             ("RDB$FIELD_PRECISION", Small), ("RDB$DIMENSIONS", Small),
+            // the BLR itself is not modelled: non-null (the source text) exactly when Firebird has one
+            ("RDB$COMPUTED_BLR", SqlType.BlobBinary), ("RDB$VALIDATION_BLR", SqlType.BlobBinary), ("RDB$DEFAULT_VALUE", SqlType.BlobBinary),
         ], d =>
         {
             var rows = new List<Value[]>();
@@ -97,7 +99,9 @@ internal static class SystemTables
                 t.IsString ? I(t.Length) : Value.Null, t.IsTextual ? I(0) : Value.Null, t.IsTextual || t.IsString ? I(t.WireCharsetId) : Value.Null,
                 t.IsExact ? I(t.Precision > 0 ? t.Precision : t.Kind switch { TypeKind.SmallInt => 4, TypeKind.Integer => 9, _ => 18 }) : Value.Null,
                 Value.Null,
+                Blr(computed), Blr(check), Blr(defSrc),
             ];
+            static Value Blr(string? source) => source == null ? Value.Null : Value.Bytes(System.Text.Encoding.UTF8.GetBytes(source));
             foreach (var dom in d.Domains.Values) rows.Add(Field(dom.Name, dom.Type, null, dom.DefaultSource, dom.CheckSource, dom.NotNull));
             foreach (var t in d.Tables.Values)
                 for (var i = 0; i < t.Columns.Count; i++)

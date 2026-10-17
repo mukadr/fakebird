@@ -302,7 +302,7 @@ public sealed partial class Parser
                 continue;
             }
             var negated = false;
-            if (Is("NOT") && (IsAt(1, "BETWEEN") || IsAt(1, "LIKE") || IsAt(1, "IN") || IsAt(1, "STARTING")
+            if (Is("NOT") && (IsAt(1, "BETWEEN") || IsAt(1, "LIKE") || IsAt(1, "IN") || IsAt(1, "STARTING") || IsAt(1, "STARTS")
                               || IsAt(1, "CONTAINING") || IsAt(1, "SIMILAR")))
             {
                 _i++;
@@ -321,7 +321,7 @@ public sealed partial class Parser
                 Expr? esc = Accept("ESCAPE") ? Additive() : null;
                 left = new LikeExpr(LikeKind.Like, left, pat, esc, negated) { Pos = pos };
             }
-            else if (Accept("STARTING"))
+            else if (Accept("STARTING") || Accept("STARTS")) // STARTS [WITH]: undocumented synonym accepted by Firebird 3
             {
                 Accept("WITH");
                 left = new LikeExpr(LikeKind.StartingWith, left, Additive(), null, negated) { Pos = pos };

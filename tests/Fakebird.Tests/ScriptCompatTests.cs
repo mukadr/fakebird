@@ -193,4 +193,29 @@ public class ScriptCompatTests(ServerFixture fx)
         Assert.Equal([2m, 3m], db.Execute("select qp from ti order by seq").Select(r => r[0]));
         Assert.Equal([[3m, 1L]], db.Execute("select qp, count(*) from ti where seq = 2 group by qp"));
     }
+
+    [Fact]
+    public void StartsWithIsASynonymOfStartingWith()
+    {
+        var db = NewDb();
+        Assert.Equal([1, 1, 1, 0], db.Execute("""
+            select iif('ARX' starts with 'AR', 1, 0), iif('ARX' starts 'AR', 1, 0), iif('ARX' starting with 'AR', 1, 0),
+                   iif('ARX' not starts with 'AR', 1, 0)
+            from rdb$database
+            """).Single().Select(v => Convert.ToInt32(v)));
+    }
+
+    [Fact]
+    public void RdbFieldsExposesComputedBlr()
+    {
+        var db = NewDb();
+        db.RunScript("create table t (a integer, b computed by (a * 2))");
+        var plain = db.Execute("""
+            select trim(rf.rdb$field_name) from rdb$relation_fields rf
+            join rdb$fields f on f.rdb$field_name = rf.rdb$field_source
+            where rf.rdb$relation_name = 'T' and f.rdb$computed_blr is null
+            order by rf.rdb$field_position
+            """);
+        Assert.Equal(["A"], plain.Select(r => r[0]));
+    }
 }
