@@ -173,6 +173,9 @@ public static class Dml
                     conflict = !s.PendingDelete && ix.RowHasKey(s.Pending, key);
                 else
                 {
+                    // a NOWAIT transaction meeting a key another one just stored gets the violation, like Firebird
+                    if (s.Owner is { Active: true } && !s.PendingDelete && !tx.Wait && ix.RowHasKey(s.Pending, key))
+                        throw Err.Unique(name, rt.Table.Name, KeyText(rt.Table, ix.Columns, row));
                     if (s.Owner is { Active: true } other && (s.PendingDelete || ix.RowHasKey(s.Pending, key)))
                     {
                         // a concurrent transaction holds the key: wait for it like Firebird does
@@ -211,6 +214,24 @@ public static class Dml
         return true;
     }
 
+    /// <summary>Another active transaction deletes or re-keys the row holding this key (it may not exist any more).</summary>
+    static Transaction? LockedByOther(Ctx c, Engine.Index ix, Table table, IndexKey key)
+    {
+        foreach (var s in ix.Lookup(key) ?? [])
+        {
+            if (table.IsGtt && s.Attachment != c.Tx.Att.Id) continue;
+            if (s.Owner is { Active: true } other && other != c.Tx && ix.RowHasKey(s.Visible(c.Tx), key)
+                && (s.PendingDelete || !ix.RowHasKey(s.Pending, key)))
+                return other;
+        }
+        return null;
+    }
+
+    /// <summary>Another active transaction stored this key and has not committed it yet.</summary>
+    internal static Transaction? StoredByOther(Ctx c, RowSlot s, Engine.Index ix, Table table, IndexKey key)
+        => (!table.IsGtt || s.Attachment == c.Tx.Att.Id) && s.Owner is { Active: true } other && other != c.Tx
+            && !s.PendingDelete && ix.RowHasKey(s.Pending, key) ? other : null;
+
     static bool ExistsVisible(Ctx c, Engine.Index ix, Table table, IndexKey key, RowSlot? exclude = null)
     {
         var list = ix.Lookup(key);
@@ -243,8 +264,15 @@ public static class Dml
             if (hasNull) continue;
             var key = fk.ParentIndex.MakeKey(vals);
             if (ReferenceEquals(fk.Parent, rt.Table) && ReferencesItself(fk.ParentIndex, row, key)) continue;
-            if (!ExistsVisible(c, fk.ParentIndex, fk.Parent, key))
-                throw Err.ForeignKeyMissing(fk.Constraint.Name, rt.Table.Name, KeyText(rt.Table, fk.Columns, row));
+            while (true)
+            {
+                if (!ExistsVisible(c, fk.ParentIndex, fk.Parent, key))
+                    throw Err.ForeignKeyMissing(fk.Constraint.Name, rt.Table.Name, KeyText(rt.Table, fk.Columns, row));
+                // the parent row is being deleted or changed by a concurrent transaction: wait for its outcome
+                if (LockedByOther(c, fk.ParentIndex, fk.Parent, key) is not { } other) break;
+                if (!c.Tx.Wait) throw Err.ForeignKeyMissing(fk.Constraint.Name, rt.Table.Name, KeyText(rt.Table, fk.Columns, row));
+                c.Tx.WaitFor(other);
+            }
         }
     }
 
@@ -305,7 +333,12 @@ public static class Dml
             var d = s.Visible(c.Tx);
             if (d != null && r.ChildIndex.RowHasKey(d, key)) children.Add((s, d));
         }
-        if (children.Count == 0) return;
+        // children stored by a concurrent transaction reference the key too (Firebird sees them in the index)
+        var pendingElsewhere = list.Any(s => StoredByOther(c, s, r.ChildIndex, r.Child, key) != null);
+        if (children.Count == 0 && !pendingElsewhere) return;
+        if (pendingElsewhere && action != RefAction.NoAction)
+            foreach (var s in list.ToArray())
+                if (StoredByOther(c, s, r.ChildIndex, r.Child, key) is { } other) c.Tx.WaitFor(other);
         if (action == RefAction.NoAction)
         {
             // checked at the end of the statement (rows referencing each other may all be deleted)
@@ -379,10 +412,17 @@ public static class DeferredChecks
             var children = r.ChildIndex.Lookup(childKey);
             if (children == null) continue;
             var referenced = false;
-            foreach (var s in children)
+            foreach (var s in children.ToArray())
             {
                 if (r.Child.IsGtt && s.Attachment != c.Tx.Att.Id) continue;
                 if (r.ChildIndex.RowHasKey(s.Visible(c.Tx), childKey)) { referenced = true; break; }
+                // a child a concurrent transaction stored: NOWAIT fails at once, WAIT waits for its outcome
+                if (Dml.StoredByOther(c, s, r.ChildIndex, r.Child, childKey) is { } other)
+                {
+                    if (!c.Tx.Wait) { referenced = true; break; }
+                    c.Tx.WaitFor(other);
+                    if (r.ChildIndex.RowHasKey(s.Visible(c.Tx), childKey)) { referenced = true; break; }
+                }
             }
             if (!referenced) continue;
             var pvals = new Value[r.ParentColumns.Length];

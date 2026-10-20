@@ -297,13 +297,19 @@ public static partial class CorpusRunner
         return sb.ToString().Replace("\r", "");
     }
 
+    [GeneratedRegex(@"concurrent transaction number is \d+")]
+    private static partial Regex TransactionNumber();
+
     [GeneratedRegex(@"^\s*(At (block|procedure|trigger|function|sub-procedure|sub-function)\b.*|line: \d+, col: \d+.*)$", RegexOptions.Multiline)]
     private static partial Regex Location();
+
+    const int ConcurrentTransaction = 335544878;
 
     static string DescribeError(FbException e)
     {
         var codes = StatusVector(e);
         var msg = Location().Replace(e.Message.Replace("\r", ""), "");
+        msg = TransactionNumber().Replace(msg, "concurrent transaction number is N");
         msg = string.Join("\n", msg.Split('\n').Select(l => l.TrimEnd()).Where(l => l.Length > 0));
         return $"ERROR {codes} {e.SQLSTATE}\n{msg}";
     }
@@ -314,15 +320,21 @@ public static partial class CorpusRunner
         if (e.InnerException is not { } isc || isc.GetType().GetProperty("Errors")?.GetValue(isc) is not System.Collections.IEnumerable errors)
             return string.Join(",", e.Errors.Select(x => x.Number));
         var parts = new List<string>();
+        var previous = 0;
         foreach (var err in errors)
         {
             var t = err.GetType();
             var type = (int)t.GetProperty("Type")!.GetValue(err)!;
             var code = (int)t.GetProperty("ErrorCode")!.GetValue(err)!;
             var str = t.GetProperty("StrParam")!.GetValue(err) as string;
+            var after = previous;
+            if (type == 1) previous = code;
             parts.Add(type switch
             {
                 1 => code.ToString(CultureInfo.InvariantCulture),  // isc_arg_gds
+                // transaction numbers differ from server to server
+                4 when after == ConcurrentTransaction => "#N",
+                2 when after == ConcurrentTransaction => "'N'",
                 4 => "#" + code.ToString(CultureInfo.InvariantCulture), // isc_arg_number
                 19 => "@" + str,                                    // isc_arg_sql_state
                 18 => "warning:" + code.ToString(CultureInfo.InvariantCulture),

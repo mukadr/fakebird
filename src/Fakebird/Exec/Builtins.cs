@@ -678,8 +678,9 @@ public static class Builtins
                     "CURRENT_ROLE" => S(c.Att.Role),
                     "SESSION_ID" => S(c.Att.Id.ToString(CultureInfo.InvariantCulture)),
                     "TRANSACTION_ID" => S(c.Tx.Id.ToString(CultureInfo.InvariantCulture)),
-                    "ISOLATION_LEVEL" => S(c.Tx.Snapshot ? "SNAPSHOT" : "READ COMMITTED"),
-                    "LOCK_TIMEOUT" => S("-1"),
+                    "ISOLATION_LEVEL" => S(c.Tx.Consistency ? "CONSISTENCY" : c.Tx.Snapshot ? "SNAPSHOT" : "READ COMMITTED"),
+                    // 0 for NOWAIT, the timeout of a timed wait, -1 for an endless one
+                    "LOCK_TIMEOUT" => S(!c.Tx.Wait ? "0" : c.Tx.LockTimeout > 0 ? c.Tx.LockTimeout.ToString(CultureInfo.InvariantCulture) : "-1"),
                     "READ_ONLY" => S(c.Tx.ReadOnly ? "TRUE" : "FALSE"),
                     "CLIENT_PID" => S("0"),
                     "CLIENT_PROCESS" => S("fakebird"),

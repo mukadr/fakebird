@@ -315,8 +315,8 @@ public sealed class Transaction
             while (other.Active)
             {
                 var remaining = deadline - DateTime.UtcNow;
-                if (remaining <= TimeSpan.Zero)
-                    throw new StatusBuilder().Gds(335544345).Gds(335544510).Gds(Err.isc_concurrent_transaction).Num((int)other.Id).Build("40001"); // lock_timeout
+                // a timed-out wait ends like a NOWAIT conflict
+                if (remaining <= TimeSpan.Zero) throw Err.UpdateConflict(other.Id);
                 Monitor.Wait(Db.Sync, remaining > TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : remaining);
             }
         }
@@ -331,6 +331,8 @@ public sealed class Transaction
     internal int Restarts;
     public bool WasCommitted { get; private set; }
     public int LockTimeout;
+    /// <summary>Isolation CONSISTENCY (table stability): a snapshot that the context reports as such.</summary>
+    public bool Consistency;
 
     internal void Update(Table t, RowSlot slot, Value[] row)
     {
@@ -488,7 +490,7 @@ public sealed class Transaction
     internal void RollbackToSavepoint(string name)
     {
         var idx = Savepoints?.FindLastIndex(s => s.Name == name) ?? -1;
-        if (idx < 0) throw Err.Random($"Savepoint {name} unknown");
+        if (idx < 0) throw new StatusBuilder().Gds(FbMessages.invalid_savepoint).Str(name).Build();
         RollbackTo(Savepoints![idx].Mark);
         Savepoints.RemoveRange(idx + 1, Savepoints.Count - idx - 1);
     }
@@ -496,7 +498,7 @@ public sealed class Transaction
     internal void ReleaseSavepoint(string name, bool only)
     {
         var idx = Savepoints?.FindLastIndex(s => s.Name == name) ?? -1;
-        if (idx < 0) throw Err.Random($"Savepoint {name} unknown");
+        if (idx < 0) throw new StatusBuilder().Gds(FbMessages.invalid_savepoint).Str(name).Build();
         if (only) Savepoints!.RemoveAt(idx);
         else Savepoints!.RemoveRange(idx, Savepoints.Count - idx);
     }

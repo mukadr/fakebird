@@ -86,7 +86,11 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   SUSPEND without RETURNS, duplicate variables, labels on non-loops) carry Firebird's codes.
 * **READ COMMITTED reads a statement-level snapshot** (READ CONSISTENCY): a top-level statement,
   including all the PSQL it runs, sees the data committed when it started, and is restarted when it
-  meets a row committed after that.
+  meets a row committed after that. Concurrent transactions conflict like Firebird's: a NOWAIT
+  transaction gets the unique-key violation for a key another one stored, foreign keys see parents being
+  deleted and children being stored by uncommitted transactions (failing at once under NOWAIT, waiting
+  otherwise), a timed-out lock wait is an update conflict, and the context reports the isolation
+  (CONSISTENCY included) and LOCK_TIMEOUT (0 for NOWAIT) of the transaction.
 * **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...
 * **Transactions**: read committed (default) and snapshot isolation, no dirty reads, statement
   atomicity, savepoints, WAIT/NOWAIT lock conflicts with deadlock detection and lock timeouts. A NOWAIT

@@ -234,7 +234,7 @@ internal static class Err
 
     public static FbError UpdateConflict(long otherTx)
         => new StatusBuilder().Gds(isc_deadlock).Gds(isc_update_conflict)
-            .Gds(isc_concurrent_transaction).Num((int)otherTx).Build("40001");
+            .Gds(isc_concurrent_transaction).Str(otherTx.ToString(System.Globalization.CultureInfo.InvariantCulture)).Build("40001");
 
     public static FbError UserException(string name, int number, string message, string? formatted = null, string[]? args = null)
     {

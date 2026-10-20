@@ -414,7 +414,7 @@ internal sealed class Connection
         Guard(() =>
         {
             var db = Db();
-            bool snapshot = true, readOnly = false, wait = true;
+            bool snapshot = true, readOnly = false, wait = true, consistency = false;
             var lockTimeout = 0;
             var i = tpb.Length > 0 ? 1 : 0;
             while (i < tpb.Length)
@@ -422,7 +422,7 @@ internal sealed class Connection
                 int item = tpb[i++];
                 switch (item)
                 {
-                    case Isc.tpb_consistency:
+                    case Isc.tpb_consistency: snapshot = consistency = true; break;
                     case Isc.tpb_concurrency: snapshot = true; break;
                     case Isc.tpb_read_committed: snapshot = false; break;
                     case Isc.tpb_read: readOnly = true; break;
@@ -448,6 +448,7 @@ internal sealed class Connection
             Transaction tx;
             lock (db.Sync) tx = _att!.StartTransaction(snapshot, readOnly, wait);
             tx.LockTimeout = lockTimeout;
+            tx.Consistency = consistency;
             var h = NewHandle();
             _txs[h] = tx;
             Response(h);
