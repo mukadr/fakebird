@@ -438,6 +438,14 @@ public sealed partial class Parser
         return e;
     }
 
+    /// <summary>Exact literals beyond BIGINT are INT128 (NUM128/LIMIT64); larger ones would be DECFLOAT.</summary>
+    static Expr WideLiteral(string digits, int scale, int pos)
+    {
+        if (Int128.TryParse(digits, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var w))
+            return new LiteralExpr(Value.Wide(w, scale), TypeRules.Exact(TypeKind.Int128, scale, 0)) { Pos = pos };
+        throw Err.Unsupported("DECFLOAT literal " + digits);
+    }
+
     Expr NumberLiteral(bool negate)
     {
         var t = Advance();
@@ -451,15 +459,17 @@ public sealed partial class Parser
                     var type = l is >= int.MinValue and <= int.MaxValue ? SqlType.Integer : SqlType.BigInt;
                     return new LiteralExpr(Value.Int(l), type) { Pos = t.Pos };
                 }
-                // too big for BIGINT: Firebird 3 makes it a DOUBLE? It errors for dialect 3 ints > 2^63.
-                throw Err.Dsql(-104, "Arithmetic exception, numeric overflow, or string truncation");
+                return WideLiteral(text, 0, t.Pos);
             }
             case Tok.Decimal:
             {
-                var v = Conv.ParseNumber(text);
-                if (v.Tag == VTag.Double) return new LiteralExpr(v, SqlType.Double) { Pos = t.Pos };
-                // Firebird makes every literal with a decimal point a scaled BIGINT (SCALEDINT)
-                return new LiteralExpr(v, SqlType.ExactExpr(TypeKind.BigInt, v.Scale)) { Pos = t.Pos };
+                var dot = text.IndexOf('.');
+                var scale = dot < 0 ? 0 : text.Length - dot - 1;
+                var digits = dot < 0 ? text : text.Remove(dot, 1);
+                if (long.TryParse(digits, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var m))
+                    // Firebird makes every literal with a decimal point a scaled BIGINT (SCALEDINT)
+                    return new LiteralExpr(Value.Int(m, scale), SqlType.ExactExpr(TypeKind.BigInt, scale)) { Pos = t.Pos };
+                return WideLiteral(digits, scale, t.Pos);
             }
             default:
                 // the engine converts approximate literals from their text like any string (CVT_get_double)

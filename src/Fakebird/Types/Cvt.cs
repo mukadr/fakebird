@@ -371,8 +371,9 @@ public static class Cvt
     public static long DoubleToExact(double d, int scale, TypeKind kind, bool isFloat)
     {
         var eps = isFloat ? 1e-5 : 1e-14;
-        // Firebird scales are negative: multiply by 10^scale here
+        // Firebird scales are negative: multiply by 10^scale here (a negative scale divides)
         if (scale > 0) d *= PowerOfTen(scale);
+        else if (scale < 0) d /= PowerOfTen(-scale);
         if (d > 0) d += 0.5 + eps;
         else d -= 0.5 + eps;
         switch (kind)

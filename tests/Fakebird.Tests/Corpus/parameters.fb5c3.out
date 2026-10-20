@@ -1,0 +1,215 @@
+--- select n2 + ? from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select ? + n2 from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select n2 - ? from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select n2 * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select ? * n2 from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select n2 / ? from src
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select i * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select b * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select dp * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select i / ? from src
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select ? / i from src
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select ? * 2 from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select 2 * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select ? + 2 from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select ? + ? from src
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select ? * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select dt + ? from src
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select dt - ? from src
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select ? - dt from src
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select ts + ? from src
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select ? + dt from src
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select -? from src
+ERROR 335544569 335544606 336397256 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for negation (minus operator)
+--- select i + -? from src
+ERROR 335544569 335544606 336397256 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for negation (minus operator)
+--- select cast(? as integer) * n2 from src
+MULTIPLY:NUMERIC (8,8,2,True,,MULTIPLY,False,False)
+2.5 | 
+affected 0
+--- select (n2 + 1) * ? from src
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select s || ? from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select ? || s from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(?) from src
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+2 | 
+affected 0
+--- select coalesce(?, n2) from src
+COALESCE:NUMERIC (4,4,2,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(n2, ?) from src
+COALESCE:NUMERIC (4,4,2,True,,COALESCE,False,False)
+1.25 | 
+affected 0
+--- select n2 + ?, n2 - ?, ? - n2 from src
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- update src set n2 = n2 + ? where id = 1 returning n2
+N2:NUMERIC (4,9,2,True,SRC,N2,False,False)
+3.25 | 
+affected 1
+--- update src set n2 = n2 * ? where id = 1 returning n2
+N2:NUMERIC (4,9,2,True,SRC,N2,False,False)
+6.5 | 
+affected 1
+--- update src set i = i * ? where id = 1 returning i
+I:INTEGER (4,,,True,SRC,I,False,False)
+14 | 
+affected 1
+--- update src set s = s || ? where id = 1 returning s
+S:VARCHAR (10,,,True,SRC,S,False,False)
+abcx | 
+affected 1
+--- select id from src where i > ? + 1
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+1 | 
+affected 0
+--- select id from src where i > ? * 2
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+1 | 
+affected 0
+--- select id from src where i * ? > 1
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+1 | 
+affected 0
+--- select id from src where i + ? > 1
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+1 | 
+affected 0
+--- select id from src where n2 = ? / 2
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+affected 0
+--- insert into src (id, i) values (?, 1 + ?) returning i
+I:INTEGER (4,,,True,SRC,I,False,False)
+3 | 
+affected 1
+--- insert into src (id, i) values (?, ? * 2) returning i
+I:INTEGER (4,,,True,SRC,I,False,False)
+6 | 
+affected 1
+--- select id from src where s = ? || 'bc'
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+affected 0
+--- select id from src where s like ? || '%'
+ID:INTEGER (4,,,False,SRC,ID,True,False)
+1 | 
+affected 0
+--- select id from src where dt > current_date - ?
+CLIENT EXCEPTION InvalidCastException: Invalid cast from 'Int64' to 'DateTime'.
+--- select iif(? > 1, 'y', 'n') from src
+CASE:CHAR (1,,,False,,CASE,False,False)
+y | 
+y | 
+y | 
+affected 0
+--- select n2 between ? and ? * 2 from src
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+NULL | 
+NULL | 
+affected 0

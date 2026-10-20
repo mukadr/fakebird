@@ -244,6 +244,8 @@ public sealed partial class Compiler
                 {
                     case UnaryOp.Neg:
                     {
+                        if (u.Operand is ParamExpr && expected == null)
+                            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(FbMessages.dsql_invalid_type_neg).Build();
                         var x = Bind(u.Operand, s, expected);
                         var neg = new NegNode(x) { Type = x.Type, Name = NegName(u), NotNull = x.NotNull, EngineType = x.EngineType };
                         if (x is ConstNode { Value.IsNull: false } k)
@@ -340,7 +342,11 @@ public sealed partial class Compiler
             {
                 var t = ResolveType(ca.Type);
                 var x = Bind(ca.Operand, s, t);
-                if (x is ParamNode) return x;
+                if (x is ParamNode pn)
+                {
+                    pn.Name = "CAST";
+                    return pn;
+                }
                 return Fold(new CastNode(x, t));
             }
             case CollateExpr co:
@@ -419,9 +425,24 @@ public sealed partial class Compiler
     static Collation MergeCollation(SqlType a, SqlType b)
         => a.IsTextual && a.Collation != Collation.Binary ? a.Collation : b.IsTextual ? b.Collation : Collation.Binary;
 
+    /// <summary>An expression with a parameter whose type must come from the context (not under a CAST).</summary>
+    static bool HasUntypedParam(Expr e) => e switch
+    {
+        ParamExpr => true,
+        UnaryExpr u => HasUntypedParam(u.Operand),
+        BinaryExpr b => b.Op is not (BinaryOp.And or BinaryOp.Or) && (HasUntypedParam(b.Left) || HasUntypedParam(b.Right)),
+        _ => false,
+    };
+
     (XNode, XNode) BindPair(Expr l, Expr r, Scope s)
     {
         if (l is ParamExpr && r is ParamExpr) throw Err.DataTypeUnknown();
+        // a side with parameters in an expression is typed from the other side (PASS1_set_parameter_type)
+        if (l is not ParamExpr && HasUntypedParam(l) && !HasUntypedParam(r))
+        {
+            var rr = Bind(r, s);
+            return (Bind(l, s, ParamTypeFor(rr.Type)), rr);
+        }
         if (l is ParamExpr)
         {
             var rr = Bind(r, s);
@@ -476,8 +497,14 @@ public sealed partial class Compiler
             }
             case BinaryOp.Concat:
             {
-                var l = Bind(b.Left, s, b.Left is ParamExpr ? SqlType.VarChar(8191) : null);
-                var r = Bind(b.Right, s, b.Right is ParamExpr ? SqlType.VarChar(8191) : null);
+                // parameters take the context's type; without one their type is unknown
+                if ((b.Left is ParamExpr || b.Right is ParamExpr) && expected == null)
+                {
+                    UnknownParam = true;
+                    expected = SqlType.VarChar(1);
+                }
+                var l = Bind(b.Left, s, expected);
+                var r = Bind(b.Right, s, expected);
                 SqlType t;
                 if (l.Type.Kind == TypeKind.Blob || r.Type.Kind == TypeKind.Blob) t = SqlType.BlobText;
                 else
@@ -541,23 +568,6 @@ public sealed partial class Compiler
 
     XNode BindArith(BinaryExpr b, Scope s, SqlType? expected)
     {
-        XNode l, r;
-        if (b.Left is ParamExpr && b.Right is ParamExpr)
-        {
-            var t = expected ?? throw Err.DataTypeUnknown();
-            l = Bind(b.Left, s, t);
-            r = Bind(b.Right, s, t);
-        }
-        else if (b.Left is ParamExpr)
-        {
-            r = Bind(b.Right, s);
-            l = Bind(b.Left, s, ArithParamType(r.Type, b.Op, expected));
-        }
-        else
-        {
-            l = Bind(b.Left, s);
-            r = Bind(b.Right, s, b.Right is ParamExpr ? ArithParamType(l.Type, b.Op, expected) : null);
-        }
         var op = b.Op switch
         {
             BinaryOp.Add => ArithOp.Add,
@@ -565,6 +575,25 @@ public sealed partial class Compiler
             BinaryOp.Mul => ArithOp.Mul,
             _ => ArithOp.Div,
         };
+        XNode l, r;
+        if (b.Left is ParamExpr || b.Right is ParamExpr)
+        {
+            // PASS1_set_parameter_type: parameters take the type their context expects (assignment target,
+            // other side of a comparison...). Without one, Firebird's ArithmeticNode::make fails on the unknown type.
+            if (expected == null)
+            {
+                // the operation itself is fine; Firebird reports the parameter's unknown type at the end
+                expected = UntypedArithParam(op, b, s);
+                UnknownParam = true;
+            }
+            l = Bind(b.Left, s, expected);
+            r = Bind(b.Right, s, expected);
+        }
+        else
+        {
+            l = Bind(b.Left, s, expected);
+            r = Bind(b.Right, s, expected);
+        }
         var (type, nullable) = TypeRules.Arith(op, l.Type, !l.NotNull, r.Type, !r.NotNull);
         var name = op switch { ArithOp.Add => "ADD", ArithOp.Sub => "SUBTRACT", ArithOp.Mul => "MULTIPLY", _ => "DIVIDE" };
         SqlType? engine = null;
@@ -576,17 +605,24 @@ public sealed partial class Compiler
         return Fold(new ArithNode(op, l, r) { Type = type, Name = name, NotNull = !nullable, EngineType = engine });
     }
 
-    static SqlType ArithParamType(SqlType other, BinaryOp op, SqlType? expected)
+    /// <summary>A parameter's type stayed unknown (reported when the statement is complete).</summary>
+    public bool UnknownParam;
+
+    /// <summary>
+    /// An operator on a parameter of unknown type: raises Firebird's ArithmeticNode::make error, or returns the
+    /// other operand's type when the operation is valid (the parameter then stays of unknown type).
+    /// </summary>
+    SqlType UntypedArithParam(ArithOp op, BinaryExpr b, Scope s)
     {
-        if (other.Kind == TypeKind.Null) return expected ?? throw Err.DataTypeUnknown();
-        if (other.IsDateTime)
-        {
-            if (op == BinaryOp.Sub && expected is { IsNumeric: true }) return other;
-            return other.Kind == TypeKind.Date ? SqlType.Integer : SqlType.Double;
-        }
-        if (other.IsString) return SqlType.Double;
-        if (other.IsExact && op is BinaryOp.Mul or BinaryOp.Div) return SqlType.Exact(TypeKind.BigInt, other.Scale);
-        return other;
+        FbError Eval(int code) => new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(code).Build();
+        if (op == ArithOp.Mul) throw Eval(FbMessages.dsql_invalid_type_multip_dial3);
+        if (op == ArithOp.Div) throw Eval(FbMessages.dsql_invalid_type_div_dial3);
+        if (b.Left is ParamExpr && b.Right is ParamExpr) throw Eval(FbMessages.dsql_invalid_type_addsub_dial3);
+        var other = Bind(b.Left is ParamExpr ? b.Right : b.Left, s);
+        if (other.Type.IsString) throw Eval(FbMessages.dsql_nostring_addsub_dial3);
+        if (other.Type.IsDateTime)
+            throw Eval(op == ArithOp.Add ? FbMessages.dsql_invalid_dateortime_add : FbMessages.dsql_invalid_datetime_subtract);
+        return other.Type;
     }
 
     public static SqlType ArithType(ArithOp op, SqlType a, SqlType b)

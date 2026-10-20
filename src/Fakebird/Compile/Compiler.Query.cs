@@ -96,7 +96,11 @@ public sealed partial class Compiler
                 if (f.Args[i] is not ParamExpr) args[i] = Bind(f.Args[i], s, null);
             for (var i = 0; i < args.Length; i++)
                 if (args[i] == null)
+                {
                     args[i] = Bind(f.Args[i], s, def.ParamHint?.Invoke(i, args) ?? throw Err.DataTypeUnknown());
+                    // setParams* make a fresh descriptor: the parameter is described as NOT NULL
+                    args[i]!.NotNull = true;
+                }
             var bound = args.Select(a => a!).ToArray();
             var node = new FuncNode(f.Name, def.Impl, bound, def.ResultType(bound), def.Deterministic)
             {

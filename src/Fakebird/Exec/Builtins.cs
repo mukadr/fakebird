@@ -828,14 +828,33 @@ public static class Builtins
         var x = Conv.ToDouble(v);
         double res;
         if (toInteger) res = mode == MidpointRounding.ToPositiveInfinity ? Math.Ceiling(x) : Math.Floor(x);
+        else if (mode == MidpointRounding.ToZero)
+        {
+            // evlTrunc: modf of the value, then of the fraction scaled by 10^digits
+            if (digits < 0)
+            {
+                var p = 1L;
+                for (var k = digits; k < 0; k++) p *= 10;
+                res = Math.Truncate(x / p) * p;
+            }
+            else
+            {
+                var whole = Math.Truncate(x);
+                var r = x - whole;
+                if (digits != 0)
+                {
+                    var p = 1L;
+                    for (var k = 0; k < digits; k++) p *= 10;
+                    whole += Math.Truncate(r * p) / p;
+                }
+                res = whole;
+            }
+        }
         else
         {
-            var m = Math.Pow(10, digits);
-            res = mode switch
-            {
-                MidpointRounding.ToZero => Math.Truncate(x * m) / m,
-                _ => Math.Round(x * m, MidpointRounding.AwayFromZero) / m,
-            };
+            // evlRound: a scaled int64 (MOV_get_int64 rounding: +0.5 + epsilon), shown again as a double
+            var n = Cvt.DoubleToExact(x, (int)digits, TypeKind.BigInt, v.IsFloat);
+            res = digits >= 0 ? n / Cvt.PowerOfTen((int)digits) : n * Cvt.PowerOfTen((int)-digits);
         }
         return D(res);
     }

@@ -17,6 +17,8 @@ public sealed partial class Compiler
         var stmt = Parser.ParseStatement(sql, out var pc);
         var comp = new Compiler(db, pc);
         var p = comp.CompileTop(stmt);
+        // parameters whose type stayed unknown fail when the statement is described, after everything else
+        if (comp.UnknownParam) throw Err.DataTypeUnknown();
         p.ParamTypes = comp.FinalParamTypes();
         p.StreamCount = comp.StreamCount;
         p.Version = db.SchemaVersion;

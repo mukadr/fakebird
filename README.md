@@ -92,6 +92,12 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   SUM(BIGINT)) and evaluated with the same algorithms (int64 division scaling, overflow checks and
   their error codes). INT128 results are described as BIGINT (DataTypeCompatibility 3.0) and fail at
   fetch when they do not fit; literals that fit in 32 bits are evaluated as INTEGER like Firebird's BLR.
+* **Rounding** matches Firebird everywhere: casts and assignments round half away from zero on the
+  first dropped digit (doubles with Firebird's epsilon), ROUND returns scaled integers even for doubles
+  (`ROUND(1.005e0, 2)` is 1.01), TRUNC of doubles uses `modf`, divisions truncate.
+* **Parameters** are typed from their context (assignment target, other side of a comparison, CAST,
+  function arguments); in the select list an operator on an untyped parameter fails like Firebird
+  (`Data type unknown`, `Invalid data type for multiplication`).
 * **Describe information** follows Firebird 5's rules: result types of expressions (NUMERIC vs DECIMAL,
   storage size and scale of arithmetic, CASE/COALESCE/UNION common types, built-in functions), NULLABLE
   flags, and the names, relations and field names clients see.
