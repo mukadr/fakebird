@@ -295,6 +295,7 @@ public sealed partial class Compiler
         {
             if (q.Body is QuerySpec qs)
             {
+                if (!qs.Limit.IsEmpty && !q.Limit.IsEmpty) throw Err.Dsql104(FbMessages.dsql_firstskip_rows);
                 var spec = CompileSpec(qs, outer, q.OrderBy, q.Limit, q.WithLock);
                 return spec;
             }
@@ -328,20 +329,21 @@ public sealed partial class Compiler
         IsBlob = t.Kind == TypeKind.Blob,
     };
 
+    /// <summary>ORDER BY of a UNION: only positions of the select list.</summary>
     static int OutputColumnIndex(Expr e, OutCol[] cols)
     {
-        if (e is LiteralExpr { Value.Tag: VTag.Int } lit && lit.Value.Scale == 0)
-        {
-            var i = (int)lit.Value.L;
-            if (i < 1 || i > cols.Length) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "ORDER BY");
-            return i - 1;
-        }
-        if (e is ColumnRefExpr c)
-        {
-            for (var i = 0; i < cols.Length; i++)
-                if (cols[i].Name == c.Name) return i;
-        }
-        throw Err.Dsql(-104, "Invalid ORDER BY clause: must use column positions or names of the select list in a UNION");
+        if (IsPosition(e, out var i) && i >= 1 && i <= cols.Length) return i - 1;
+        throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104)
+            .Gds(FbMessages.dsql_command_err).Gds(FbMessages.order_by_err).Build();
+    }
+
+    /// <summary>An unsigned integer literal: a select list position in ORDER BY / GROUP BY (-1 is an expression).</summary>
+    static bool IsPosition(Expr e, out int position)
+    {
+        position = 0;
+        if (e is not LiteralExpr { Value.Tag: VTag.Int, Negated: false } lit || lit.Value.Scale != 0) return false;
+        position = lit.Value.L > int.MaxValue ? int.MaxValue : (int)lit.Value.L;
+        return true;
     }
 
     QueryNode WrapLimit(QueryNode body, LimitSpec limit, Scope? outer)
@@ -360,14 +362,9 @@ public sealed partial class Compiler
             var to = Bind(limit.RowsTo, s, SqlType.BigInt);
             var one = new ConstNode(Value.Int(1), SqlType.BigInt);
             var skip = new ArithNode(ArithOp.Sub, from, one) { Type = SqlType.BigInt };
+            // ROWS m TO n is SKIP m - 1 FIRST n - m + 1
             var count = new ArithNode(ArithOp.Add, new ArithNode(ArithOp.Sub, to, from) { Type = SqlType.BigInt }, one) { Type = SqlType.BigInt };
-            var safeCount = new FuncNode("MAXVALUE0", (c, a, f) =>
-            {
-                var v = a[0].Eval(c);
-                if (v.IsNull) return v;
-                return Value.Int(Math.Max(0, v.L));
-            }, [count], SqlType.BigInt);
-            return (safeCount, skip);
+            return (count, skip);
         }
         return (limit.First == null ? null : Bind(limit.First, s, SqlType.BigInt),
             limit.Skip == null ? null : Bind(limit.Skip, s, SqlType.BigInt));
@@ -590,9 +587,8 @@ public sealed partial class Compiler
                 if (g is ColumnRefExpr { Qualifier: null } byName
                     && qs.Items.Where(i => i.Alias == byName.Name && i.Expr is not StarExpr).Take(2).ToList() is [var aliased])
                     ge = aliased.Expr;
-                if (g is LiteralExpr { Value.Tag: VTag.Int } pos && pos.Value.Scale == 0)
+                if (IsPosition(g, out var p))
                 {
-                    var p = (int)pos.Value.L;
                     if (p < 1 || p > qs.Items.Count) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "GROUP BY");
                     ge = qs.Items[p - 1].Expr;
                 }
@@ -683,12 +679,13 @@ public sealed partial class Compiler
             }
             var expected = selectListTypes != null && proj.Count < selectListTypes.Length ? selectListTypes[proj.Count] : null;
             var node = Bind(item.Expr, s, expected);
-            if (item.Alias != null) aliasIndex.TryAdd(item.Alias, proj.Count);
+            if (item.Alias != null && !aliasIndex.TryAdd(item.Alias, proj.Count)) aliasIndex[item.Alias] = -1; // ambiguous
             proj.Add(node);
             outCols.Add(OutColOf(node, item.Alias));
         }
 
         // ORDER BY
+        SortRel? sortRel = null;
         if (orderBy != null && orderBy.Count > 0)
         {
             s.AggClause = "ORDER BY clause";
@@ -696,20 +693,26 @@ public sealed partial class Compiler
             foreach (var o in orderBy)
             {
                 XNode keyNode;
-                if (o.Expr is LiteralExpr { Value.Tag: VTag.Int } lit && lit.Value.Scale == 0)
+                if (IsPosition(o.Expr, out var p))
                 {
-                    var p = (int)lit.Value.L;
                     if (p < 1 || p > proj.Count) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "ORDER BY");
                     keyNode = proj[p - 1];
                 }
                 else if (o.Expr is ColumnRefExpr { Qualifier: null } cr && aliasIndex.TryGetValue(cr.Name, out var ai))
+                {
+                    if (ai < 0)
+                        throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+                            .Gds(FbMessages.dsql_ambiguous_field_name).Str("an alias").Str("an alias in the select list with name")
+                            .Gds(Err.isc_random).Str(cr.Name).Build();
                     keyNode = proj[ai];
+                }
                 else keyNode = Bind(o.Expr, s, null);
                 var sk = MakeSortKey(o, keyNode.Type);
                 sk.Expr = keyNode;
                 keys.Add(sk);
             }
-            rel = new SortRel(rel, keys.ToArray(), s.Streams.ToArray());
+            sortRel = new SortRel(rel, keys.ToArray(), s.Streams.ToArray());
+            rel = sortRel;
         }
 
         var specQuery = new SpecQuery
@@ -723,8 +726,11 @@ public sealed partial class Compiler
             specQuery.Skip = skip;
         }
         s.AggMode = false;
+        if (sortRel != null)
+            sortRel.SortFields = SortFieldsOf(refs, aggRel != null ? [aggRel.OutStream] : saveStreams, sortRel.Keys.Select(k => k.Expr));
         if (aggRel != null) aggRel.SortFields = SortFieldsOf(refs, saveStreams, aggRel.Keys);
         else if (qs.Distinct) specQuery.SortFields = SortFieldsOf(refs, saveStreams, proj);
+        specQuery.Ordered = sortRel != null;
         if (queryLimit != null && !queryLimit.IsEmpty)
         {
             var (first, skip) = BindLimit(queryLimit, s);

@@ -25,6 +25,8 @@ public abstract class QCursor
 public abstract class QueryNode
 {
     public OutCol[] Columns = [];
+    /// <summary>The statement's top-level query: what fails while it opens is reported by op_execute.</summary>
+    public bool AtExecute;
     public abstract QCursor Open(Ctx c);
 
     public List<Value[]> ToList(Ctx c)
@@ -44,50 +46,42 @@ public sealed class SpecQuery : QueryNode
     public bool Distinct;
     /// <summary>The fields carried in the sort records of the DISTINCT sort (see SortImage).</summary>
     public SortField[] SortFields = [];
+    /// <summary>The source is sorted by ORDER BY, which the DISTINCT keeps.</summary>
+    public bool Ordered;
     public XNode? First, Skip;
 
     public override QCursor Open(Ctx c)
     {
-        long first = long.MaxValue, skip = 0;
-        if (First != null) first = LimitValue(c, First, "FIRST");
-        if (Skip != null) skip = LimitValue(c, Skip, "SKIP");
-        if (first == 0) return new EmptyQ();
-        return new Cursor(this, c, Source.Open(c), first, skip);
+        var limit = Limit.Open(AtExecute, c, First, Skip);
+        return limit.Empty ? new EmptyQ() : new Cursor(this, c, Source.Open(c), limit);
     }
 
-    internal static long LimitValue(Ctx c, XNode n, string what)
+    sealed class Cursor(SpecQuery q, Ctx c, RowCursor src, Limit limit) : QCursor
     {
-        var v = n.Eval(c);
-        if (v.IsNull) return what == "FIRST" ? long.MaxValue : 0;
-        var l = Conv.ToInt64(v);
-        if (l < 0) throw Err.Random($"Invalid {what} value: must be zero or positive");
-        return l;
-    }
-
-    sealed class Cursor(SpecQuery q, Ctx c, RowCursor src, long first, long skip) : QCursor
-    {
-        long _returned;
-        long _skipped;
         List<Value[]>? _distinct;
         int _next;
 
         public override bool Next()
         {
-            if (_returned >= first) return false;
+            if (!limit.Next(Fetch)) return false;
+            Current = _row;
+            return true;
+        }
+
+        Value[] _row = [];
+
+        bool Fetch()
+        {
             if (q.Distinct && _distinct == null) _distinct = Distinct();
-            while (_distinct != null ? _next < _distinct.Count : src.Next())
+            if (_distinct != null)
             {
-                var row = _distinct != null ? _distinct[_next++] : Project();
-                if (_skipped < skip)
-                {
-                    _skipped++;
-                    continue;
-                }
-                _returned++;
-                Current = row;
+                if (_next >= _distinct.Count) return false;
+                _row = _distinct[_next++];
                 return true;
             }
-            return false;
+            if (!src.Next()) return false;
+            _row = Project();
+            return true;
         }
 
         Value[] Project()
@@ -116,8 +110,10 @@ public sealed class SpecQuery : QueryNode
                 }
                 else if (SortImage.Compare(image, rows[i].Image) >= 0) rows[i] = (row, image);
             }
-            // the rows come out of the sort in key order (NULLs first)
-            return rows.Select(r => r.Row).OrderBy(r => r, SortImage.KeyOrder(q.Projection.Select(p => p.Type).ToArray())).ToList();
+            // without ORDER BY the rows come out of the sort in key order (NULLs first)
+            var distinct = rows.Select(r => r.Row);
+            if (!q.Ordered) distinct = distinct.OrderBy(r => r, SortImage.KeyOrder(q.Projection.Select(p => p.Type).ToArray()));
+            return distinct.ToList();
         }
     }
 }
@@ -132,14 +128,52 @@ public sealed class UnionQuery : QueryNode
     public QueryNode Left = null!, Right = null!;
     public bool All;
 
-    public override QCursor Open(Ctx c) => new Cursor(this, c);
+    public override QCursor Open(Ctx c) => All ? new Cursor(this, c) : new ListQ(Distinct(c));
 
+    /// <summary>
+    /// UNION: Firebird sorts the union's rows, keeps the last of equal ones (in sort-record order: input order, or the
+    /// bytes of ICU-collated text, see SortImage) and returns them in key order.
+    /// </summary>
+    List<Value[]> Distinct(Ctx c)
+    {
+        var types = Columns.Select(x => x.Type).ToArray();
+        var cols = types.Select(t => t.Collation).ToArray();
+        var carried = types.Where(SortImage.Volatile).ToArray();
+        var seen = new Dictionary<IndexKey, int>();
+        var rows = new List<(Value[] Row, byte[] Image)>();
+        var cur = new Cursor(this, c);
+        while (cur.Next())
+        {
+            var row = cur.Current;
+            var image = SortImage.Build(carried, row.Where((_, i) => SortImage.Volatile(types[i])).ToArray());
+            var key = new IndexKey(row, cols);
+            if (!seen.TryGetValue(key, out var i))
+            {
+                seen.Add(key, rows.Count);
+                rows.Add((row, image));
+            }
+            else if (SortImage.Compare(image, rows[i].Image) >= 0) rows[i] = (row, image);
+        }
+        return rows.Select(r => r.Row).OrderBy(r => r, SortImage.KeyOrder(types)).ToList();
+    }
+
+    sealed class ListQ(List<Value[]> rows) : QCursor
+    {
+        int _i;
+
+        public override bool Next()
+        {
+            if (_i >= rows.Count) return false;
+            Current = rows[_i++];
+            return true;
+        }
+    }
+
+    /// <summary>The branches' rows one after the other, converted to the union's column types.</summary>
     sealed class Cursor(UnionQuery q, Ctx c) : QCursor
     {
         QCursor? _cur = q.Left.Open(c);
         bool _right;
-        HashSet<IndexKey>? _seen = q.All ? null : new();
-        readonly Collation[] _cols = q.Columns.Select(x => x.Type.Collation).ToArray();
 
         public override bool Next()
         {
@@ -150,7 +184,6 @@ public sealed class UnionQuery : QueryNode
                     var src = _cur.Current;
                     var row = new Value[src.Length];
                     for (var i = 0; i < row.Length; i++) row[i] = Coercion.ToType(src[i], q.Columns[i].Type);
-                    if (_seen != null && !_seen.Add(new IndexKey(row, _cols))) continue;
                     Current = row;
                     return true;
                 }
@@ -204,32 +237,74 @@ public sealed class LimitQuery : QueryNode
 
     public override QCursor Open(Ctx c)
     {
-        long first = long.MaxValue, skip = 0;
-        if (First != null) first = SpecQuery.LimitValue(c, First, "FIRST");
-        if (Skip != null) skip = SpecQuery.LimitValue(c, Skip, "SKIP");
-        return new Cursor(Input.Open(c), first, skip);
+        var limit = Limit.Open(AtExecute, c, First, Skip);
+        return limit.Empty ? new EmptyQ() : new Cursor(Input.Open(c), limit);
     }
 
-    sealed class Cursor(QCursor input, long first, long skip) : QCursor
+    sealed class Cursor(QCursor input, Limit limit) : QCursor
     {
-        long _n, _s;
-
         public override bool Next()
         {
-            if (_n >= first) return false;
-            while (input.Next())
-            {
-                if (_s < skip)
-                {
-                    _s++;
-                    continue;
-                }
-                _n++;
-                Current = input.Current;
-                return true;
-            }
-            return false;
+            if (!limit.Next(input.Next)) return false;
+            Current = input.Current;
+            return true;
         }
+    }
+}
+
+/// <summary>
+/// FIRST/SKIP (and ROWS, OFFSET/FETCH), as Firebird's FirstRowsStream over SkipRowsStream: the FIRST value is
+/// evaluated when the query opens, a zero FIRST opens nothing, then SKIP; NULL counts as 0, a negative value fails.
+/// The counters are Firebird's, overflow included (SKIP 2^63-1 returns the first row).
+/// </summary>
+public sealed class Limit
+{
+    long _first = long.MaxValue, _skip = 1;
+    public bool Empty;
+
+    public static Limit Open(bool atExecute, Ctx c, XNode? first, XNode? skip)
+    {
+        var l = new Limit();
+        try
+        {
+            if (first != null)
+            {
+                l._first = Value(c, first);
+                if (l._first < 0) throw new StatusBuilder().Gds(FbMessages.bad_limit_param).Build();
+                if (l._first == 0) { l.Empty = true; return l; }
+            }
+            if (skip != null)
+            {
+                var n = Value(c, skip);
+                if (n < 0) throw new StatusBuilder().Gds(FbMessages.bad_skip_param).Build();
+                l._skip = unchecked(n + 1);
+            }
+        }
+        catch (FbError e) when (atExecute)
+        {
+            e.AtExecute = true;
+            throw;
+        }
+        return l;
+    }
+
+    static long Value(Ctx c, XNode n)
+    {
+        var v = n.Eval(c);
+        return v.IsNull ? 0 : Conv.ToInt64(v);
+    }
+
+    public bool Next(Func<bool> next)
+    {
+        if (_first <= 0) return false;
+        _first--;
+        while (_skip > 1)
+        {
+            _skip--;
+            if (!next()) return false;
+        }
+        _skip = unchecked(_skip - 1);
+        return next();
     }
 }
 

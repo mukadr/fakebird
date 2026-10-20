@@ -198,19 +198,20 @@ public static class SortImage
 
     /// <summary>The data part of the current row's sort record (SortedStream: zeroed, then flags and fields).</summary>
     public static byte[] Build(Ctx c, SortField[] fields)
+        => Build(fields.Select(f => f.Type).ToArray(), fields.Select(f => c.Rows[f.Stream]?[f.Col] ?? Value.Null).ToArray());
+
+    public static byte[] Build(SqlType[] types, Value[] values)
     {
-        var size = fields.Length;
-        foreach (var f in fields) size = Align(size, f.Type) + Length(f.Type);
+        var size = types.Length;
+        foreach (var t in types) size = Align(size, t) + Length(t);
         var data = new byte[(size + 3) & ~3];
-        var at = fields.Length;
-        for (var i = 0; i < fields.Length; i++)
+        var at = types.Length;
+        for (var i = 0; i < types.Length; i++)
         {
-            var f = fields[i];
-            at = Align(at, f.Type);
-            var v = c.Rows[f.Stream]?[f.Col] ?? Value.Null;
-            if (v.IsNull) data[i] = 1;
-            else Write(data.AsSpan(at, Length(f.Type)), v, f.Type);
-            at += Length(f.Type);
+            at = Align(at, types[i]);
+            if (values[i].IsNull) data[i] = 1;
+            else Write(data.AsSpan(at, Length(types[i])), values[i], types[i]);
+            at += Length(types[i]);
         }
         return data;
     }
@@ -349,7 +350,7 @@ public sealed class AggregateRel : RelNode
     public override RowCursor Open(Ctx c)
     {
         var groups = new Dictionary<IndexKey, int>();
-        var rows = new List<List<(Value[] Keys, byte[] Image, Value[][] Frame)>>();
+        var rows = new List<List<(Value[] Keys, byte[] Image, Frame Frame)>>();
         var ic = Input.Open(c);
         while (ic.Next())
         {
@@ -364,7 +365,7 @@ public sealed class AggregateRel : RelNode
             }
             rows[gi].Add((kv, Keys.Length > 0 ? SortImage.Build(c, SortFields) : [], Frames.Save(c, Save)));
         }
-        var list = new List<(Value[] Keys, Value[][] Frame, AggState[] States)>();
+        var list = new List<(Value[] Keys, Frame Frame, AggState[] States)>();
         foreach (var g in rows)
         {
             // Firebird groups sorted rows: a group's rows reach the aggregates in sort-record order, and the group
@@ -385,12 +386,12 @@ public sealed class AggregateRel : RelNode
         {
             var states = new AggState[Aggs.Length];
             for (var i = 0; i < states.Length; i++) states[i] = new AggState(Aggs[i]);
-            list.Add(([], SaveNullRows, states));
+            list.Add(([], Frames.Null(SaveNullRows), states));
         }
         return new Cursor(this, c, list);
     }
 
-    sealed class Cursor(AggregateRel n, Ctx c, List<(Value[] Keys, Value[][] Frame, AggState[] States)> groups) : RowCursor
+    sealed class Cursor(AggregateRel n, Ctx c, List<(Value[] Keys, Frame Frame, AggState[] States)> groups) : RowCursor
     {
         int _i;
 
@@ -442,7 +443,7 @@ public sealed class WindowRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
-        var frames = new List<Value[][]>();
+        var frames = new List<Frame>();
         // per spec: partition keys, order keys, arg values
         var part = new List<Value[]>[Specs.Length];
         var ord = new List<Value[]>[Specs.Length];
@@ -676,7 +677,7 @@ public sealed class WindowRel : RelNode
         }
     }
 
-    sealed class Cursor(WindowRel n, Ctx c, List<Value[][]> frames, Value[][] results) : RowCursor
+    sealed class Cursor(WindowRel n, Ctx c, List<Frame> frames, Value[][] results) : RowCursor
     {
         int _i;
 

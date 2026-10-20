@@ -1,0 +1,3080 @@
+--- select id, g from o order by g
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+2 | 3 | 
+affected 0
+--- select id, g from o order by g desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+2 | 3 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, g from o order by g nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+2 | 3 | 
+affected 0
+--- select id, g from o order by g nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+2 | 3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, g from o order by g desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | 3 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+affected 0
+--- select id, g from o order by g desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+2 | 3 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, g from o order by g asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+2 | 3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select g, id from o order by g, id desc
+G:INTEGER (4,,,True,O,G,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+1 | 6 | 
+1 | 3 | 
+1 | 1 | 
+2 | 5 | 
+2 | -1 | 
+2 | -7 | 
+3 | 2 | 
+affected 0
+--- select g from o order by g desc, id
+G:INTEGER (4,,,True,O,G,False,False)
+3 | 
+2 | 
+2 | 
+2 | 
+1 | 
+1 | 
+1 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, s from o order by s
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+affected 0
+--- select id, s from o order by s desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+4 | z | 
+5 | b | 
+-7 | ab | 
+1 | a  | 
+3 | a | 
+-1 | B | 
+6 | A | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, s from o order by s nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+affected 0
+--- select id, s from o order by s nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+8 | NULL | 
+affected 0
+--- select id, s from o order by s desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+4 | z | 
+5 | b | 
+-7 | ab | 
+1 | a  | 
+3 | a | 
+-1 | B | 
+6 | A | 
+2 |  | 
+affected 0
+--- select id, s from o order by s desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+4 | z | 
+5 | b | 
+-7 | ab | 
+1 | a  | 
+3 | a | 
+-1 | B | 
+6 | A | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, s from o order by s asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+8 | NULL | 
+affected 0
+--- select s, id from o order by s, id desc
+S:VARCHAR (10,,,True,O,S,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+ | 2 | 
+A | 6 | 
+B | -1 | 
+a | 3 | 
+a  | 1 | 
+ab | -7 | 
+b | 5 | 
+z | 4 | 
+affected 0
+--- select s from o order by s desc, id
+S:VARCHAR (10,,,True,O,S,False,False)
+z | 
+b | 
+ab | 
+a  | 
+a | 
+B | 
+A | 
+ | 
+NULL | 
+affected 0
+--- select id, ci from o order by ci
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+8 | NULL | 
+2 |  | 
+3 | a | 
+6 | a  | 
+1 | A | 
+-7 | Ab | 
+-1 | b | 
+5 | B | 
+4 | Z | 
+affected 0
+--- select id, ci from o order by ci desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+4 | Z | 
+5 | B | 
+-1 | b | 
+-7 | Ab | 
+1 | A | 
+3 | a | 
+6 | a  | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, ci from o order by ci nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+8 | NULL | 
+2 |  | 
+3 | a | 
+6 | a  | 
+1 | A | 
+-7 | Ab | 
+-1 | b | 
+5 | B | 
+4 | Z | 
+affected 0
+--- select id, ci from o order by ci nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+2 |  | 
+3 | a | 
+6 | a  | 
+1 | A | 
+-7 | Ab | 
+-1 | b | 
+5 | B | 
+4 | Z | 
+8 | NULL | 
+affected 0
+--- select id, ci from o order by ci desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+8 | NULL | 
+4 | Z | 
+5 | B | 
+-1 | b | 
+-7 | Ab | 
+1 | A | 
+3 | a | 
+6 | a  | 
+2 |  | 
+affected 0
+--- select id, ci from o order by ci desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+4 | Z | 
+5 | B | 
+-1 | b | 
+-7 | Ab | 
+1 | A | 
+3 | a | 
+6 | a  | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, ci from o order by ci asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+2 |  | 
+3 | a | 
+6 | a  | 
+1 | A | 
+-7 | Ab | 
+-1 | b | 
+5 | B | 
+4 | Z | 
+8 | NULL | 
+affected 0
+--- select ci, id from o order by ci, id desc
+CI:VARCHAR (10,,,True,O,CI,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+ | 2 | 
+a  | 6 | 
+a | 3 | 
+A | 1 | 
+Ab | -7 | 
+b | -1 | 
+B | 5 | 
+Z | 4 | 
+affected 0
+--- select ci from o order by ci desc, id
+CI:VARCHAR (10,,,True,O,CI,False,False)
+Z | 
+B | 
+b | 
+Ab | 
+A | 
+a | 
+a  | 
+ | 
+NULL | 
+affected 0
+--- select id, c from o order by c
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+8 | NULL | 
+2 |       | 
+6 | A     | 
+-1 | B     | 
+1 | a     | 
+3 | a     | 
+-7 | ab    | 
+5 | b     | 
+4 | z     | 
+affected 0
+--- select id, c from o order by c desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+4 | z     | 
+5 | b     | 
+-7 | ab    | 
+1 | a     | 
+3 | a     | 
+-1 | B     | 
+6 | A     | 
+2 |       | 
+8 | NULL | 
+affected 0
+--- select id, c from o order by c nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+8 | NULL | 
+2 |       | 
+6 | A     | 
+-1 | B     | 
+1 | a     | 
+3 | a     | 
+-7 | ab    | 
+5 | b     | 
+4 | z     | 
+affected 0
+--- select id, c from o order by c nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+2 |       | 
+6 | A     | 
+-1 | B     | 
+1 | a     | 
+3 | a     | 
+-7 | ab    | 
+5 | b     | 
+4 | z     | 
+8 | NULL | 
+affected 0
+--- select id, c from o order by c desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+8 | NULL | 
+4 | z     | 
+5 | b     | 
+-7 | ab    | 
+1 | a     | 
+3 | a     | 
+-1 | B     | 
+6 | A     | 
+2 |       | 
+affected 0
+--- select id, c from o order by c desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+4 | z     | 
+5 | b     | 
+-7 | ab    | 
+1 | a     | 
+3 | a     | 
+-1 | B     | 
+6 | A     | 
+2 |       | 
+8 | NULL | 
+affected 0
+--- select id, c from o order by c asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+2 |       | 
+6 | A     | 
+-1 | B     | 
+1 | a     | 
+3 | a     | 
+-7 | ab    | 
+5 | b     | 
+4 | z     | 
+8 | NULL | 
+affected 0
+--- select c, id from o order by c, id desc
+C:CHAR (5,,,True,O,C,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+      | 2 | 
+A     | 6 | 
+B     | -1 | 
+a     | 3 | 
+a     | 1 | 
+ab    | -7 | 
+b     | 5 | 
+z     | 4 | 
+affected 0
+--- select c from o order by c desc, id
+C:CHAR (5,,,True,O,C,False,False)
+z     | 
+b     | 
+ab    | 
+a     | 
+a     | 
+B     | 
+A     | 
+      | 
+NULL | 
+affected 0
+--- select id, d from o order by d
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | -10000000000 | 
+3 | -0.5 | 
+1 | 0 | 
+6 | 0 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+-1 | 10000000000 | 
+affected 0
+--- select id, d from o order by d desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+-1 | 10000000000 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+1 | 0 | 
+6 | 0 | 
+3 | -0.5 | 
+2 | -10000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, d from o order by d nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | -10000000000 | 
+3 | -0.5 | 
+1 | 0 | 
+6 | 0 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+-1 | 10000000000 | 
+affected 0
+--- select id, d from o order by d nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+2 | -10000000000 | 
+3 | -0.5 | 
+1 | 0 | 
+6 | 0 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+-1 | 10000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, d from o order by d desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | 10000000000 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+1 | 0 | 
+6 | 0 | 
+3 | -0.5 | 
+2 | -10000000000 | 
+affected 0
+--- select id, d from o order by d desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+-1 | 10000000000 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+1 | 0 | 
+6 | 0 | 
+3 | -0.5 | 
+2 | -10000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, d from o order by d asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+2 | -10000000000 | 
+3 | -0.5 | 
+1 | 0 | 
+6 | 0 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+-1 | 10000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select d, id from o order by d, id desc
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+-10000000000 | 2 | 
+-0.5 | 3 | 
+0 | 6 | 
+0 | 1 | 
+2.5 | 5 | 
+2.5 | -7 | 
+10000000000 | -1 | 
+affected 0
+--- select d from o order by d desc, id
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+10000000000 | 
+2.5 | 
+2.5 | 
+0 | 
+0 | 
+-0.5 | 
+-10000000000 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, n from o order by n
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | -1 | 
+-7 | -1 | 
+1 | -0.01 | 
+-1 | 0.01 | 
+3 | 2 | 
+6 | 2 | 
+2 | 99.99 | 
+affected 0
+--- select id, n from o order by n desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+2 | 99.99 | 
+3 | 2 | 
+6 | 2 | 
+-1 | 0.01 | 
+1 | -0.01 | 
+5 | -1 | 
+-7 | -1 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, n from o order by n nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | -1 | 
+-7 | -1 | 
+1 | -0.01 | 
+-1 | 0.01 | 
+3 | 2 | 
+6 | 2 | 
+2 | 99.99 | 
+affected 0
+--- select id, n from o order by n nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+5 | -1 | 
+-7 | -1 | 
+1 | -0.01 | 
+-1 | 0.01 | 
+3 | 2 | 
+6 | 2 | 
+2 | 99.99 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, n from o order by n desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | 99.99 | 
+3 | 2 | 
+6 | 2 | 
+-1 | 0.01 | 
+1 | -0.01 | 
+5 | -1 | 
+-7 | -1 | 
+affected 0
+--- select id, n from o order by n desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+2 | 99.99 | 
+3 | 2 | 
+6 | 2 | 
+-1 | 0.01 | 
+1 | -0.01 | 
+5 | -1 | 
+-7 | -1 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, n from o order by n asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+5 | -1 | 
+-7 | -1 | 
+1 | -0.01 | 
+-1 | 0.01 | 
+3 | 2 | 
+6 | 2 | 
+2 | 99.99 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select n, id from o order by n, id desc
+N:NUMERIC (4,9,2,True,O,N,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+-1 | 5 | 
+-1 | -7 | 
+-0.01 | 1 | 
+0.01 | -1 | 
+2 | 6 | 
+2 | 3 | 
+99.99 | 2 | 
+affected 0
+--- select n from o order by n desc, id
+N:NUMERIC (4,9,2,True,O,N,False,False)
+99.99 | 
+2 | 
+2 | 
+0.01 | 
+-0.01 | 
+-1 | 
+-1 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, dt from o order by dt
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+8 | NULL | 
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+4 | 2100-01-01 00:00:00.0000 | 
+affected 0
+--- select id, dt from o order by dt desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+4 | 2100-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+8 | NULL | 
+affected 0
+--- select id, dt from o order by dt nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+8 | NULL | 
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+4 | 2100-01-01 00:00:00.0000 | 
+affected 0
+--- select id, dt from o order by dt nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+4 | 2100-01-01 00:00:00.0000 | 
+8 | NULL | 
+affected 0
+--- select id, dt from o order by dt desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+8 | NULL | 
+4 | 2100-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+affected 0
+--- select id, dt from o order by dt desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+4 | 2100-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+8 | NULL | 
+affected 0
+--- select id, dt from o order by dt asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+DT:DATE (4,,,True,O,DT,False,False)
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+5 | 2024-03-01 00:00:00.0000 | 
+-7 | 2024-03-01 00:00:00.0000 | 
+4 | 2100-01-01 00:00:00.0000 | 
+8 | NULL | 
+affected 0
+--- select dt, id from o order by dt, id desc
+DT:DATE (4,,,True,O,DT,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+0001-01-01 00:00:00.0000 | 2 | 
+1999-12-31 00:00:00.0000 | -1 | 
+2024-01-01 00:00:00.0000 | 6 | 
+2024-01-01 00:00:00.0000 | 3 | 
+2024-01-01 00:00:00.0000 | 1 | 
+2024-03-01 00:00:00.0000 | 5 | 
+2024-03-01 00:00:00.0000 | -7 | 
+2100-01-01 00:00:00.0000 | 4 | 
+affected 0
+--- select dt from o order by dt desc, id
+DT:DATE (4,,,True,O,DT,False,False)
+2100-01-01 00:00:00.0000 | 
+2024-03-01 00:00:00.0000 | 
+2024-03-01 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+1999-12-31 00:00:00.0000 | 
+0001-01-01 00:00:00.0000 | 
+NULL | 
+affected 0
+--- select id, ts from o order by ts
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+affected 0
+--- select id, ts from o order by ts desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, ts from o order by ts nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+affected 0
+--- select id, ts from o order by ts nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, ts from o order by ts desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+affected 0
+--- select id, ts from o order by ts desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+2 | 0001-01-01 00:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, ts from o order by ts asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+2 | 0001-01-01 00:00:00.0000 | 
+-1 | 1999-12-31 23:59:59.0000 | 
+3 | 2024-01-01 00:00:00.0000 | 
+6 | 2024-01-01 00:00:00.0000 | 
+1 | 2024-01-01 00:00:00.0001 | 
+5 | 2024-03-01 10:00:00.0000 | 
+-7 | 2024-03-01 10:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select ts, id from o order by ts, id desc
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+0001-01-01 00:00:00.0000 | 2 | 
+1999-12-31 23:59:59.0000 | -1 | 
+2024-01-01 00:00:00.0000 | 6 | 
+2024-01-01 00:00:00.0000 | 3 | 
+2024-01-01 00:00:00.0001 | 1 | 
+2024-03-01 10:00:00.0000 | 5 | 
+2024-03-01 10:00:00.0000 | -7 | 
+affected 0
+--- select ts from o order by ts desc, id
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+2024-03-01 10:00:00.0000 | 
+2024-03-01 10:00:00.0000 | 
+2024-01-01 00:00:00.0001 | 
+2024-01-01 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+1999-12-31 23:59:59.0000 | 
+0001-01-01 00:00:00.0000 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, b from o order by b
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+2 | False | 
+3 | False | 
+6 | False | 
+1 | True | 
+5 | True | 
+-7 | True | 
+affected 0
+--- select id, b from o order by b desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+1 | True | 
+5 | True | 
+-7 | True | 
+2 | False | 
+3 | False | 
+6 | False | 
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+affected 0
+--- select id, b from o order by b nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+2 | False | 
+3 | False | 
+6 | False | 
+1 | True | 
+5 | True | 
+-7 | True | 
+affected 0
+--- select id, b from o order by b nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+2 | False | 
+3 | False | 
+6 | False | 
+1 | True | 
+5 | True | 
+-7 | True | 
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+affected 0
+--- select id, b from o order by b desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+1 | True | 
+5 | True | 
+-7 | True | 
+2 | False | 
+3 | False | 
+6 | False | 
+affected 0
+--- select id, b from o order by b desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+1 | True | 
+5 | True | 
+-7 | True | 
+2 | False | 
+3 | False | 
+6 | False | 
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+affected 0
+--- select id, b from o order by b asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+2 | False | 
+3 | False | 
+6 | False | 
+1 | True | 
+5 | True | 
+-7 | True | 
+4 | NULL | 
+8 | NULL | 
+-1 | NULL | 
+affected 0
+--- select b, id from o order by b, id desc
+B:BOOLEAN (1,,,True,O,B,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+NULL | -1 | 
+False | 6 | 
+False | 3 | 
+False | 2 | 
+True | 5 | 
+True | 1 | 
+True | -7 | 
+affected 0
+--- select b from o order by b desc, id
+B:BOOLEAN (1,,,True,O,B,False,False)
+True | 
+True | 
+True | 
+False | 
+False | 
+False | 
+NULL | 
+NULL | 
+NULL | 
+affected 0
+--- select id, bl from o order by bl
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+8 | NULL | 
+5 | e | 
+3 | c | 
+-1 | a | 
+1 | b | 
+2 |  | 
+-7 | d | 
+4 | f | 
+6 | g | 
+affected 0
+--- select id, bl from o order by bl desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+6 | g | 
+4 | f | 
+-7 | d | 
+2 |  | 
+1 | b | 
+-1 | a | 
+3 | c | 
+5 | e | 
+8 | NULL | 
+affected 0
+--- select id, bl from o order by bl nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+8 | NULL | 
+5 | e | 
+3 | c | 
+-1 | a | 
+1 | b | 
+2 |  | 
+-7 | d | 
+4 | f | 
+6 | g | 
+affected 0
+--- select id, bl from o order by bl nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+5 | e | 
+3 | c | 
+-1 | a | 
+1 | b | 
+2 |  | 
+-7 | d | 
+4 | f | 
+6 | g | 
+8 | NULL | 
+affected 0
+--- select id, bl from o order by bl desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+8 | NULL | 
+6 | g | 
+4 | f | 
+-7 | d | 
+2 |  | 
+1 | b | 
+-1 | a | 
+3 | c | 
+5 | e | 
+affected 0
+--- select id, bl from o order by bl desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+6 | g | 
+4 | f | 
+-7 | d | 
+2 |  | 
+1 | b | 
+-1 | a | 
+3 | c | 
+5 | e | 
+8 | NULL | 
+affected 0
+--- select id, bl from o order by bl asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+5 | e | 
+3 | c | 
+-1 | a | 
+1 | b | 
+2 |  | 
+-7 | d | 
+4 | f | 
+6 | g | 
+8 | NULL | 
+affected 0
+--- select bl, id from o order by bl, id desc
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+e | 5 | 
+c | 3 | 
+a | -1 | 
+b | 1 | 
+ | 2 | 
+d | -7 | 
+f | 4 | 
+g | 6 | 
+affected 0
+--- select bl from o order by bl desc, id
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+g | 
+f | 
+d | 
+ | 
+b | 
+a | 
+c | 
+e | 
+NULL | 
+affected 0
+--- select id, bi from o order by bi
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | -5 | 
+-7 | -5 | 
+1 | -1 | 
+2 | 0 | 
+3 | 3 | 
+6 | 3 | 
+-1 | 9000000000 | 
+affected 0
+--- select id, bi from o order by bi desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+-1 | 9000000000 | 
+3 | 3 | 
+6 | 3 | 
+2 | 0 | 
+1 | -1 | 
+5 | -5 | 
+-7 | -5 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, bi from o order by bi nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | -5 | 
+-7 | -5 | 
+1 | -1 | 
+2 | 0 | 
+3 | 3 | 
+6 | 3 | 
+-1 | 9000000000 | 
+affected 0
+--- select id, bi from o order by bi nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+5 | -5 | 
+-7 | -5 | 
+1 | -1 | 
+2 | 0 | 
+3 | 3 | 
+6 | 3 | 
+-1 | 9000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, bi from o order by bi desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | 9000000000 | 
+3 | 3 | 
+6 | 3 | 
+2 | 0 | 
+1 | -1 | 
+5 | -5 | 
+-7 | -5 | 
+affected 0
+--- select id, bi from o order by bi desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+-1 | 9000000000 | 
+3 | 3 | 
+6 | 3 | 
+2 | 0 | 
+1 | -1 | 
+5 | -5 | 
+-7 | -5 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, bi from o order by bi asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+5 | -5 | 
+-7 | -5 | 
+1 | -1 | 
+2 | 0 | 
+3 | 3 | 
+6 | 3 | 
+-1 | 9000000000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select bi, id from o order by bi, id desc
+BI:BIGINT (8,,,True,O,BI,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+-5 | 5 | 
+-5 | -7 | 
+-1 | 1 | 
+0 | 2 | 
+3 | 6 | 
+3 | 3 | 
+9000000000 | -1 | 
+affected 0
+--- select bi from o order by bi desc, id
+BI:BIGINT (8,,,True,O,BI,False,False)
+9000000000 | 
+3 | 
+3 | 
+0 | 
+-1 | 
+-5 | 
+-5 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, sm from o order by sm
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+4 | NULL | 
+8 | NULL | 
+3 | -3 | 
+6 | -3 | 
+2 | -1 | 
+-1 | 0 | 
+1 | 1 | 
+5 | 3 | 
+-7 | 3 | 
+affected 0
+--- select id, sm from o order by sm desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+5 | 3 | 
+-7 | 3 | 
+1 | 1 | 
+-1 | 0 | 
+2 | -1 | 
+3 | -3 | 
+6 | -3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, sm from o order by sm nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+4 | NULL | 
+8 | NULL | 
+3 | -3 | 
+6 | -3 | 
+2 | -1 | 
+-1 | 0 | 
+1 | 1 | 
+5 | 3 | 
+-7 | 3 | 
+affected 0
+--- select id, sm from o order by sm nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+3 | -3 | 
+6 | -3 | 
+2 | -1 | 
+-1 | 0 | 
+1 | 1 | 
+5 | 3 | 
+-7 | 3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, sm from o order by sm desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | 3 | 
+-7 | 3 | 
+1 | 1 | 
+-1 | 0 | 
+2 | -1 | 
+3 | -3 | 
+6 | -3 | 
+affected 0
+--- select id, sm from o order by sm desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+5 | 3 | 
+-7 | 3 | 
+1 | 1 | 
+-1 | 0 | 
+2 | -1 | 
+3 | -3 | 
+6 | -3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, sm from o order by sm asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+3 | -3 | 
+6 | -3 | 
+2 | -1 | 
+-1 | 0 | 
+1 | 1 | 
+5 | 3 | 
+-7 | 3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select sm, id from o order by sm, id desc
+SM:SMALLINT (2,,,True,O,SM,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+-3 | 6 | 
+-3 | 3 | 
+-1 | 2 | 
+0 | -1 | 
+1 | 1 | 
+3 | 5 | 
+3 | -7 | 
+affected 0
+--- select sm from o order by sm desc, id
+SM:SMALLINT (2,,,True,O,SM,False,False)
+3 | 
+3 | 
+1 | 
+0 | 
+-1 | 
+-3 | 
+-3 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, t from o order by t
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+4 | NULL | 
+8 | NULL | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+1 | 00:00:00.0001 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+2 | 12:00:00.0000 | 
+-1 | 23:59:59.0000 | 
+affected 0
+--- select id, t from o order by t desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+-1 | 23:59:59.0000 | 
+2 | 12:00:00.0000 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+1 | 00:00:00.0001 | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, t from o order by t nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+4 | NULL | 
+8 | NULL | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+1 | 00:00:00.0001 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+2 | 12:00:00.0000 | 
+-1 | 23:59:59.0000 | 
+affected 0
+--- select id, t from o order by t nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+1 | 00:00:00.0001 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+2 | 12:00:00.0000 | 
+-1 | 23:59:59.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, t from o order by t desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+4 | NULL | 
+8 | NULL | 
+-1 | 23:59:59.0000 | 
+2 | 12:00:00.0000 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+1 | 00:00:00.0001 | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+affected 0
+--- select id, t from o order by t desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+-1 | 23:59:59.0000 | 
+2 | 12:00:00.0000 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+1 | 00:00:00.0001 | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, t from o order by t asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+1 | 00:00:00.0001 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+2 | 12:00:00.0000 | 
+-1 | 23:59:59.0000 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select t, id from o order by t, id desc
+T:TIME (4,,,True,O,T,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+NULL | 4 | 
+00:00:00.0000 | 6 | 
+00:00:00.0000 | 3 | 
+00:00:00.0001 | 1 | 
+10:00:00.0000 | 5 | 
+10:00:00.0000 | -7 | 
+12:00:00.0000 | 2 | 
+23:59:59.0000 | -1 | 
+affected 0
+--- select t from o order by t desc, id
+T:TIME (4,,,True,O,T,False,False)
+23:59:59.0000 | 
+12:00:00.0000 | 
+10:00:00.0000 | 
+10:00:00.0000 | 
+00:00:00.0001 | 
+00:00:00.0000 | 
+00:00:00.0000 | 
+NULL | 
+NULL | 
+affected 0
+--- select id, ai from o order by ai
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+8 | NULL | 
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+affected 0
+--- select id, ai from o order by ai desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+-7 | ë | 
+4 | Ê | 
+1 | ê | 
+5 | é | 
+-1 | E | 
+3 | e | 
+6 | e  | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, ai from o order by ai nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+8 | NULL | 
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+affected 0
+--- select id, ai from o order by ai nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+8 | NULL | 
+affected 0
+--- select id, ai from o order by ai desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+8 | NULL | 
+-7 | ë | 
+4 | Ê | 
+1 | ê | 
+5 | é | 
+-1 | E | 
+3 | e | 
+6 | e  | 
+2 |  | 
+affected 0
+--- select id, ai from o order by ai desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+-7 | ë | 
+4 | Ê | 
+1 | ê | 
+5 | é | 
+-1 | E | 
+3 | e | 
+6 | e  | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, ai from o order by ai asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+8 | NULL | 
+affected 0
+--- select ai, id from o order by ai, id desc
+AI:VARCHAR (10,,,True,O,AI,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+ | 2 | 
+e  | 6 | 
+e | 3 | 
+E | -1 | 
+é | 5 | 
+ê | 1 | 
+Ê | 4 | 
+ë | -7 | 
+affected 0
+--- select ai from o order by ai desc, id
+AI:VARCHAR (10,,,True,O,AI,False,False)
+ë | 
+Ê | 
+ê | 
+é | 
+E | 
+e | 
+e  | 
+ | 
+NULL | 
+affected 0
+--- select id, u from o order by u
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+8 | NULL | 
+2 |  | 
+-1 | a | 
+1 | A | 
+-7 | ab | 
+5 | b | 
+6 | b  | 
+3 | B | 
+4 | Z | 
+affected 0
+--- select id, u from o order by u desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+4 | Z | 
+3 | B | 
+5 | b | 
+6 | b  | 
+-7 | ab | 
+1 | A | 
+-1 | a | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, u from o order by u nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+8 | NULL | 
+2 |  | 
+-1 | a | 
+1 | A | 
+-7 | ab | 
+5 | b | 
+6 | b  | 
+3 | B | 
+4 | Z | 
+affected 0
+--- select id, u from o order by u nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+2 |  | 
+-1 | a | 
+1 | A | 
+-7 | ab | 
+5 | b | 
+6 | b  | 
+3 | B | 
+4 | Z | 
+8 | NULL | 
+affected 0
+--- select id, u from o order by u desc nulls first
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+8 | NULL | 
+4 | Z | 
+3 | B | 
+5 | b | 
+6 | b  | 
+-7 | ab | 
+1 | A | 
+-1 | a | 
+2 |  | 
+affected 0
+--- select id, u from o order by u desc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+4 | Z | 
+3 | B | 
+5 | b | 
+6 | b  | 
+-7 | ab | 
+1 | A | 
+-1 | a | 
+2 |  | 
+8 | NULL | 
+affected 0
+--- select id, u from o order by u asc nulls last
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+2 |  | 
+-1 | a | 
+1 | A | 
+-7 | ab | 
+5 | b | 
+6 | b  | 
+3 | B | 
+4 | Z | 
+8 | NULL | 
+affected 0
+--- select u, id from o order by u, id desc
+U:VARCHAR (10,,,True,O,U,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+NULL | 8 | 
+ | 2 | 
+a | -1 | 
+A | 1 | 
+ab | -7 | 
+b  | 6 | 
+b | 5 | 
+B | 3 | 
+Z | 4 | 
+affected 0
+--- select u from o order by u desc, id
+U:VARCHAR (10,,,True,O,U,False,False)
+Z | 
+B | 
+b | 
+b  | 
+ab | 
+A | 
+a | 
+ | 
+NULL | 
+affected 0
+--- select id from o order by g
+ID:INTEGER (4,,,False,O,ID,True,False)
+4 | 
+8 | 
+1 | 
+3 | 
+6 | 
+5 | 
+-7 | 
+-1 | 
+2 | 
+affected 0
+--- select id, g from o order by g
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+2 | 3 | 
+affected 0
+--- select id, g, s from o order by g
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+4 | NULL | z | 
+8 | NULL | NULL | 
+1 | 1 | a  | 
+3 | 1 | a | 
+6 | 1 | A | 
+5 | 2 | b | 
+-7 | 2 | ab | 
+-1 | 2 | B | 
+2 | 3 |  | 
+affected 0
+--- select g from o order by g
+G:INTEGER (4,,,True,O,G,False,False)
+NULL | 
+NULL | 
+1 | 
+1 | 
+1 | 
+2 | 
+2 | 
+2 | 
+3 | 
+affected 0
+--- select s, id from o order by g desc
+S:VARCHAR (10,,,True,O,S,False,False)
+ID:INTEGER (4,,,False,O,ID,True,False)
+ | 2 | 
+b | 5 | 
+ab | -7 | 
+B | -1 | 
+a  | 1 | 
+a | 3 | 
+A | 6 | 
+z | 4 | 
+NULL | 8 | 
+affected 0
+--- select id from o order by b
+ID:INTEGER (4,,,False,O,ID,True,False)
+4 | 
+8 | 
+-1 | 
+2 | 
+3 | 
+6 | 
+1 | 
+5 | 
+-7 | 
+affected 0
+--- select id from o order by dt
+ID:INTEGER (4,,,False,O,ID,True,False)
+8 | 
+2 | 
+-1 | 
+1 | 
+3 | 
+6 | 
+5 | 
+-7 | 
+4 | 
+affected 0
+--- select id, n from o order by n
+ID:INTEGER (4,,,False,O,ID,True,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+4 | NULL | 
+8 | NULL | 
+5 | -1 | 
+-7 | -1 | 
+1 | -0.01 | 
+-1 | 0.01 | 
+3 | 2 | 
+6 | 2 | 
+2 | 99.99 | 
+affected 0
+--- select id, d from o order by d
+ID:INTEGER (4,,,False,O,ID,True,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | -10000000000 | 
+3 | -0.5 | 
+1 | 0 | 
+6 | 0 | 
+5 | 2.5 | 
+-7 | 2.5 | 
+-1 | 10000000000 | 
+affected 0
+--- select id, ci from o order by ci
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+8 | NULL | 
+2 |  | 
+3 | a | 
+6 | a  | 
+1 | A | 
+-7 | Ab | 
+-1 | b | 
+5 | B | 
+4 | Z | 
+affected 0
+--- select ci from o order by ci
+CI:VARCHAR (10,,,True,O,CI,False,False)
+NULL | 
+ | 
+a | 
+a  | 
+A | 
+Ab | 
+b | 
+B | 
+Z | 
+affected 0
+--- select id from o order by ci desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+4 | 
+5 | 
+-1 | 
+-7 | 
+1 | 
+3 | 
+6 | 
+2 | 
+8 | 
+affected 0
+--- select id, ai from o order by ai
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+8 | NULL | 
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+affected 0
+--- select id, u from o order by u
+ID:INTEGER (4,,,False,O,ID,True,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+8 | NULL | 
+2 |  | 
+-1 | a | 
+1 | A | 
+-7 | ab | 
+5 | b | 
+6 | b  | 
+3 | B | 
+4 | Z | 
+affected 0
+--- select id, c from o order by c
+ID:INTEGER (4,,,False,O,ID,True,False)
+C:CHAR (5,,,True,O,C,False,False)
+8 | NULL | 
+2 |       | 
+6 | A     | 
+-1 | B     | 
+1 | a     | 
+3 | a     | 
+-7 | ab    | 
+5 | b     | 
+4 | z     | 
+affected 0
+--- select id, s from o order by upper(s)
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+1 | a  | 
+3 | a | 
+6 | A | 
+-7 | ab | 
+5 | b | 
+-1 | B | 
+4 | z | 
+affected 0
+--- select id, s from o order by s
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+affected 0
+--- select id from o order by g, b
+ID:INTEGER (4,,,False,O,ID,True,False)
+4 | 
+8 | 
+3 | 
+6 | 
+1 | 
+-1 | 
+5 | 
+-7 | 
+2 | 
+affected 0
+--- select id, sm, bi from o order by sm
+ID:INTEGER (4,,,False,O,ID,True,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+4 | NULL | NULL | 
+8 | NULL | NULL | 
+3 | -3 | 3 | 
+6 | -3 | 3 | 
+2 | -1 | 0 | 
+-1 | 0 | 9000000000 | 
+1 | 1 | -1 | 
+5 | 3 | -5 | 
+-7 | 3 | -5 | 
+affected 0
+--- select id, t from o order by t
+ID:INTEGER (4,,,False,O,ID,True,False)
+T:TIME (4,,,True,O,T,False,False)
+4 | NULL | 
+8 | NULL | 
+3 | 00:00:00.0000 | 
+6 | 00:00:00.0000 | 
+1 | 00:00:00.0001 | 
+5 | 10:00:00.0000 | 
+-7 | 10:00:00.0000 | 
+2 | 12:00:00.0000 | 
+-1 | 23:59:59.0000 | 
+affected 0
+--- select * from o order by g
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+C:CHAR (5,,,True,O,C,False,False)
+D:DOUBLE PRECISION (8,,,True,O,D,False,False)
+N:NUMERIC (4,9,2,True,O,N,False,False)
+DT:DATE (4,,,True,O,DT,False,False)
+TS:TIMESTAMP (8,,,True,O,TS,False,False)
+B:BOOLEAN (1,,,True,O,B,False,False)
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,O,BL,False,False)
+BI:BIGINT (8,,,True,O,BI,False,False)
+SM:SMALLINT (2,,,True,O,SM,False,False)
+T:TIME (4,,,True,O,T,False,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+U:VARCHAR (10,,,True,O,U,False,False)
+4 | NULL | z | Z | z     | NULL | NULL | 2100-01-01 00:00:00.0000 | NULL | NULL | f | NULL | NULL | NULL | Ê | Z | 
+8 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+1 | 1 | a  | A | a     | 0 | -0.01 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0001 | True | b | -1 | 1 | 00:00:00.0001 | ê | A | 
+3 | 1 | a | a | a     | -0.5 | 2 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0000 | False | c | 3 | -3 | 00:00:00.0000 | e | B | 
+6 | 1 | A | a  | A     | 0 | 2 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0000 | False | g | 3 | -3 | 00:00:00.0000 | e  | b  | 
+5 | 2 | b | B | b     | 2.5 | -1 | 2024-03-01 00:00:00.0000 | 2024-03-01 10:00:00.0000 | True | e | -5 | 3 | 10:00:00.0000 | é | b | 
+-7 | 2 | ab | Ab | ab    | 2.5 | -1 | 2024-03-01 00:00:00.0000 | 2024-03-01 10:00:00.0000 | True | d | -5 | 3 | 10:00:00.0000 | ë | ab | 
+-1 | 2 | B | b | B     | 10000000000 | 0.01 | 1999-12-31 00:00:00.0000 | 1999-12-31 23:59:59.0000 | NULL | a | 9000000000 | 0 | 23:59:59.0000 | E | a | 
+2 | 3 |  |  |       | -10000000000 | 99.99 | 0001-01-01 00:00:00.0000 | 0001-01-01 00:00:00.0000 | False |  | 0 | -1 | 12:00:00.0000 |  |  | 
+affected 0
+--- select g, s from o order by g, s
+G:INTEGER (4,,,True,O,G,False,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+NULL | NULL | 
+NULL | z | 
+1 | A | 
+1 | a | 
+1 | a  | 
+2 | B | 
+2 | ab | 
+2 | b | 
+3 |  | 
+affected 0
+--- select id from o order by 1 + 0 - 1 * 0
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by 'x'
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by null
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by ?
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select id, g from o where g = 2 order by id - id
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+5 | 2 | 
+-7 | 2 | 
+-1 | 2 | 
+affected 0
+--- select id, g from o order by 2, 1
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+2 | 3 | 
+affected 0
+--- select id, g from o order by 2 desc, 1 desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+2 | 3 | 
+5 | 2 | 
+-1 | 2 | 
+-7 | 2 | 
+6 | 1 | 
+3 | 1 | 
+1 | 1 | 
+8 | NULL | 
+4 | NULL | 
+affected 0
+--- select id x, g y from o order by y, x
+X:INTEGER (4,,,False,O,ID,True,False)
+Y:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+2 | 3 | 
+affected 0
+--- select id as g, g as id from o order by g
+G:INTEGER (4,,,False,O,ID,True,False)
+ID:INTEGER (4,,,True,O,G,False,False)
+-7 | 2 | 
+-1 | 2 | 
+1 | 1 | 
+2 | 3 | 
+3 | 1 | 
+4 | NULL | 
+5 | 2 | 
+6 | 1 | 
+8 | NULL | 
+affected 0
+--- select id as g, g as id from o order by o.g, o.id
+G:INTEGER (4,,,False,O,ID,True,False)
+ID:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+2 | 3 | 
+affected 0
+--- select id, g + 1 k from o order by k nulls last, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+K:BIGINT (8,,,True,,ADD,False,False)
+1 | 2 | 
+3 | 2 | 
+6 | 2 | 
+-7 | 3 | 
+-1 | 3 | 
+5 | 3 | 
+2 | 4 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, g from o order by g + 0 nulls last, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+2 | 3 | 
+4 | NULL | 
+8 | NULL | 
+affected 0
+--- select id, g from o order by -g, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | 3 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+affected 0
+--- select id, s from o order by s || 'x', id
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+-7 | ab | 
+3 | a | 
+5 | b | 
+2 |  | 
+4 | z | 
+affected 0
+--- select id, s from o order by char_length(s) nulls first, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+-1 | B | 
+3 | a | 
+4 | z | 
+5 | b | 
+6 | A | 
+-7 | ab | 
+1 | a  | 
+affected 0
+--- select id, s from o order by coalesce(s, '~'), id
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+2 |  | 
+6 | A | 
+-1 | B | 
+1 | a  | 
+3 | a | 
+-7 | ab | 
+5 | b | 
+4 | z | 
+8 | NULL | 
+affected 0
+--- select id from o order by case when g is null then 1 else 0 end, g desc, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+2 | 
+-7 | 
+-1 | 
+5 | 
+1 | 
+3 | 
+6 | 
+4 | 
+8 | 
+affected 0
+--- select id from o order by iif(b, 0, 1), id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+1 | 
+5 | 
+-1 | 
+2 | 
+3 | 
+4 | 
+6 | 
+8 | 
+affected 0
+--- select id, s from o order by s collate unicode_ci, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+1 | a  | 
+3 | a | 
+6 | A | 
+-7 | ab | 
+5 | b | 
+-1 | B | 
+4 | z | 
+affected 0
+--- select id, s from o order by s collate unicode_ci_ai, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+S:VARCHAR (10,,,True,O,S,False,False)
+8 | NULL | 
+2 |  | 
+1 | a  | 
+3 | a | 
+6 | A | 
+-7 | ab | 
+5 | b | 
+-1 | B | 
+4 | z | 
+affected 0
+--- select id, ai from o order by ai collate unicode, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+AI:VARCHAR (10,,,True,O,AI,False,False)
+8 | NULL | 
+2 |  | 
+3 | e | 
+6 | e  | 
+-1 | E | 
+5 | é | 
+1 | ê | 
+4 | Ê | 
+-7 | ë | 
+affected 0
+--- select id, ci from o order by cast(ci as varchar(10) character set utf8), id
+ID:INTEGER (4,,,False,O,ID,True,False)
+CI:VARCHAR (10,,,True,O,CI,False,False)
+8 | NULL | 
+2 |  | 
+1 | A | 
+-7 | Ab | 
+5 | B | 
+4 | Z | 
+3 | a | 
+6 | a  | 
+-1 | b | 
+affected 0
+--- select id from o order by (select max(id) from o o2 where o2.g = o.g), id
+ID:INTEGER (4,,,False,O,ID,True,False)
+4 | 
+8 | 
+2 | 
+-7 | 
+-1 | 
+5 | 
+1 | 
+3 | 
+6 | 
+affected 0
+--- select id, g from o order by (g), (id)
+ID:INTEGER (4,,,False,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+5 | 2 | 
+2 | 3 | 
+affected 0
+--- select id from o order by id, id, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select g, count(*) from o group by g order by 2 desc, 1
+G:INTEGER (4,,,True,O,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 3 | 
+NULL | 2 | 
+3 | 1 | 
+affected 0
+--- select g, count(*) c from o group by g order by c, g nulls last
+G:INTEGER (4,,,True,O,G,False,False)
+C:BIGINT (8,,,False,,COUNT,False,False)
+3 | 1 | 
+NULL | 2 | 
+1 | 3 | 
+2 | 3 | 
+affected 0
+--- select distinct g from o order by g desc
+G:INTEGER (4,,,True,O,G,False,False)
+3 | 
+2 | 
+1 | 
+NULL | 
+affected 0
+--- select distinct g from o order by 1 nulls last
+G:INTEGER (4,,,True,O,G,False,False)
+1 | 
+2 | 
+3 | 
+NULL | 
+affected 0
+--- select g from o union select sm from o order by 1
+G:INTEGER (4,,,True,O,G,False,False)
+NULL | 
+-3 | 
+-1 | 
+0 | 
+1 | 
+2 | 
+3 | 
+affected 0
+--- select g from o union all select sm from o order by 1 desc nulls last
+G:INTEGER (4,,,True,O,G,False,False)
+3 | 
+3 | 
+3 | 
+2 | 
+2 | 
+2 | 
+1 | 
+1 | 
+1 | 
+1 | 
+0 | 
+-1 | 
+-3 | 
+-3 | 
+NULL | 
+NULL | 
+NULL | 
+NULL | 
+affected 0
+--- select id, g from o union select g, id from o order by 2, 1
+ID:INTEGER (4,,,True,O,ID,True,False)
+G:INTEGER (4,,,True,O,G,False,False)
+4 | NULL | 
+8 | NULL | 
+2 | -7 | 
+2 | -1 | 
+1 | 1 | 
+3 | 1 | 
+6 | 1 | 
+-7 | 2 | 
+-1 | 2 | 
+3 | 2 | 
+5 | 2 | 
+1 | 3 | 
+2 | 3 | 
+NULL | 4 | 
+2 | 5 | 
+1 | 6 | 
+NULL | 8 | 
+affected 0
+--- select s from o union select ci from o order by 1
+S:VARCHAR (10,,,True,O,S,False,False)
+NULL | 
+ | 
+A | 
+Ab | 
+B | 
+Z | 
+a  | 
+ab | 
+b | 
+z | 
+affected 0
+--- select id from (select id, g from o order by g desc) order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select first 3 id from (select id from o order by id desc) order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+affected 0
+--- select * from (select first 2 id from o order by id) x
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o where id in (select first 2 id from o order by id desc) order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+6 | 
+8 | 
+affected 0
+--- select id from o order by g desc, s desc nulls last, id
+ID:INTEGER (4,,,False,O,ID,True,False)
+2 | 
+5 | 
+-7 | 
+-1 | 
+1 | 
+3 | 
+6 | 
+4 | 
+8 | 
+affected 0
+--- select id from o order by rdb$db_key
+ID:INTEGER (4,,,False,O,ID,True,False)
+5 | 
+3 | 
+-1 | 
+8 | 
+1 | 
+2 | 
+-7 | 
+4 | 
+6 | 
+affected 0
+--- select id, row_number() over (order by rdb$db_key) from o order by rdb$db_key desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+6 | 9 | 
+4 | 8 | 
+-7 | 7 | 
+2 | 6 | 
+1 | 5 | 
+8 | 4 | 
+-1 | 3 | 
+3 | 2 | 
+5 | 1 | 
+affected 0
+--- select id from o order by g nulls last, rdb$db_key desc
+ID:INTEGER (4,,,False,O,ID,True,False)
+6 | 
+1 | 
+3 | 
+-7 | 
+-1 | 
+5 | 
+2 | 
+4 | 
+8 | 
+affected 0
+--- select id from o order by 0
+ERROR 335544569 335544436 #-104 335544821 'ORDER BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the ORDER BY clause
+--- select id from o order by 2
+ERROR 335544569 335544436 #-104 335544821 'ORDER BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the ORDER BY clause
+--- select id from o order by -1
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by 1.5
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+-7 | 
+-1 | 
+affected 0
+--- select id, g from o order by x
+ERROR 335544569 335544436 #-206 335544578 335544382 'X' 336397208 #1 #30 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+X
+At line 1, column 30
+--- select id x, g x from o order by x
+ERROR 335544569 335544436 #-204 336003085 'an alias' 'an alias in the select list with name' 335544382 'X' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between an alias and an alias in the select list with name
+X
+--- select id from o order by count(*)
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select id from o order by sum(id)
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select id from o order by bl
+ID:INTEGER (4,,,False,O,ID,True,False)
+8 | 
+5 | 
+3 | 
+-1 | 
+1 | 
+2 | 
+-7 | 
+4 | 
+6 | 
+affected 0
+--- select g, count(*) from o group by g order by id
+ERROR 335544569 335544436 #-104 335544824 'ORDER BY clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the ORDER BY clause (not contained in either an aggregate function or the GROUP BY clause)
+--- select id from o union select g from o order by id
+ERROR 335544569 335544436 #-104 335544570 335544617 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+invalid ORDER BY clause
+--- select id from o union select g from o order by 2
+ERROR 335544569 335544436 #-104 335544570 335544617 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+invalid ORDER BY clause
+--- select id from o union select g from o order by o.id
+ERROR 335544569 335544436 #-104 335544570 335544617 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+invalid ORDER BY clause
+--- select id from o order by 1 collate unicode
+ERROR 335544569 335544436 #-204 335544573 335544640 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Invalid use of CHARACTER SET or COLLATE
+--- select id from o order by s collate win1252
+ERROR 335544569 335544436 #-204 335544588 'WIN1252' 'UTF8' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+COLLATION WIN1252 for CHARACTER SET UTF8 is not defined
+--- select first 2 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select first 0 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select first 1 skip 1 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+affected 0
+--- select skip 2 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select skip 0 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select first 100 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select skip 100 id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select first (1 + 1) id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select first (1 + 1) skip (2 * 1) id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+affected 0
+--- select first 2.5 id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 '2.5' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+2.5
+--- select first '2' id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 ''2'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+'2'
+--- select first null id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 'null' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+null
+--- select skip null id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #13 335544382 'null' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 13
+null
+--- select first -1 id from o order by id
+ERROR 335544569 335544436 #-206 335544578 335544382 'FIRST' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+FIRST
+At line 1, column 8
+--- select skip -1 id from o order by id
+ERROR 335544569 335544436 #-206 335544578 335544382 'SKIP' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+SKIP
+At line 1, column 8
+--- select first (select count(*) from o where g = 2) id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #15 335544382 'select' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 15
+select
+--- select first 9223372036854775807 id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 '9223372036854775807' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+9223372036854775807
+--- select first 2147483648 id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 '2147483648' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+2147483648
+--- select skip 9223372036854775807 id from o order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #13 335544382 '9223372036854775807' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 13
+9223372036854775807
+--- select id from o order by id rows 2
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by id rows 2 to 4
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+2 | 
+affected 0
+--- select id from o order by id rows 0
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows 0 to 2
+ERROR 335544818 '' 42000
+Invalid parameter to OFFSET or SKIP. Only integers >= 0 are allowed.
+--- select id from o order by id rows 3 to 1
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id rows 1 to 1
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+affected 0
+--- select id from o order by id rows 4 to 100
+ID:INTEGER (4,,,False,O,ID,True,False)
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id rows 100
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id rows -1
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id rows 1 to -1
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id rows null
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows 2 to null
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows 1 + 1
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by id rows 2.5
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id rows '2'
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by id rows (select count(*) from o where g = 2)
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id offset 2 rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id offset 0 rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id offset 100 rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id fetch first 2 rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by id fetch next 1 row only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+affected 0
+--- select id from o order by id fetch first row only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+affected 0
+--- select id from o order by id offset 1 row fetch next 2 rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id offset 2 rows fetch first 0 rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id offset -1 rows
+ERROR 335544818 '' 42000
+Invalid parameter to OFFSET or SKIP. Only integers >= 0 are allowed.
+--- select id from o order by id fetch first -1 rows only
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id fetch first 2.5 rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id fetch first null rows only
+ERROR 335544569 335544436 #-104 335544634 #1 #42 335544382 'null' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 42
+null
+--- select id from o order by id offset null rows
+ERROR 335544569 335544436 #-104 335544634 #1 #37 335544382 'null' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 37
+null
+--- select id from o order by id offset 9223372036854775807 rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+affected 0
+--- select first ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select skip ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select first ? skip ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+affected 0
+--- select first ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select first ? id from o order by id
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select first ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select first ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select first ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+affected 0
+--- select skip ? id from o order by id
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id rows ?
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select id from o order by id rows ? to ?
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id rows ?
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows ? to ?
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows ?
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id offset ? rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id offset ? rows fetch next ? rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+1 | 
+affected 0
+--- select id from o order by id fetch first ? rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id offset ? rows
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+8 | 
+affected 0
+--- select id from o order by id fetch first ? rows only
+ERROR 335544817 '' HY000
+Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.
+--- select id from o order by id rows ?
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select first 2 skip 1 id from o order by id rows 1
+ERROR 335544569 335544436 #-104 336397327 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+FIRST/SKIP cannot be used with OFFSET/FETCH or ROWS
+--- select first 2 id from o order by id offset 1 rows
+ERROR 335544569 335544436 #-104 336397327 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+FIRST/SKIP cannot be used with OFFSET/FETCH or ROWS
+--- select id from o order by id rows 1 offset 1 rows
+ERROR 335544569 335544436 #-104 335544634 #1 #37 335544382 'offset' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 37
+offset
+--- select first 1 g, count(*) from o group by g order by 2 desc, 1
+G:INTEGER (4,,,True,O,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+affected 0
+--- select first 2 distinct g from o order by g
+G:INTEGER (4,,,True,O,G,False,False)
+NULL | 
+1 | 
+affected 0
+--- select distinct first 2 g from o order by g
+ERROR 335544569 335544436 #-104 335544634 #1 #23 335544382 '2' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 23
+2
+--- select first 2 id from o union select first 1 id from o order by 1
+ID:INTEGER (4,,,False,O,ID,True,False)
+3 | 
+5 | 
+affected 0
+--- select id from o union all select id from o order by 1 rows 3 to 5
+ID:INTEGER (4,,,False,O,ID,True,False)
+-1 | 
+-1 | 
+1 | 
+affected 0
+--- select id from o union all select id from o order by 1 offset 15 rows fetch next 5 rows only
+ID:INTEGER (4,,,False,O,ID,True,False)
+6 | 
+8 | 
+8 | 
+affected 0
+--- select id from o rows 2
+ID:INTEGER (4,,,False,O,ID,True,False)
+5 | 
+3 | 
+affected 0
+--- select first 1 id from o where 1 = 0
+ID:INTEGER (4,,,False,O,ID,True,False)
+affected 0
+--- select id from o order by id rows 2 for update
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select first 2 id from o order by id with lock
+ID:INTEGER (4,,,False,O,ID,True,False)
+-7 | 
+-1 | 
+affected 0
+--- select (select first 1 id from o order by id desc) from rdb$database
+ID:INTEGER (4,,,True,O,ID,True,False)
+8 | 
+affected 0
+--- select (select id from o order by id rows 2 to 2) from rdb$database
+ID:INTEGER (4,,,True,O,ID,True,False)
+-1 | 
+affected 0
+--- select (select id from o order by id offset 3 rows fetch next 1 row only) from rdb$database
+ID:INTEGER (4,,,True,O,ID,True,False)
+2 | 
+affected 0
+--- select (select id from o order by id rows 2) from rdb$database
+ID:INTEGER (4,,,True,O,ID,True,False)
+ERROR 335544652 '' 21000
+multiple rows in singleton select

@@ -186,21 +186,23 @@ public sealed partial class Compiler
 
     static List<(RowSlot Slot, Value[] Row)> CollectTargets(Ctx c, RelNode rel, int stream, (XNode? First, XNode? Skip) limit)
     {
-        long first = long.MaxValue, skip = 0;
-        if (limit.First != null) first = SpecQuery.LimitValue(c, limit.First, "FIRST");
-        if (limit.Skip != null) skip = SpecQuery.LimitValue(c, limit.Skip, "SKIP");
         var list = new List<(RowSlot, Value[])>();
+        var rows = Limit.Open(false, c, limit.First, limit.Skip);
+        if (rows.Empty) return list;
         var seen = new HashSet<RowSlot>(ReferenceEqualityComparer.Instance);
         var cur = rel.Open(c);
-        while (cur.Next())
-        {
-            var slot = c.Slots[stream] ?? throw new InvalidOperationException("internal: no slot for DML target");
-            if (!seen.Add(slot)) continue;
-            if (skip > 0) { skip--; continue; }
-            if (list.Count >= first) break;
-            list.Add((slot, c.Rows[stream]));
-        }
+        while (rows.Next(NextTarget)) list.Add((c.Slots[stream]!, c.Rows[stream]));
         return list;
+
+        bool NextTarget()
+        {
+            while (cur.Next())
+            {
+                var slot = c.Slots[stream] ?? throw new InvalidOperationException("internal: no slot for DML target");
+                if (seen.Add(slot)) return true;
+            }
+            return false;
+        }
     }
 
     public Prepared CompileUpdate(UpdateStmt st, Scope? parent)
@@ -442,7 +444,7 @@ public sealed partial class Compiler
         {
             c.Db.EnsureOwned(t);
             var rt = Dml.GetRuntime(c.Db, t);
-            var rows = new List<(Value[][] Frame, RowSlot? Slot)>();
+            var rows = new List<(Frame Frame, RowSlot? Slot)>();
             var cur = rel.Open(c);
             while (cur.Next()) rows.Add((Frames.Save(c, saveStreams), c.Slots[tStream]));
             var touched = new HashSet<RowSlot>(ReferenceEqualityComparer.Instance);

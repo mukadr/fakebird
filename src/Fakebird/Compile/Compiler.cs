@@ -133,6 +133,17 @@ public sealed partial class Compiler
         return Collation.Binary;
     }
 
+    /// <summary>The collations of UTF8 (other character sets are not checked).</summary>
+    static readonly HashSet<string> Utf8Collations = ["UTF8", "UCS_BASIC", "UNICODE", "UNICODE_CI", "UNICODE_CI_AI"];
+
+    static void CheckCollation(string name, Charset charset)
+    {
+        var n = name.ToUpperInvariant();
+        if (charset == Charset.Utf8 && !Utf8Collations.Contains(n))
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+                .Gds(FbMessages.collation_not_found).Str(n).Str("UTF8").Build();
+    }
+
     public static Charset CharsetOf(string? name) => name?.ToUpperInvariant() switch
     {
         null => Charset.Utf8,
@@ -368,7 +379,10 @@ public sealed partial class Compiler
             case CollateExpr co:
             {
                 var x = Bind(co.Operand, s, expected);
-                if (!x.Type.IsTextual) throw Err.Dsql(-204, "COLLATE applies only to character types");
+                if (!x.Type.IsTextual)
+                    throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+                        .Gds(FbMessages.dsql_datatype_err).Gds(FbMessages.collation_requires_text).Build();
+                CheckCollation(co.Collation, x.Type.Charset);
                 x.Type = x.Type.WithCollation(CollationOf(co.Collation));
                 return x;
             }

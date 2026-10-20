@@ -24,19 +24,33 @@ public sealed class EmptyCursor : RowCursor
 }
 
 /// <summary>Frame save/restore of stream rows (for materializing operators).</summary>
+/// <summary>The current rows of some streams, with their record slots (RDB$DB_KEY, positioned DML).</summary>
+public sealed record Frame(Value[][] Rows, RowSlot?[] Slots);
+
 public static class Frames
 {
-    public static Value[][] Save(Ctx c, int[] streams)
+    public static Frame Save(Ctx c, int[] streams)
     {
         var f = new Value[streams.Length][];
-        for (var i = 0; i < streams.Length; i++) f[i] = c.Rows[streams[i]];
-        return f;
+        var slots = new RowSlot?[streams.Length];
+        for (var i = 0; i < streams.Length; i++)
+        {
+            f[i] = c.Rows[streams[i]];
+            slots[i] = c.Slots[streams[i]];
+        }
+        return new Frame(f, slots);
     }
 
-    public static void Restore(Ctx c, int[] streams, Value[][] frame)
+    public static void Restore(Ctx c, int[] streams, Frame frame)
     {
-        for (var i = 0; i < streams.Length; i++) c.Rows[streams[i]] = frame[i];
+        for (var i = 0; i < streams.Length; i++)
+        {
+            c.Rows[streams[i]] = frame.Rows[i];
+            c.Slots[streams[i]] = frame.Slots[i];
+        }
     }
+
+    public static Frame Null(Value[][] nullRows) => new(nullRows, new RowSlot?[nullRows.Length]);
 
     public static void SetNull(Ctx c, int[] streams, Value[][] nullRows)
     {
@@ -424,7 +438,7 @@ public sealed class HashJoinRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
-        var table = new Dictionary<IndexKey, List<Value[][]>>();
+        var table = new Dictionary<IndexKey, List<Frame>>();
         var rc = Right.Open(c);
         while (rc.Next())
         {
@@ -443,9 +457,9 @@ public sealed class HashJoinRel : RelNode
         return new Cursor(this, c, Left.Open(c), table);
     }
 
-    sealed class Cursor(HashJoinRel n, Ctx c, RowCursor left, Dictionary<IndexKey, List<Value[][]>> table) : RowCursor
+    sealed class Cursor(HashJoinRel n, Ctx c, RowCursor left, Dictionary<IndexKey, List<Frame>> table) : RowCursor
     {
-        List<Value[][]>? _bucket;
+        List<Frame>? _bucket;
         int _pos;
         bool _matched;
 
@@ -512,20 +526,20 @@ public sealed class FullJoinRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
-        var rights = new List<Value[][]>();
+        var rights = new List<Frame>();
         var rc = Right.Open(c);
         while (rc.Next()) rights.Add(Frames.Save(c, Right.Streams));
         return new Cursor(this, c, Left.Open(c), rights);
     }
 
-    sealed class Cursor(FullJoinRel n, Ctx c, RowCursor left, List<Value[][]> rights) : RowCursor
+    sealed class Cursor(FullJoinRel n, Ctx c, RowCursor left, List<Frame> rights) : RowCursor
     {
         readonly bool[] _rightMatched = new bool[rights.Count];
         bool _inLeft;
         int _pos;
         bool _matched;
         bool _leftDone;
-        Value[][]? _leftFrame;
+        Frame? _leftFrame;
 
         public override bool Next()
         {
@@ -602,15 +616,20 @@ public sealed class SortRel : RelNode
         Streams = input.Streams;
     }
 
+    /// <summary>The fields carried in the sort records, which order rows with equal keys (see SortImage).</summary>
+    public SortField[] SortFields = [];
+
     public override RowCursor Open(Ctx c)
     {
-        var rows = new List<(Value[] Keys, Value[][] Frame)>();
+        var rows = new List<(Value[] Keys, Frame Frame)>();
+        var images = new List<byte[]>();
         var ic = Input.Open(c);
         while (ic.Next())
         {
             var k = new Value[Keys.Length];
             for (var i = 0; i < Keys.Length; i++) k[i] = Keys[i].Expr.Eval(c);
             rows.Add((k, Frames.Save(c, Save)));
+            images.Add(SortImage.Build(c, SortFields));
         }
         var arr = rows.ToArray();
         var keys = Keys;
@@ -619,6 +638,7 @@ public sealed class SortRel : RelNode
         Array.Sort(idx, (x, y) =>
         {
             var r = CompareKeys(arr[x].Keys, arr[y].Keys, keys, x, y);
+            if (r == 0) r = SortImage.Compare(images[x], images[y]);
             return r != 0 ? r : x.CompareTo(y);
         });
         return new Cursor(c, Save, arr, idx);
@@ -647,7 +667,7 @@ public sealed class SortRel : RelNode
         return 0;
     }
 
-    sealed class Cursor(Ctx c, int[] save, (Value[] Keys, Value[][] Frame)[] rows, int[] idx) : RowCursor
+    sealed class Cursor(Ctx c, int[] save, (Value[] Keys, Frame Frame)[] rows, int[] idx) : RowCursor
     {
         int _i;
 

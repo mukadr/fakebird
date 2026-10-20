@@ -98,7 +98,11 @@ public sealed partial class Parser
     {
         var t = Cur;
         if (t.Kind == Tok.Eof) return Err.SyntaxMsg("Unexpected end of command - line " + t.Line + ", column " + t.Col);
-        return Err.Syntax(t.Line, t.Col, t.Kind == Tok.String ? "'" + t.Text + "'" : t.Text);
+        // the token as written (keywords and identifiers are upper-cased by the lexer)
+        var text = t.Kind == Tok.Ident && t.Pos + t.Text.Length <= _sql.Length && _sql[t.Pos] != '"'
+            && string.Equals(_sql.Substring(t.Pos, t.Text.Length), t.Text, StringComparison.OrdinalIgnoreCase)
+            ? _sql.Substring(t.Pos, t.Text.Length) : t.Text;
+        return Err.Syntax(t.Line, t.Col, t.Kind == Tok.String ? "'" + text + "'" : text);
     }
 
     /// <summary>Identifier (unquoted non-reserved word or quoted).</summary>

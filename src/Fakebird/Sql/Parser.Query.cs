@@ -40,17 +40,21 @@ public sealed partial class Parser
             q.Limit.RowsFrom = Additive();
             if (Accept("TO")) q.Limit.RowsTo = Additive();
         }
-        if (Accept("OFFSET"))
+        else
         {
-            q.Limit.Skip = Additive();
-            if (!Accept("ROWS")) Expect("ROW");
-        }
-        if (Accept("FETCH"))
-        {
-            if (!Accept("FIRST")) Expect("NEXT");
-            q.Limit.First = Is("ROW") || Is("ROWS") ? new LiteralExpr(Types.Value.Int(1), Types.SqlType.Integer) : Additive();
-            if (!Accept("ROWS")) Expect("ROW");
-            Expect("ONLY");
+            // OFFSET and FETCH take a simple value: a literal (optionally negative) or a parameter
+            if (Accept("OFFSET"))
+            {
+                q.Limit.Skip = SimpleValue();
+                if (!Accept("ROWS")) Expect("ROW");
+            }
+            if (Accept("FETCH"))
+            {
+                if (!Accept("FIRST")) Expect("NEXT");
+                q.Limit.First = Is("ROW") || Is("ROWS") ? new LiteralExpr(Types.Value.Int(1), Types.SqlType.Integer) : SimpleValue();
+                if (!Accept("ROWS")) Expect("ROW");
+                Expect("ONLY");
+            }
         }
         if (Accept("FOR"))
         {
@@ -96,8 +100,17 @@ public sealed partial class Parser
     {
         var qs = new QuerySpec { Pos = Cur.Pos };
         Expect("SELECT");
-        if (Accept("FIRST")) qs.Limit.First = LimitValue();
-        if (Accept("SKIP")) qs.Limit.Skip = LimitValue();
+        // FIRST and SKIP are not reserved: without a limit value after them they start the select list
+        if (Accept("FIRST"))
+        {
+            if (LimitValue() is { } first) qs.Limit.First = first;
+            else _i--;
+        }
+        if (Accept("SKIP"))
+        {
+            if (LimitValue() is { } skip) qs.Limit.Skip = skip;
+            else _i--;
+        }
         if (Accept("DISTINCT")) qs.Distinct = true;
         else Accept("ALL");
         // a bare * is the whole select list (Firebird's grammar: select_list is '*' or a list of items)
@@ -126,15 +139,34 @@ public sealed partial class Parser
         return qs;
     }
 
-    Expr LimitValue()
+    /// <summary>FIRST/SKIP value: a 32-bit integer literal, a parameter or a parenthesized value; null if none follows.</summary>
+    Expr? LimitValue()
     {
-        if (Cur.Kind == Tok.Integer) return NumberLiteral(false);
-        if (Cur.Kind == Tok.Param) return Primary();
-        if (Cur.Kind == Tok.Colon) return Primary();
-        ExpectOp("(");
+        if (Cur.Kind == Tok.Integer)
+        {
+            if (!int.TryParse(Cur.Text, out _)) throw Unexpected();
+            return NumberLiteral(false);
+        }
+        if (Cur.Kind is Tok.Param or Tok.Colon) return Primary();
+        if (!AcceptOp("(")) return null;
+        if (Is("SELECT")) throw Unexpected();
         var e = Expression();
         ExpectOp(")");
         return e;
+    }
+
+    /// <summary>simple_value_spec: a constant (a number may be negated), a parameter or a variable.</summary>
+    Expr SimpleValue()
+    {
+        if (Is("NULL")) throw Unexpected();
+        if (Cur.Kind is Tok.Param or Tok.Colon) return Primary();
+        if (IsOp("-"))
+        {
+            _i++;
+            if (Cur.Kind is not (Tok.Integer or Tok.Decimal or Tok.Float)) throw Unexpected();
+            return NumberLiteral(true);
+        }
+        return Primary();
     }
 
     void SkipPlan()

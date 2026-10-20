@@ -115,6 +115,11 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   shown value, the order in which MIN/MAX/LIST see the rows, and the DISTINCT survivor follow the bytes of
   Firebird's sort records; SUM/AVG DISTINCT add the values in sorted order; SUM(NULL) is CHAR(1); the
   aggregate errors (nested, in WHERE/GROUP BY, ungrouped columns per clause) carry Firebird's codes.
+* **Ordering and limits**: rows with equal ORDER BY keys come out in Firebird's sort-record order (e.g.
+  INTEGER ties by their little-endian bytes, so -1 after 5); NULLs first ascending; UNION orders by
+  positions only and keeps the last of duplicate rows; FIRST/SKIP/ROWS/OFFSET/FETCH follow Firebird's
+  grammar (FIRST is a column name without a value, OFFSET/FETCH take literals or parameters) and
+  runtime (NULL means 0 rows, negative values fail at execute, FIRST/SKIP cannot mix with ROWS/OFFSET).
 * **Parameters** are typed from their context (assignment target, other side of a comparison, CAST,
   function arguments); in the select list an operator on an untyped parameter fails like Firebird
   (`Data type unknown`, `Invalid data type for multiplication`).

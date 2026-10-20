@@ -36,6 +36,8 @@ public sealed partial class Compiler
                 if (s.Into != null) throw Err.Dsql(-104, "INTO is allowed only in PSQL");
                 _openAtExecute = true;
                 var q = CompileSelect(s.Query, null);
+                q.AtExecute = true;
+                if (q is LimitQuery { Input: SpecQuery inner }) inner.AtExecute = true;
                 return new SelectPrepared
                 {
                     Query = q,
