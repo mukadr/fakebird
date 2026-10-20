@@ -140,6 +140,16 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   (RDB$PRIMARYn, RDB$FOREIGNn, RDB$n) share one counter, RDB$CHECK_CONSTRAINTS lists the NOT NULL,
   CHECK and referential-action rows, and the DDL errors (second primary key, duplicate key columns,
   referenced keys, constraint columns changing type, unknown constraints) carry Firebird's codes.
+* **Metadata** in the RDB$ tables follows Firebird 5: system columns have Firebird's types and
+  nullability; RDB$FIELDS has Firebird's sub types, precisions (0 for plain integers), collation ids
+  and NULLs, column defaults sit in RDB$RELATION_FIELDS and domain defaults/checks in RDB$FIELDS, all
+  sources keep the text as written (`default 'x'`, `check (value > 0)`, trigger source from AS);
+  RDB$VIEW_RELATIONS, RDB$DEPENDENCIES (views), RDB$FUNCTION_ARGUMENTS, COMMENT ON descriptions,
+  trigger type codes for multi-event triggers, expression index sources, and field positions that
+  keep their gaps after a column is dropped. NUMERIC/DECIMAL take precisions up to 38 (INT128).
+  ALTER COLUMN TYPE follows Firebird's rules (no narrowing, no text to number, text keeps its length)
+  and the DDL errors (missing or duplicate objects and columns, domains in use, columns used by
+  views, bad lengths and scales) carry Firebird's codes.
 * **Joins and subqueries**: USING/NATURAL columns are COALESCE(left, right) when unqualified (and in
   `*`), the null-extended side of an outer join is described as nullable, ON conditions only see the
   sources joined so far, and ambiguity, alias-conflict, USING, derived-table column list and column count
@@ -220,7 +230,9 @@ configured server and of Fakebird, marked SAME or DIFF. Besides `FAKEBIRD_FB5C3_
 
 Error codes, SQLCODEs, SQLSTATEs and message texts come from Firebird's own message files:
 `tools/genmsg.py <firebird>/src/include/firebird/impl/msg > src/Fakebird/FbMessages.g.cs` (that
-generated file stays under Firebird's Initial Developer's Public License, see its header).
+generated file stays under Firebird's Initial Developer's Public License, see its header). The types and
+nullability of the system tables' columns come from Firebird's relation definitions:
+`tools/gensys.py <firebird>/src/jrd > src/Fakebird/Engine/SystemSchema.g.cs` (same license).
 
 ## Loading a real-world schema
 
@@ -245,6 +257,7 @@ src/Fakebird/Wire      Firebird wire protocol (versions 10-12) server
 tests/Fakebird.Tests   engine, wire, SQL feature, client behaviour, Dapper and EF Core tests
 tests/Fakebird.Tests/Corpus   SQL corpus with the golden output of a real Firebird 5
 tools/genmsg.py        generates FbMessages.g.cs from Firebird's message files
+tools/gensys.py        generates SystemSchema.g.cs (system table columns) from Firebird's relations.h
 samples/               ASP.NET Core API + WebApplicationFactory tests using Fakebird
 bench/                 throughput checks through the real client
 ```

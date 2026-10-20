@@ -15,7 +15,12 @@ internal static class SystemTables
     static void Add(Database db, string name, (string Name, SqlType Type)[] cols, Func<Database, List<Value[]>> rows)
     {
         var t = new Table { Name = name, IsSystem = true, Virtual = rows };
-        foreach (var (n, ty) in cols) t.Columns.Add(new Column { Name = n, Type = ty });
+        // the type and nullability of a column Firebird defines come from its own system relation definitions
+        var schema = SystemSchema.Relations.TryGetValue(name, out var defs) ? defs.ToDictionary(d => d.Name) : null;
+        foreach (var (n, ty) in cols)
+            t.Columns.Add(schema != null && schema.TryGetValue(n, out var d)
+                ? new Column { Name = n, Type = d.Type, NotNull = !d.Nullable }
+                : new Column { Name = n, Type = ty });
         t.RebuildColumnIndex();
         db.Tables[name] = t;
     }
@@ -44,11 +49,12 @@ internal static class SystemTables
             var rows = new List<Value[]>();
             var id = 128;
             foreach (var t in d.Tables.Values.OrderBy(x => x.Name, StringComparer.Ordinal))
-                rows.Add([Value.Null, Value.Null, Value.Null, I(t.IsSystem ? 0 : id++), I(t.IsSystem ? 1 : 0), I(8), I(1), I(t.Columns.Count),
+                rows.Add([Value.Null, Value.Null, S(t.Description), I(t.IsSystem ? 0 : id++), I(t.IsSystem ? 1 : 0), I(8), I(1), I(t.Columns.Count),
                     N(t.Name), Value.Null, Value.Null, Value.Null, Value.Null, N("SYSDBA"), Value.Null, I(1),
                     I(t.IsGtt ? (t.GttPreserveRows ? 4 : 5) : 0), Value.Null]);
             foreach (var v in d.Views.Values.OrderBy(x => x.Name, StringComparer.Ordinal))
-                rows.Add([Value.Null, S(v.Source), Value.Null, I(id++), I(0), I(8), I(1), I(v.Columns.Count),
+                // the BLR is not modelled: non-null like Firebird's
+                rows.Add([Value.Bytes([0]), S(v.Source), S(v.Description), I(id++), I(0), I(8), I(1), I(v.Columns.Count),
                     N(v.Name), Value.Null, Value.Null, Value.Null, Value.Null, N("SYSDBA"), Value.Null, I(1), I(1), Value.Null]);
             return rows;
         });
@@ -67,15 +73,17 @@ internal static class SystemTables
                 for (var i = 0; i < t.Columns.Count; i++)
                 {
                     var c = t.Columns[i];
-                    rows.Add([N(c.Name), N(t.Name), N(FieldSource(t.Name, c, i)), Value.Null, Value.Null, I(i), I(1), I(i), Value.Null,
-                        Value.Null, Value.Null, I(t.IsSystem ? 1 : 0), Value.Null, Value.Null, c.NotNull ? I(1) : Value.Null,
-                        c.DefaultSource == null ? Value.Null : S("DEFAULT " + c.DefaultSource), I(0), N(c.IdentitySequence),
+                    // NOT NULL of the column itself (a domain's lives in RDB$FIELDS); identities are NOT NULL
+                    var notNull = c.NotNull && (c.Domain == null || c.NotNullConstraint != null || c.IdentitySequence != null);
+                    rows.Add([N(c.Name), N(t.Name), N(FieldSource(t.Name, c, i)), Value.Null, Value.Null, I(c.Position ?? i), I(1), I(i), Value.Null,
+                        S(c.Description), Value.Null, I(t.IsSystem ? 1 : 0), Value.Null, Value.Null, notNull ? I(1) : Value.Null,
+                        S(c.DefaultSource), CollationIdOf(c.Type), N(c.IdentitySequence),
                         c.IdentitySequence == null ? Value.Null : I(c.IdentityAlways ? 0 : 1)]);
                 }
             foreach (var v in d.Views.Values)
                 for (var i = 0; i < v.Columns.Count; i++)
                     rows.Add([N(v.Columns[i].Name), N(v.Name), N($"RDB$V_{v.Name}_{i}"), Value.Null, Value.Null, I(i), I(1), I(i), Value.Null,
-                        Value.Null, Value.Null, I(0), Value.Null, Value.Null, Value.Null, Value.Null, I(0), Value.Null, Value.Null]);
+                        S(v.ColumnDescriptions?.GetValueOrDefault(v.Columns[i].Name)), Value.Null, I(0), Value.Null, Value.Null, Value.Null, Value.Null, CollationIdOf(v.Columns[i].Type), Value.Null, Value.Null]);
             return rows;
         });
 
@@ -91,27 +99,34 @@ internal static class SystemTables
         ], d =>
         {
             var rows = new List<Value[]>();
-            Value[] Field(string name, SqlType t, string? computed, string? defSrc, string? check, bool notNull) =>
+            Value[] Field(string name, SqlType t, string? computed, string? defSrc, string? check, bool notNull, bool derived = false, string? desc = null) =>
             [
-                N(name), Value.Null, check == null ? Value.Null : S("CHECK (" + check + ")"), computed == null ? Value.Null : S("(" + computed + ")"),
-                defSrc == null ? Value.Null : S("DEFAULT " + defSrc), I(t.ByteLength), I(-t.Scale), I(BlrType(t)), I(SubType(t)),
-                Value.Null, I(0), t.Kind == TypeKind.Blob ? I(80) : Value.Null, notNull ? I(1) : Value.Null,
-                t.IsString ? I(t.Length) : Value.Null, t.IsTextual ? I(0) : Value.Null, t.IsTextual || t.IsString ? I(t.WireCharsetId) : Value.Null,
-                t.IsExact ? I(t.Precision > 0 ? t.Precision : t.Kind switch { TypeKind.SmallInt => 4, TypeKind.Integer => 9, _ => 18 }) : Value.Null,
+                N(name), Value.Null, S(check), computed == null ? Value.Null : S("(" + computed + ")"),
+                S(defSrc), I(t.ByteLength), I(-t.Scale), I(BlrType(t)), SubType(t),
+                S(desc), I(0), t.Kind == TypeKind.Blob ? I(80) : Value.Null, notNull ? I(1) : Value.Null,
+                t.IsString ? I(t.Length) : Value.Null, CollationIdOf(t), t.IsTextual || t.IsString ? I(t.WireCharsetId) : Value.Null,
+                // the precision of NUMERIC/DECIMAL; plain integers have 0, except computed ones (their expression's)
+                t.IsExact ? I(t.SubType is 1 or 2 ? t.Precision : computed != null || derived ? t.Kind switch { TypeKind.SmallInt => 4, TypeKind.Integer => 9, _ => 18 } : 0) : Value.Null,
                 Value.Null,
                 Blr(computed), Blr(check), Blr(defSrc),
             ];
             static Value Blr(string? source) => source == null ? Value.Null : Value.Bytes(System.Text.Encoding.UTF8.GetBytes(source));
-            foreach (var dom in d.Domains.Values) rows.Add(Field(dom.Name, dom.Type, null, dom.DefaultSource, dom.CheckSource, dom.NotNull));
+            foreach (var dom in d.Domains.Values) rows.Add(Field(dom.Name, dom.Type, null, dom.DefaultSource, dom.CheckSource, dom.NotNull, desc: dom.Description));
             foreach (var t in d.Tables.Values)
                 for (var i = 0; i < t.Columns.Count; i++)
                 {
                     var c = t.Columns[i];
                     if (c.Domain != null) continue;
-                    rows.Add(Field(FieldSource(t.Name, c, i), c.Type, c.ComputedBySource, c.DefaultSource, null, false));
+                    // a column's default is in RDB$RELATION_FIELDS, not in its own RDB$FIELDS row
+                    rows.Add(Field(FieldSource(t.Name, c, i), c.Type, c.ComputedBySource, null, null, false));
                 }
+            // a view column reading a base column shares its field; any other gets one made from its expression
             foreach (var v in d.Views.Values)
-                for (var i = 0; i < v.Columns.Count; i++) rows.Add(Field($"RDB$V_{v.Name}_{i}", v.Columns[i].Type, null, null, null, false));
+            {
+                var direct = DirectColumns(v);
+                for (var i = 0; i < v.Columns.Count; i++)
+                    rows.Add(Field($"RDB$V_{v.Name}_{i}", v.Columns[i].Type, null, null, null, false, derived: i >= direct.Length || !direct[i]));
+            }
             return rows;
         });
 
@@ -121,7 +136,7 @@ internal static class SystemTables
             ("RDB$SECURITY_CLASS", Name), ("RDB$OWNER_NAME", Name), ("RDB$INITIAL_VALUE", Big), ("RDB$GENERATOR_INCREMENT", Int),
         ], d => d.Sequences.Values.Select((s, i) => new[]
         {
-            N(s.Name), I(i + 1), I(s.IsIdentity ? 6 : 0), Value.Null, Value.Null, N("SYSDBA"), I(s.InitialValue), I(s.Increment),
+            N(s.Name), I(i + 1), I(s.IsIdentity ? 6 : 0), S(s.Description), Value.Null, N("SYSDBA"), I(s.InitialValue), I(s.Increment),
         }).ToList());
 
         Add(db, "RDB$PROCEDURES",
@@ -132,7 +147,7 @@ internal static class SystemTables
             ("RDB$PRIVATE_FLAG", Small), ("RDB$ENGINE_NAME", Name), ("RDB$ENTRYPOINT", SqlType.VarChar(255)),
         ], d => d.Procedures.Values.Select((p, i) => new[]
         {
-            N(p.Name), I(i + 1), I(p.Inputs.Count), I(p.Outputs.Count), Value.Null, S(p.Source), Value.Null, N("SYSDBA"),
+            N(p.Name), I(i + 1), I(p.Inputs.Count), I(p.Outputs.Count), S(p.Description), S(p.Source), Value.Null, N("SYSDBA"),
             I(p.Selectable ? 1 : 2), I(1), I(0), Value.Null, Value.Null, Value.Null, Value.Null,
         }).ToList());
 
@@ -149,7 +164,7 @@ internal static class SystemTables
             {
                 for (var i = 0; i < p.Inputs.Count; i++)
                     rows.Add([N(p.Inputs[i].Name), N(p.Name), I(i), I(0), N(p.Inputs[i].Domain ?? "RDB$P_" + p.Name + "_I" + i), Value.Null, I(0),
-                        Value.Null, Value.Null, p.Inputs[i].NotNull ? I(1) : Value.Null, I(0), Value.Null, Value.Null, Value.Null]);
+                        S(p.Inputs[i].DefaultSource), Value.Null, p.Inputs[i].NotNull ? I(1) : Value.Null, I(0), Value.Null, Value.Null, Value.Null]);
                 for (var i = 0; i < p.Outputs.Count; i++)
                     rows.Add([N(p.Outputs[i].Name), N(p.Name), I(i), I(1), N(p.Outputs[i].Domain ?? "RDB$P_" + p.Name + "_O" + i), Value.Null, I(0),
                         Value.Null, Value.Null, p.Outputs[i].NotNull ? I(1) : Value.Null, I(0), Value.Null, Value.Null, Value.Null]);
@@ -166,9 +181,35 @@ internal static class SystemTables
             ("RDB$OWNER_NAME", Name), ("RDB$LEGACY_FLAG", Small), ("RDB$DETERMINISTIC_FLAG", Small),
         ], d => d.Functions.Values.Select((f, i) => new[]
         {
-            N(f.Name), Value.Null, Value.Null, Value.Null, Value.Null, Value.Null, I(0), I(0), Value.Null, Value.Null, Value.Null,
+            N(f.Name), Value.Null, Value.Null, S(f.Description), Value.Null, Value.Null, I(0), I(0), Value.Null, Value.Null, Value.Null,
             S(f.Source), I(i + 1), I(1), Value.Null, N("SYSDBA"), I(0), I(f.Deterministic ? 1 : 0),
         }).ToList());
+
+        Add(db, "RDB$FUNCTION_ARGUMENTS",
+        [
+            ("RDB$FUNCTION_NAME", Name), ("RDB$ARGUMENT_POSITION", Small), ("RDB$MECHANISM", Small), ("RDB$FIELD_TYPE", Small),
+            ("RDB$FIELD_SCALE", Small), ("RDB$FIELD_LENGTH", Small), ("RDB$FIELD_SUB_TYPE", Small), ("RDB$CHARACTER_SET_ID", Small),
+            ("RDB$FIELD_PRECISION", Small), ("RDB$CHARACTER_LENGTH", Small), ("RDB$PACKAGE_NAME", Name), ("RDB$ARGUMENT_NAME", Name),
+            ("RDB$FIELD_SOURCE", Name), ("RDB$DEFAULT_VALUE", SqlType.BlobBinary), ("RDB$DEFAULT_SOURCE", Text), ("RDB$COLLATION_ID", Small),
+            ("RDB$NULL_FLAG", Small), ("RDB$ARGUMENT_MECHANISM", Small), ("RDB$FIELD_NAME", Name), ("RDB$RELATION_NAME", Name),
+            ("RDB$SYSTEM_FLAG", Small), ("RDB$DESCRIPTION", Text),
+        ], d =>
+        {
+            // position 0 is the return value (no name), then the inputs; their types are in RDB$FIELDS
+            var rows = new List<Value[]>();
+            foreach (var f in d.Functions.Values)
+            {
+                Value[] Arg(int pos, string? name, string source, RoutineParam? p) =>
+                [
+                    N(f.Name), I(pos), Value.Null, Value.Null, Value.Null, Value.Null, Value.Null, Value.Null, Value.Null, Value.Null,
+                    Value.Null, N(name), N(source), Value.Null, S(p?.DefaultSource), Value.Null, p is { NotNull: true } ? I(1) : Value.Null,
+                    p == null ? Value.Null : I(0), Value.Null, Value.Null, I(0), Value.Null,
+                ];
+                rows.Add(Arg(0, null, "RDB$F_" + f.Name + "_R", null));
+                for (var i = 0; i < f.Inputs.Count; i++) rows.Add(Arg(i + 1, f.Inputs[i].Name, f.Inputs[i].Domain ?? "RDB$F_" + f.Name + "_" + i, f.Inputs[i]));
+            }
+            return rows;
+        });
 
         Add(db, "RDB$TRIGGERS",
         [
@@ -178,7 +219,7 @@ internal static class SystemTables
             ("RDB$ENGINE_NAME", Name), ("RDB$ENTRYPOINT", SqlType.Char(255)), ("RDB$SQL_SECURITY", Bool),
         ], d => d.Triggers.Values.Select(t => new[]
         {
-            N(t.Name), N(t.Table), I(t.Position), I(TriggerType(t)), S(t.Source), Value.Null, Value.Null, I(t.Active ? 0 : 1),
+            N(t.Name), N(t.Table), I(t.Position), I(TriggerType(t)), S(t.Source), Value.Null, S(t.Description), I(t.Active ? 0 : 1),
             I(0), I(1), I(1), Value.Null, Value.Null, Value.Null, Value.Null,
         }).ToList());
 
@@ -195,8 +236,8 @@ internal static class SystemTables
                 fk = d.Constraints[con.RefConstraint!].IndexName;
             return new[]
             {
-                N(ix.Name), N(ix.Table), I(i + 1), I(ix.Unique ? 1 : 0), Value.Null, I(ix.Columns.Length), I(ix.Active ? 0 : 1),
-                I(ix.Descending ? 1 : 0), N(fk), I(0), Value.Null, Value.Null, Value.Dbl(0),
+                N(ix.Name), N(ix.Table), I(i + 1), I(ix.Unique ? 1 : 0), S(ix.Description), I(ix.Columns.Length), I(ix.Active || ix.ExpressionSource != null ? 0 : 1),
+                I(ix.Descending ? 1 : 0), N(fk), I(0), ix.ExpressionSource == null ? Value.Null : Value.Bytes([0]), S(ix.ExpressionSource), Value.Dbl(0),
             };
         }).ToList());
 
@@ -244,6 +285,25 @@ internal static class SystemTables
             N(c.Name), N(c.RefConstraint), N("FULL", 7), N(Rule(c.OnUpdate), 11), N(Rule(c.OnDelete), 11),
         }).ToList());
 
+        // the base tables of views: their FROM contexts, and the columns each view reads
+        Add(db, "RDB$VIEW_RELATIONS",
+        [
+            ("RDB$VIEW_NAME", Name), ("RDB$RELATION_NAME", Name), ("RDB$VIEW_CONTEXT", Small), ("RDB$CONTEXT_NAME", Name),
+            ("RDB$CONTEXT_TYPE", Small), ("RDB$PACKAGE_NAME", Name),
+        ], d => d.Views.Values.SelectMany(v => ViewDeps.Contexts(v.Query).Select((x, i) => new[]
+        {
+            N(v.Name), N(x.Name), I(i + 1), N(x.Alias ?? x.Name, 255), I(d.Views.ContainsKey(x.Name) ? 1 : d.Procedures.ContainsKey(x.Name) ? 2 : 0), Value.Null,
+        })).ToList());
+
+        Add(db, "RDB$DEPENDENCIES",
+        [
+            ("RDB$DEPENDENT_NAME", Name), ("RDB$DEPENDED_ON_NAME", Name), ("RDB$FIELD_NAME", Name), ("RDB$DEPENDENT_TYPE", Small),
+            ("RDB$DEPENDED_ON_TYPE", Small), ("RDB$PACKAGE_NAME", Name),
+        ], d => d.Views.Values.SelectMany(v => ViewDeps.Of(d, v.Query).Select(x => new[]
+        {
+            N(v.Name), N(x.Table), N(x.Column), I(1), I(d.Views.ContainsKey(x.Table) ? 1 : d.Procedures.ContainsKey(x.Table) ? 5 : 0), Value.Null,
+        })).ToList());
+
         Add(db, "RDB$CHECK_CONSTRAINTS", [("RDB$CONSTRAINT_NAME", Name), ("RDB$TRIGGER_NAME", Name)],
             // NOT NULL constraints name their column; CHECKs and foreign key actions their system triggers
             d => d.Tables.Values.Where(t => !t.IsSystem).SelectMany(t => t.Columns.Where(c => c.NotNullConstraint != null)
@@ -258,7 +318,7 @@ internal static class SystemTables
         [
             ("RDB$EXCEPTION_NAME", Name), ("RDB$EXCEPTION_NUMBER", Int), ("RDB$MESSAGE", SqlType.VarChar(1021)), ("RDB$DESCRIPTION", Text),
             ("RDB$SYSTEM_FLAG", Small), ("RDB$SECURITY_CLASS", Name), ("RDB$OWNER_NAME", Name),
-        ], d => d.Exceptions.Values.Select(e => new[] { N(e.Name), I(e.Number), S(e.Message), Value.Null, I(0), Value.Null, N("SYSDBA") }).ToList());
+        ], d => d.Exceptions.Values.Select(e => new[] { N(e.Name), I(e.Number), S(e.Message), S(e.Description), I(0), Value.Null, N("SYSDBA") }).ToList());
 
         Add(db, "RDB$CHARACTER_SETS",
         [
@@ -298,6 +358,14 @@ internal static class SystemTables
 
     static string FieldSource(string table, Column c, int i) => c.Domain ?? $"RDB${table}_{i}";
 
+    /// <summary>The view columns that read a base column directly (a plain, ungrouped select of a column).</summary>
+    static bool[] DirectColumns(View v)
+    {
+        if (v.Query.Body is not Sql.QuerySpec qs || qs.GroupBy.Count > 0 || qs.Having != null || qs.Distinct) return [];
+        var hasAggregate = qs.Items.Any(i => i.Expr is Sql.FuncExpr f && Compile.Compiler.IsAggregate(f));
+        return qs.Items.Select(i => !hasAggregate && i.Expr is Sql.ColumnRefExpr).ToArray();
+    }
+
     static string Rule(Sql.RefAction a) => a switch
     {
         Sql.RefAction.Cascade => "CASCADE",
@@ -323,28 +391,38 @@ internal static class SystemTables
         _ => 0,
     };
 
-    static int SubType(SqlType t) => t.Kind switch
+    /// <summary>RDB$FIELD_SUB_TYPE: blob subtypes, NUMERIC 1 / DECIMAL 2 for exact numbers, 0 for text, NULL otherwise.</summary>
+    static Value SubType(SqlType t) => t.Kind switch
     {
-        TypeKind.Blob => t.SubType,
-        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt => t.Scale > 0 ? t.SubType : 0,
-        TypeKind.Char or TypeKind.VarChar => t.Charset == Charset.Octets ? 1 : 0,
-        _ => 0,
+        TypeKind.Blob => I(t.SubType),
+        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt or TypeKind.Int128 => I(t.SubType),
+        TypeKind.Char or TypeKind.VarChar => I(0),
+        _ => Value.Null,
     };
+
+    /// <summary>RDB$COLLATION_ID of a text type (UTF8: 0 UTF8, 1 UCS_BASIC, 2 UNICODE, 3 UNICODE_CI, 4 UNICODE_CI_AI).</summary>
+    static Value CollationIdOf(SqlType t) => !t.IsTextual ? Value.Null : I(t.Charset == Charset.Utf8 ? t.Collation switch
+    {
+        Collation.Unicode => 2,
+        Collation.CaseInsensitive => 3,
+        Collation.CaseAccentInsensitive => 4,
+        _ => 0,
+    } : 0);
 
     static long TriggerType(Trigger t)
     {
         // Firebird encoding: 1-6 single event (before/after insert/update/delete), multi-event uses slots
         long Code(Sql.TriggerEvent e) => e switch { Sql.TriggerEvent.Insert => 1, Sql.TriggerEvent.Update => 2, _ => 3 };
         var events = new[] { Sql.TriggerEvent.Insert, Sql.TriggerEvent.Update, Sql.TriggerEvent.Delete }.Where(e => (t.Events & e) != 0).ToList();
+        // TRIGGER_TYPE_SUFFIX(slot1, slot2, slot3) = slot1 << 1 | slot2 << 3 | slot3 << 5, minus 1 for BEFORE
         var before = t.Timing == Sql.TriggerTiming.Before;
-        if (events.Count == 1) return (Code(events[0]) - 1) * 2 + (before ? 1 : 2);
-        long type = before ? 1 : 2;
+        long suffix = 0;
         var shift = 1;
         foreach (var e in events)
         {
-            type += Code(e) << shift;
+            suffix |= Code(e) << shift;
             shift += 2;
         }
-        return type - 1 + (before ? 0 : 0);
+        return suffix + (before ? -1 : 0);
     }
 }

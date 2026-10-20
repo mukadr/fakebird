@@ -1156,6 +1156,7 @@ internal static class FbMessages
     public const int dyn_dup_table = 336068740;
     public const int dyn_133 = 336068741;
     public const int dyn_134 = 336068742;
+    public const int dyn_dup_procedure = 336068743;
     public const int dyn_136 = 336068744;
     public const int dyn_137 = 336068745;
     public const int dyn_138 = 336068746;
@@ -1223,7 +1224,9 @@ internal static class FbMessages
     public const int dyn_char_fld_too_small = 336068816;
     public const int dyn_invalid_dtype_conversion = 336068817;
     public const int dyn_dtype_conv_invalid = 336068818;
+    public const int dyn_virmemexh = 336068819;
     public const int dyn_zero_len_id = 336068820;
+    public const int del_gen_fail = 336068821;
     public const int dyn_gen_not_found = 336068822;
     public const int dyn_215 = 336068823;
     public const int dyn_216 = 336068824;
@@ -1244,6 +1247,7 @@ internal static class FbMessages
     public const int dyn_231 = 336068839;
     public const int dyn_wrong_gtt_scope = 336068840;
     public const int dyn_233 = 336068841;
+    public const int del_coll_fail = 336068842;
     public const int dyn_coll_used_table = 336068843;
     public const int dyn_coll_used_domain = 336068844;
     public const int dyn_cannot_del_syscoll = 336068845;
@@ -1261,6 +1265,9 @@ internal static class FbMessages
     public const int dyn_cannot_addrem_computed = 336068857;
     public const int dyn_no_empty_pw = 336068858;
     public const int dyn_dup_index = 336068859;
+    public const int dyn_locksmith_use_granted = 336068860;
+    public const int dyn_dup_exception = 336068861;
+    public const int dyn_dup_generator = 336068862;
     public const int dyn_255 = 336068863;
     public const int dyn_package_not_found = 336068864;
     public const int dyn_schema_not_found = 336068865;
@@ -1274,6 +1281,7 @@ internal static class FbMessages
     public const int dyn_funcsignat_package = 336068873;
     public const int dyn_procsignat_package = 336068874;
     public const int dyn_defvaldecl_package_proc = 336068875;
+    public const int dyn_dup_function = 336068876;
     public const int dyn_package_body_exists = 336068877;
     public const int dyn_invalid_ddl_func = 336068878;
     public const int dyn_newfc_oldsyntax = 336068879;
@@ -1296,11 +1304,14 @@ internal static class FbMessages
     public const int dyn_cant_use_zero_increment = 336068896;
     public const int dyn_cant_use_in_foreignkey = 336068897;
     public const int dyn_defvaldecl_package_func = 336068898;
+    public const int dyn_create_user_no_password = 336068899;
     public const int dyn_cyclic_role = 336068900;
     public const int dyn_293 = 336068901;
     public const int dyn_294 = 336068902;
     public const int dyn_295 = 336068903;
     public const int dyn_cant_use_zero_inc_ident = 336068904;
+    public const int dyn_concur_alter_database = 336068905;
+    public const int dyn_incompat_alter_database = 336068906;
     public const int dyn_no_ddl_grant_opt_priv = 336068907;
     public const int dyn_no_grant_opt_priv = 336068908;
     public const int dyn_func_not_exist = 336068909;
@@ -2754,6 +2765,7 @@ internal static class FbMessages
         [336068740] = new("dyn_dup_table", -901, "42S01", "Table @1 already exists"),
         [336068741] = new("dyn_133", -901, "", "Number of referencing columns do not equal number of referenced columns"),
         [336068742] = new("dyn_134", -901, "", "STORE RDB$PROCEDURES failed"),
+        [336068743] = new("dyn_dup_procedure", -901, "", "Procedure @1 already exists"),
         [336068744] = new("dyn_136", -901, "", "STORE RDB$PROCEDURE_PARAMETERS failed"),
         [336068745] = new("dyn_137", -901, "", "Store into system table @1 failed"),
         [336068746] = new("dyn_138", -901, "", "ERASE RDB$PROCEDURE_PARAMETERS failed"),
@@ -2821,7 +2833,9 @@ internal static class FbMessages
         [336068816] = new("dyn_char_fld_too_small", -829, "42000", "New size specified for column @1 must be at least @2 characters."),
         [336068817] = new("dyn_invalid_dtype_conversion", -829, "42000", "Cannot change datatype for @1.  Conversion from base type @2 to @3 is not supported."),
         [336068818] = new("dyn_dtype_conv_invalid", -829, "42000", "Cannot change datatype for column @1 from a character type to a non-character type."),
+        [336068819] = new("dyn_virmemexh", -901, "", "unable to allocate memory from the operating system"),
         [336068820] = new("dyn_zero_len_id", -901, "42000", "Zero length identifiers are not allowed"),
+        [336068821] = new("del_gen_fail", -901, "", "ERASE RDB$GENERATORS failed"),
         [336068822] = new("dyn_gen_not_found", -901, "42000", "Sequence @1 not found"),
         [336068823] = new("dyn_215", -901, "", "Difference file is not defined"),
         [336068824] = new("dyn_216", -901, "", "Difference file is already defined"),
@@ -2842,6 +2856,7 @@ internal static class FbMessages
         [336068839] = new("dyn_231", -901, "", "File name is invalid"),
         [336068840] = new("dyn_wrong_gtt_scope", -901, "HY000", "@1 cannot reference @2"),
         [336068841] = new("dyn_233", -901, "", "Local column @1 is computed, cannot set a default value"),
+        [336068842] = new("del_coll_fail", -901, "", "ERASE RDB$COLLATIONS failed"),
         [336068843] = new("dyn_coll_used_table", -901, "HY000", "Collation @1 is used in table @2 (field name @3) and cannot be dropped"),
         [336068844] = new("dyn_coll_used_domain", -901, "HY000", "Collation @1 is used in domain @2 and cannot be dropped"),
         [336068845] = new("dyn_cannot_del_syscoll", -607, "HY000", "Cannot delete system collation"),
@@ -2859,6 +2874,9 @@ internal static class FbMessages
         [336068857] = new("dyn_cannot_addrem_computed", -829, "42000", "Cannot add or remove COMPUTED from column @1"),
         [336068858] = new("dyn_no_empty_pw", -901, "42000", "Password should not be empty string"),
         [336068859] = new("dyn_dup_index", -901, "42S11", "Index @1 already exists"),
+        [336068860] = new("dyn_locksmith_use_granted", -901, "", "Only @1 or user with privilege USE_GRANTED_BY_CLAUSE can use GRANTED BY clause"),
+        [336068861] = new("dyn_dup_exception", -901, "", "Exception @1 already exists"),
+        [336068862] = new("dyn_dup_generator", -901, "", "Sequence @1 already exists"),
         [336068863] = new("dyn_255", -901, "", "ERASE RDB$USER_PRIVILEGES failed in REVOKE ALL ON ALL"),
         [336068864] = new("dyn_package_not_found", -901, "42000", "Package @1 not found"),
         [336068865] = new("dyn_schema_not_found", -901, "42000", "Schema @1 not found"),
@@ -2872,6 +2890,7 @@ internal static class FbMessages
         [336068873] = new("dyn_funcsignat_package", -901, "42000", "Function @1 has a signature mismatch on package body @2"),
         [336068874] = new("dyn_procsignat_package", -901, "42000", "Procedure @1 has a signature mismatch on package body @2"),
         [336068875] = new("dyn_defvaldecl_package_proc", -901, "42000", "Default values for parameters are not allowed in the definition of a previously declared packaged procedure @1.@2"),
+        [336068876] = new("dyn_dup_function", -901, "", "Function @1 already exists"),
         [336068877] = new("dyn_package_body_exists", -901, "42000", "Package body @1 already exists"),
         [336068878] = new("dyn_invalid_ddl_func", -607, "HY000", "Invalid DDL statement for function @1"),
         [336068879] = new("dyn_newfc_oldsyntax", -901, "42000", "Cannot alter new style function @1 with ALTER EXTERNAL FUNCTION. Use ALTER FUNCTION instead."),
@@ -2894,11 +2913,14 @@ internal static class FbMessages
         [336068896] = new("dyn_cant_use_zero_increment", -901, "42000", "INCREMENT BY 0 is an illegal option for sequence @1"),
         [336068897] = new("dyn_cant_use_in_foreignkey", -901, "42000", "Can't use @1 in FOREIGN KEY constraint"),
         [336068898] = new("dyn_defvaldecl_package_func", -901, "42000", "Default values for parameters are not allowed in the definition of a previously declared packaged function @1.@2"),
+        [336068899] = new("dyn_create_user_no_password", -901, "", "Password must be specified when creating user"),
         [336068900] = new("dyn_cyclic_role", -901, "42000", "role @1 can not be granted to role @2"),
         [336068901] = new("dyn_293", -901, "", "DROP SYSTEM PRIVILEGES should not be used in CREATE ROLE operator"),
         [336068902] = new("dyn_294", -901, "", "Access to SYSTEM PRIVILEGES in ROLES denied to @1"),
         [336068903] = new("dyn_295", -901, "", "Only @1, DB owner @2 or user with privilege USE_GRANTED_BY_CLAUSE can use GRANTED BY clause"),
         [336068904] = new("dyn_cant_use_zero_inc_ident", -901, "42000", "INCREMENT BY 0 is an illegal option for identity column @1 of table @2"),
+        [336068905] = new("dyn_concur_alter_database", -901, "", "Concurrent ALTER DATABASE is not supported"),
+        [336068906] = new("dyn_incompat_alter_database", -901, "", "Incompatible ALTER DATABASE clauses: '@1' and '@2'"),
         [336068907] = new("dyn_no_ddl_grant_opt_priv", -901, "42000", "no @1 privilege with grant option on DDL @2"),
         [336068908] = new("dyn_no_grant_opt_priv", -901, "42000", "no @1 privilege with grant option on object @2"),
         [336068909] = new("dyn_func_not_exist", -901, "42000", "Function @1 does not exist"),

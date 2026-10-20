@@ -174,7 +174,9 @@ public sealed partial class Compiler
         }
         else if (ts.Domain != null)
         {
-            if (!Db.Domains.TryGetValue(ts.Domain, out domain)) throw Err.Dsql(-607, "Specified domain or source column " + ts.Domain + " does not exist");
+            if (!Db.Domains.TryGetValue(ts.Domain, out domain))
+                throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err)
+                    .Gds(FbMessages.dsql_domain_not_found).Str(ts.Domain).Build();
             t = domain.Type;
             if (ts.TypeOf) domain = null;
         }

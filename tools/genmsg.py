@@ -9,6 +9,8 @@ FACILITIES = {"JRD": 0, "DSQL": 7, "DYN": 8, "SQLERR": 13, "SQLWARN": 14}
 MSG = re.compile(r'^FB_IMPL_MSG\((\w+), (\d+), (\w+), (-?\d+), "(\w*)", "(\w*)", "((?:[^"\\]|\\.)*)"\)')
 # private messages (no symbol, SQLCODE or SQLSTATE) are named <facility>_<number>
 NOSYM = re.compile(r'^FB_IMPL_MSG_NO_SYMBOL\((\w+), (\d+), "((?:[^"\\]|\\.)*)"\)')
+# messages with a symbol but no SQLCODE or SQLSTATE
+SYMONLY = re.compile(r'^FB_IMPL_MSG_SYMBOL\((\w+), (\d+), (\w+), "((?:[^"\\]|\\.)*)"\)')
 
 def cs(s):
     return '"' + s.replace('\\"', '"').replace('\\', '\\\\').replace('"', '\\"') + '"'
@@ -17,6 +19,11 @@ rows = []
 for fac, num in FACILITIES.items():
     for line in open(os.path.join(sys.argv[1], fac.lower() + ".h"), encoding="utf-8"):
         m = MSG.match(line)
+        y = SYMONLY.match(line)
+        if y:
+            code = 0x14000000 | (num << 16) | int(y.group(2))
+            rows.append((code, y.group(3), -901, "", y.group(4)))
+            continue
         if not m:
             n = NOSYM.match(line)
             if n and n.group(3):

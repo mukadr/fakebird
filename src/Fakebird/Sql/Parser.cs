@@ -94,6 +94,14 @@ public sealed partial class Parser
         if (!AcceptOp(op)) throw Unexpected();
     }
 
+    /// <summary>A data type the parser rejects: [dsql_error, sqlerr -842, code, ..., At line L, column C].</summary>
+    static FbError TypeSpecError(Token at, int code, params int[] args)
+    {
+        var b = new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-842).Gds(code);
+        foreach (var a in args) b.Num(a);
+        return b.LineCol(at.Line, at.Col).Build();
+    }
+
     FbError Unexpected()
     {
         var t = Cur;
@@ -1013,8 +1021,15 @@ public sealed partial class Parser
                 ts.BaseType = t.Text == "NUMERIC" ? "NUMERIC" : "DECIMAL";
                 if (AcceptOp("("))
                 {
+                    var pt = Cur;
                     ts.Precision = (int)IntLiteral();
-                    if (AcceptOp(",")) ts.Scale = (int)IntLiteral();
+                    if (ts.Precision is < 1 or > 38) throw TypeSpecError(pt, FbMessages.precision_err2, 1, 38);
+                    if (AcceptOp(","))
+                    {
+                        var st = Cur;
+                        ts.Scale = (int)IntLiteral();
+                        if (ts.Scale > ts.Precision) throw TypeSpecError(st, FbMessages.scale_nogt);
+                    }
                     ExpectOp(")");
                 }
                 break;
@@ -1035,7 +1050,12 @@ public sealed partial class Parser
                 if (t.Text is "NCHAR" or "NATIONAL") ts.Charset = "ISO8859_1";
                 if (AcceptOp("("))
                 {
-                    ts.Length = (int)IntLiteral();
+                    var lt = Cur;
+                    var len = IntLiteral();
+                    // the grammar wants a positive short integer
+                    if (len > short.MaxValue) throw TypeSpecError(lt, FbMessages.expec_short);
+                    if (len < 1) throw TypeSpecError(lt, FbMessages.expec_positive);
+                    ts.Length = (int)len;
                     ExpectOp(")");
                 }
                 else if (varying) throw Unexpected();

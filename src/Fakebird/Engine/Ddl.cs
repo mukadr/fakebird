@@ -87,6 +87,7 @@ public static class Ddl
             case CreateExceptionStmt ce: CreateException(db, ce); break;
             case CreateDomainStmt cd: CreateDomain(db, cd); break;
             case AlterDomainStmt ad: AlterDomain(db, ad, c); break;
+            case CommentStmt cm: Comment(db, cm); break;
             case CreateProcedureStmt cp: CreateProcedure(db, cp); break;
             case CreateFunctionStmt cf: CreateFunction(db, cf); break;
             case CreateTriggerStmt tr: CreateTrigger(db, tr); break;
@@ -96,14 +97,42 @@ public static class Ddl
         db.SchemaChanged();
     }
 
+    /// <summary>An object that already exists, as Firebird's DDL reports it.</summary>
     static FbError Exists(string kind, string name) => kind switch
     {
         "Table" => new StatusBuilder().Gds(FbMessages.dyn_dup_table).Str(name).Build(),
         "Index" => new StatusBuilder().Gds(FbMessages.dyn_dup_index).Str(name).Build(),
+        "Procedure" => new StatusBuilder().Gds(FbMessages.dyn_dup_procedure).Str(name).Build(),
+        "Function" => new StatusBuilder().Gds(FbMessages.dyn_dup_function).Str(name).Build(),
+        "Exception" => new StatusBuilder().Gds(FbMessages.dyn_dup_exception).Str(name).Build(),
+        "Sequence" => new StatusBuilder().Gds(FbMessages.dyn_dup_generator).Str(name).Build(),
+        // the unique index on the system table's name column
+        "Domain" => Err.Unique("RDB$INDEX_2", "RDB$FIELDS", $"(\"RDB$FIELD_NAME\" = '{name}')"),
         _ => new StatusBuilder().Gds(Err.isc_no_meta_update).Gds(Err.isc_random).Str($"{kind} {name} already exists")
             .Build(kind is "View" ? "42S01" : "42000"),
     };
-    static FbError Missing(string kind, string name) => Err.MetaUpdate($"{kind} {name} not found");
+
+    /// <summary>An object that does not exist, as Firebird's DDL reports it.</summary>
+    static FbError Missing(string kind, string name) => kind switch
+    {
+        "Table" => new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err).Gds(FbMessages.dsql_table_not_found).Str(name).Build(),
+        "View" => new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err).Gds(FbMessages.dsql_view_not_found).Str(name).Build(),
+        "Procedure" => new StatusBuilder().Gds(FbMessages.dyn_proc_not_found).Str(name).Build(),
+        "Function" => new StatusBuilder().Gds(FbMessages.dyn_func_not_found).Str(name).Build(),
+        "Trigger" => new StatusBuilder().Gds(FbMessages.dyn_trig_not_found).Str(name).Build(),
+        "Sequence" => new StatusBuilder().Gds(FbMessages.gennotdef).Str(name).Build(),
+        "Exception" => new StatusBuilder().Gds(FbMessages.dyn_exception_not_found).Build(),
+        "Domain" => new StatusBuilder().Gds(FbMessages.dyn_domain_not_found).Build(),
+        "Index" => new StatusBuilder().Gds(FbMessages.dyn_index_not_found).Build(),
+        _ => Err.MetaUpdate($"{kind} {name} not found"),
+    };
+
+    static FbError ColumnMissing(Table t, string name)
+        => new StatusBuilder().Gds(FbMessages.dyn_column_does_not_exist).Str(name).Str(t.Name).Build();
+
+    /// <summary>A column added twice: the unique index on RDB$RELATION_FIELDS.</summary>
+    static FbError ColumnExists(string table, string name)
+        => Err.Unique("RDB$INDEX_15", "RDB$RELATION_FIELDS", $"(\"RDB$FIELD_NAME\" = '{name}', \"RDB$RELATION_NAME\" = '{table}')");
 
     static void CheckName(Database db, string name)
     {
@@ -177,7 +206,7 @@ public static class Ddl
         var t = new Table { Name = st.Name, IsGtt = st.GlobalTemporary, GttPreserveRows = st.OnCommitPreserve };
         foreach (var cd in st.Columns)
         {
-            if (t.FindColumn(cd.Name) >= 0) throw Err.MetaUpdate($"Column {cd.Name} already exists in table {st.Name}");
+            if (t.FindColumn(cd.Name) >= 0) throw ColumnExists(st.Name, cd.Name);
             var col = MakeColumn(db, t, cd);
             NameColumnConstraints(db, col, cd);
             t.Columns.Add(col);
@@ -543,7 +572,7 @@ public static class Ddl
             {
                 case AddColumnAction add:
                 {
-                    if (t.FindColumn(add.Column.Name) >= 0) throw Err.MetaUpdate($"Column {add.Column.Name} already exists in table {t.Name}");
+                    if (t.FindColumn(add.Column.Name) >= 0) throw ColumnExists(t.Name, add.Column.Name);
                     var col = MakeColumn(db, t, add.Column);
                     NameColumnConstraints(db, col, add.Column);
                     var newCols = t.Columns.ToList();
@@ -560,6 +589,7 @@ public static class Ddl
                     if (col.NotNull && fill.IsNull && t.Rows.Any(r => !r.IsDead) && VisibleRows(t, c).Any())
                         throw new StatusBuilder().Gds(Err.isc_no_meta_update).Gds(Err.isc_random)
                             .Str($"Cannot make field {col.Name} of table {t.Name} NOT NULL because there are NULLs present").Build("22006");
+                    col.Position = t.Columns.Select((x, k) => x.Position ?? k).DefaultIfEmpty(-1).Max() + 1;
                     Relayout(db, t, newCols, map, _ => fill, c);
                     if (col.ComputedBy != null)
                     {
@@ -573,7 +603,11 @@ public static class Ddl
                 case DropColumnAction drop:
                 {
                     var ci = t.FindColumn(drop.Name);
-                    if (ci < 0) throw Err.ColumnUnknown(t.Name + "." + drop.Name);
+                    if (ci < 0) throw ColumnMissing(t, drop.Name);
+                    // a column a view reads cannot go (the view's name comes padded, like Firebird's CHAR field)
+                    foreach (var v in db.Views.Values)
+                        if (ViewDeps.Of(db, v.Query).Any(x => x.Table == t.Name && x.Column == drop.Name))
+                            throw new StatusBuilder().Gds(FbMessages.dyn_52).Str(drop.Name).Str(t.Name).Str(v.Name.PadRight(63)).Build();
                     // a key column referenced by another table's foreign key: the system trigger on RDB$RELATION_FIELDS
                     if (db.Constraints.Values.Any(k => k.Type == ConstraintType.ForeignKey && k.RefTable == t.Name && k.Table != t.Name && k.RefColumns!.Contains(ci)))
                         throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.primary_key_ref)
@@ -591,6 +625,8 @@ public static class Ddl
                         if (db.Indexes[ixName].Columns.Contains(ci))
                             throw Err.MetaUpdate($"Column {drop.Name} is used in index {ixName}");
                     var col = t.Columns[ci];
+                    // the other columns keep their positions: Firebird leaves the gap
+                    for (var k = 0; k < t.Columns.Count; k++) t.Columns[k].Position ??= k;
                     var newCols = t.Columns.Where((_, i) => i != ci).ToList();
                     var map = Enumerable.Range(0, t.Columns.Count).Where(i => i != ci).ToArray();
                     Relayout(db, t, newCols, map, null, c);
@@ -612,6 +648,87 @@ public static class Ddl
         }
     }
 
+    /// <summary>AlterDomainNode::checkUpdate: the type changes Firebird allows for a column or domain.</summary>
+    internal static void CheckTypeChange(string column, SqlType from, SqlType to)
+    {
+        static bool Text(SqlType t) => t.Kind is TypeKind.Char or TypeKind.VarChar;
+        static bool DateTime(SqlType t) => t.Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp;
+        FbError Invalid() => new StatusBuilder().Gds(FbMessages.dyn_invalid_dtype_conversion).Str(column).Str(DtypeName(from)).Str(DtypeName(to)).Build();
+        FbError TooSmall(int len) => new StatusBuilder().Gds(FbMessages.dyn_char_fld_too_small).Str(column).Num(len).Build();
+        var fromLen = Text(from) ? from.Length : TypeRules.StringLength(from);
+        if (from.Kind == TypeKind.Blob || to.Kind == TypeKind.Blob)
+            throw new StatusBuilder().Gds(FbMessages.dyn_dtype_invalid).Str(column).Build();
+        if (Text(from))
+        {
+            if (!Text(to)) throw new StatusBuilder().Gds(FbMessages.dyn_dtype_conv_invalid).Str(column).Build();
+            if (to.Length < fromLen) throw TooSmall(fromLen);
+            return;
+        }
+        if (Text(to))
+        {
+            if (from.Kind == TypeKind.Boolean) throw Invalid();
+            if (to.Length < fromLen) throw TooSmall(fromLen);
+            return;
+        }
+        if (DateTime(from))
+        {
+            var ok = to.Kind == TypeKind.Date ? from.Kind != TypeKind.Time
+                : to.Kind == TypeKind.Time ? from.Kind != TypeKind.Date
+                : to.Kind == TypeKind.Timestamp && from.Kind != TypeKind.Time;
+            if (!ok) throw Invalid();
+            return;
+        }
+        if (from.Kind == TypeKind.Boolean)
+        {
+            if (to.Kind != TypeKind.Boolean) throw Invalid();
+            return;
+        }
+        // numbers: the storage may only grow
+        var allowed = to.Kind switch
+        {
+            TypeKind.SmallInt => from.Kind is TypeKind.SmallInt,
+            TypeKind.Integer => from.Kind is TypeKind.SmallInt or TypeKind.Integer,
+            TypeKind.Float => from.Kind is TypeKind.Float or TypeKind.SmallInt,
+            TypeKind.BigInt => from.Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt,
+            TypeKind.Double => from.Kind is TypeKind.Double or TypeKind.Float or TypeKind.SmallInt or TypeKind.Integer,
+            TypeKind.Int128 => from.Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt or TypeKind.Int128,
+            _ => false,
+        };
+        if (!allowed) throw Invalid();
+        // checkUpdateNumericType: NUMERIC/DECIMAL may not lose integral digits
+        if (to.Kind is not (TypeKind.Float or TypeKind.Double) && from.SubType != 0 && to.SubType != 0
+            && from.Precision - from.Scale > to.Precision - to.Scale)
+        {
+            var diff = to.Precision - (from.Precision - from.Scale);
+            var code = FbMessages.dyn_scale_too_big;
+            if (diff < 0)
+            {
+                code = FbMessages.dyn_precision_too_small;
+                diff = to.Precision + to.Scale - diff;
+            }
+            throw new StatusBuilder().Gds(code).Str(column).Num(diff).Build();
+        }
+    }
+
+    /// <summary>DSC_dtype_names: the storage type's name.</summary>
+    static string DtypeName(SqlType t) => t.Kind switch
+    {
+        TypeKind.Char => "CHAR",
+        TypeKind.VarChar => "VARCHAR",
+        TypeKind.SmallInt => "SMALLINT",
+        TypeKind.Integer => "INTEGER",
+        TypeKind.BigInt => "BIGINT",
+        TypeKind.Int128 => "INT128",
+        TypeKind.Float => "FLOAT",
+        TypeKind.Double => "DOUBLE PRECISION",
+        TypeKind.Date => "DATE",
+        TypeKind.Time => "TIME",
+        TypeKind.Timestamp => "TIMESTAMP",
+        TypeKind.Blob => "BLOB",
+        TypeKind.Boolean => "BOOLEAN",
+        _ => "<dtype_unknown>",
+    };
+
     static void RecomputeComputed(Database db, Table t, Ctx c)
     {
         var rt = Compiler.BuildRuntime(db, t);
@@ -632,11 +749,11 @@ public static class Ddl
     static void AlterColumn(Database db, Table t, AlterColumnAction ac, Ctx c)
     {
         var ci = t.FindColumn(ac.Name);
-        if (ci < 0) throw Err.ColumnUnknown(t.Name + "." + ac.Name);
+        if (ci < 0) throw ColumnMissing(t, ac.Name);
         var col = t.Columns[ci];
         if (ac.NewName != null)
         {
-            if (t.FindColumn(ac.NewName) >= 0) throw Err.MetaUpdate($"Column {ac.NewName} already exists");
+            if (t.FindColumn(ac.NewName) >= 0) throw ColumnExists(t.Name, ac.NewName);
             col.Name = ac.NewName;
             t.RebuildColumnIndex();
         }
@@ -646,6 +763,8 @@ public static class Ddl
             var order = Enumerable.Range(0, t.Columns.Count).Where(i => i != ci).ToList();
             order.Insert(pos, ci);
             Relayout(db, t, order.Select(i => t.Columns[i]).ToList(), order.ToArray(), null, c);
+            // moving a column renumbers the positions
+            for (var k = 0; k < t.Columns.Count; k++) t.Columns[k].Position = k;
         }
         if (ac.NewType != null)
         {
@@ -653,6 +772,10 @@ public static class Ddl
                     || k.Type == ConstraintType.ForeignKey && k.RefTable == t.Name && k.RefColumns!.Contains(ci))))
                 throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.integ_index_seg_mod).Build();
             var newType = Comp(db).ResolveType(ac.NewType, out var dom);
+            CheckTypeChange(col.Name, col.Type, newType);
+            // Firebird: a column that becomes text without a character set gets NONE (unless it was text)
+            if (newType.IsString && dom == null && ac.NewType.Charset == null && !col.Type.IsString)
+                newType = newType.Kind == TypeKind.Char ? SqlType.Char(newType.Length, Charset.None) : SqlType.VarChar(newType.Length, Charset.None);
             foreach (var row in VisibleRows(t, c)) Conv.Cast(row[ci], newType);
             col.Type = newType;
             if (dom != null) col.Domain = dom.Name;
@@ -715,6 +838,15 @@ public static class Ddl
         if (ac.ComputedBy != null)
         {
             if (col.ComputedBy == null) throw Err.MetaUpdate($"Cannot change {col.Name} to a computed column");
+            // the new expression must bind against the table, like when the column was created
+            var comp = Comp(db);
+            var cs = new Scope(null);
+            cs.Add(new SourceItem
+            {
+                Name = t.Name, Stream = comp.NewStream(t.Columns.Count), Table = t,
+                Cols = t.Columns.Select(cc => new ColInfo { Name = cc.Name, Type = cc.Type, Relation = t.Name, Field = cc.Name }).ToList(),
+            });
+            comp.Bind(ac.ComputedBy, cs);
             col.ComputedBy = ac.ComputedBy;
             col.ComputedBySource = ac.ComputedBySource;
             RecomputeComputed(db, t, c);
@@ -731,12 +863,13 @@ public static class Ddl
         if (st.ComputedBy != null)
         {
             if (st.Unique) throw Err.Unsupported("unique expression indexes");
-            // expression indexes only affect plans: register an inactive placeholder
-            var ph = new Index { Name = st.Name, Table = t.Name, Columns = [], Active = false };
+            // expression indexes only affect plans: register a placeholder that keeps no entries
+            var ph = new Index { Name = st.Name, Table = t.Name, Columns = [], Active = false, ExpressionSource = st.ComputedBySource };
             db.Indexes[st.Name] = ph;
             t.Indexes.Add(st.Name);
             return;
         }
+        if (st.Columns.Any(n => t.FindColumn(n) < 0)) throw new StatusBuilder().Gds(FbMessages.dyn_120).Str(st.Name).Build();
         var cols = Cols(t, st.Columns);
         var ix = MakeIndex(db, t, st.Name, cols, st.Unique, st.Descending, null);
         if (st.Unique) ValidateUnique(db, t, ix, c, st.Name);
@@ -763,7 +896,8 @@ public static class Ddl
         }
         if (!exists && db.Tables.ContainsKey(st.Name)) throw Exists("Table", st.Name);
         var q = new Compiler(db, 0).CompileSelect(st.Query, null);
-        if (st.Columns != null && st.Columns.Count != q.Columns.Length) throw Err.MetaUpdate("number of columns does not match select list");
+        if (st.Columns != null && st.Columns.Count != q.Columns.Length)
+            throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err).Gds(FbMessages.num_field_err).Build();
         var view = new View { Name = st.Name, ColumnNames = st.Columns, Query = st.Query, Source = st.Source };
         for (var i = 0; i < q.Columns.Length; i++) view.Columns.Add((st.Columns?[i] ?? q.Columns[i].Name, q.Columns[i].Type));
         if (view.Columns.Select(cc => cc.Name).Distinct().Count() != view.Columns.Count)
@@ -831,16 +965,70 @@ public static class Ddl
         comp.BindBool(d.Check!, s);
     }
 
+    static void Comment(Database db, CommentStmt st)
+    {
+        switch (st.Kind)
+        {
+            case "TABLE":
+                (db.Tables.TryGetValue(st.Name, out var t) && !t.IsSystem ? t : throw Missing("Table", st.Name)).Description = st.Text;
+                break;
+            case "VIEW":
+                (db.Views.TryGetValue(st.Name, out var v) ? v : throw Missing("View", st.Name)).Description = st.Text;
+                break;
+            case "COLUMN":
+                if (db.Tables.TryGetValue(st.Name, out var tc))
+                {
+                    var ci = tc.FindColumn(st.Sub!);
+                    if (ci < 0) throw ColumnMissing(tc, st.Sub!);
+                    tc.Columns[ci].Description = st.Text;
+                }
+                else if (db.Views.TryGetValue(st.Name, out var vc))
+                {
+                    var ci = vc.Columns.FindIndex(x => x.Name == st.Sub);
+                    if (ci < 0) throw new StatusBuilder().Gds(FbMessages.dyn_column_does_not_exist).Str(st.Sub!).Str(vc.Name).Build();
+                    (vc.ColumnDescriptions ??= new())[st.Sub!] = st.Text;
+                }
+                else throw Missing("Table", st.Name);
+                break;
+            case "PROCEDURE":
+                (db.Procedures.TryGetValue(st.Name, out var p) ? p : throw Missing("Procedure", st.Name)).Description = st.Text;
+                break;
+            case "FUNCTION":
+                (db.Functions.TryGetValue(st.Name, out var f) ? f : throw Missing("Function", st.Name)).Description = st.Text;
+                break;
+            case "TRIGGER":
+                (db.Triggers.TryGetValue(st.Name, out var tr) ? tr : throw Missing("Trigger", st.Name)).Description = st.Text;
+                break;
+            case "DOMAIN":
+                (db.Domains.TryGetValue(st.Name, out var dm) ? dm : throw Missing("Domain", st.Name)).Description = st.Text;
+                break;
+            case "SEQUENCE":
+                (db.Sequences.TryGetValue(st.Name, out var sq) ? sq : throw Missing("Sequence", st.Name)).Description = st.Text;
+                break;
+            case "EXCEPTION":
+                (db.Exceptions.TryGetValue(st.Name, out var ex) ? ex : throw Missing("Exception", st.Name)).Description = st.Text;
+                break;
+            case "INDEX":
+                (db.Indexes.TryGetValue(st.Name, out var ix) ? ix : throw Missing("Index", st.Name)).Description = st.Text;
+                break;
+        }
+    }
+
     static void AlterDomain(Database db, AlterDomainStmt st, Ctx c)
     {
         if (!db.Domains.TryGetValue(st.Name, out var d)) throw Missing("Domain", st.Name);
-        if (st.SetDefault) d.Default = st.Default;
-        if (st.DropDefault) d.Default = null;
+        if (st.SetDefault)
+        {
+            d.Default = st.Default;
+            d.DefaultSource = st.DefaultSource;
+        }
+        if (st.DropDefault) { d.Default = null; d.DefaultSource = null; }
         if (st.NotNull != null) d.NotNull = st.NotNull.Value;
-        if (st.DropConstraint) d.Check = null;
+        if (st.DropConstraint) { d.Check = null; d.CheckSource = null; }
         if (st.AddCheck != null)
         {
             d.Check = st.AddCheck;
+            d.CheckSource = st.CheckSource;
             ValidateDomainCheck(db, d);
         }
         if (st.NewType != null) d.Type = Comp(db).ResolveType(st.NewType);
@@ -872,7 +1060,7 @@ public static class Ddl
         {
             if (!names.Add(p.Name)) throw Err.MetaUpdate("duplicate parameter name " + p.Name);
             var t = comp.ResolveType(p.Type, out var dom);
-            return new RoutineParam { Name = p.Name, Type = t, NotNull = p.NotNull || (dom?.NotNull ?? false), Default = p.Default, Domain = dom?.Name };
+            return new RoutineParam { Name = p.Name, Type = t, NotNull = p.NotNull || (dom?.NotNull ?? false), Default = p.Default, DefaultSource = p.DefaultSource, Domain = dom?.Name };
         }).ToList();
     }
 
@@ -1084,7 +1272,8 @@ public static class Ddl
                 if (!db.Domains.ContainsKey(st.Name)) throw Missing("Domain", st.Name);
                 foreach (var t in db.Tables.Values)
                     foreach (var col in t.Columns)
-                        if (col.Domain == st.Name) throw Err.MetaUpdate($"Domain {st.Name} is used in table {t.Name}");
+                        if (col.Domain == st.Name)
+                            throw new StatusBuilder().Gds(FbMessages.dyn_43).Str(st.Name).Str(t.Name).Str(col.Name).Build();
                 db.Domains.Remove(st.Name);
                 break;
             }

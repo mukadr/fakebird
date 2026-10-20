@@ -1,0 +1,644 @@
+--- select trim(rf.rdb$field_name), rf.rdb$field_position, trim(rf.rdb$field_source) starting with 'RDB$',
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$FIELD_POSITION,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_SUB_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SUB_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SCALE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SCALE,False,False)
+RDB$FIELD_PRECISION:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_PRECISION,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+COALESCE:SMALLINT (2,,,True,,COALESCE,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$NULL_FLAG,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FIELDS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+RDB$IDENTITY_TYPE:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$IDENTITY_TYPE,False,False)
+RDB$SEGMENT_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$SEGMENT_LENGTH,False,False)
+RDB$DIMENSIONS:SMALLINT (2,,,True,RDB$FIELDS,RDB$DIMENSIONS,False,False)
+I | 0 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+SM | 1 | True | 7 | 0 | 2 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+BI | 2 | True | 16 | 0 | 8 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N92 | 3 | True | 8 | 1 | 4 | -2 | 9 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N182 | 4 | True | 16 | 1 | 8 | -2 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N4 | 5 | True | 7 | 1 | 2 | 0 | 4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N10 | 6 | True | 16 | 1 | 8 | 0 | 10 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+D52 | 7 | True | 8 | 2 | 4 | -2 | 5 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+D18 | 8 | True | 16 | 2 | 8 | -4 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+F | 9 | True | 10 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DP | 10 | True | 27 | NULL | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+C5 | 11 | True | 14 | 0 | 20 | 0 | NULL | 5 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+V10 | 12 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VO | 13 | True | 37 | 0 | 8 | 0 | NULL | 8 | 1 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VW | 14 | True | 37 | 0 | 10 | 0 | NULL | 10 | 53 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VA | 15 | True | 37 | 0 | 10 | 0 | NULL | 10 | 2 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VN | 16 | True | 37 | 0 | 10 | 0 | NULL | 10 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VCI | 17 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VAI | 18 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DT | 19 | True | 12 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+TM | 20 | True | 13 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+TS | 21 | True | 35 | NULL | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+B | 22 | True | 23 | NULL | 1 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+BT | 23 | True | 261 | 1 | 8 | 0 | NULL | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+BB | 24 | True | 261 | 0 | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+B0 | 25 | True | 261 | 0 | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+M | 26 | False | 16 | 1 | 8 | -2 | 15 | NULL | NULL | NULL | NULL | 1 | NULL | default 0 | NULL | NULL | NULL | NULL | 
+NM | 27 | False | 37 | 0 | 120 | 0 | NULL | 30 | 4 | 3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+NN | 28 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | 1 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DF | 29 | True | 37 | 0 | 20 | 0 | NULL | 5 | 4 | 0 | NULL | NULL | default 'x' | NULL | NULL | NULL | NULL | NULL | 
+DN | 30 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | default null | NULL | NULL | NULL | NULL | NULL | 
+CMP | 31 | True | 16 | 0 | 8 | 0 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | (i * 2) | NULL | NULL | NULL | 
+CMP2 | 32 | True | 37 | 0 | 44 | 0 | NULL | 11 | 4 | 0 | NULL | NULL | NULL | NULL | (v10 || '!') | NULL | NULL | NULL | 
+ID | 33 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | 1 | NULL | NULL | NULL | NULL | 1 | NULL | NULL | 
+affected 0
+--- select trim(rdb$field_name), rdb$field_type, rdb$field_length, rdb$field_scale, rdb$field_precision, rdb$null_flag, cast(rdb$default_source as varchar(30)), cast(rdb$validation_source as varchar(40)), rdb$character_set_id, rdb$collation_id from rdb$fields where rdb$field_name in ('D_MONEY', 'D_NAME')
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SCALE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SCALE,False,False)
+RDB$FIELD_PRECISION:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_PRECISION,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FIELDS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (30,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+RDB$COLLATION_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$COLLATION_ID,False,False)
+D_MONEY | 16 | 8 | -2 | 15 | 1 | default 0 | check (value >= 0) | NULL | NULL | 
+D_NAME | 37 | 120 | 0 | NULL | NULL | NULL | NULL | 4 | 3 | 
+affected 0
+--- select trim(rdb$relation_name), rdb$relation_type, rdb$system_flag, trim(rdb$owner_name), rdb$field_id, rdb$view_blr is null, rdb$external_file from rdb$relations where rdb$relation_name = 'TY'
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$RELATION_TYPE:SMALLINT (2,,,True,RDB$RELATIONS,RDB$RELATION_TYPE,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$RELATIONS,RDB$SYSTEM_FLAG,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_ID:SMALLINT (2,,,True,RDB$RELATIONS,RDB$FIELD_ID,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$EXTERNAL_FILE:VARCHAR (255,,,True,RDB$RELATIONS,RDB$EXTERNAL_FILE,False,False)
+TY | 0 | 0 | SYSDBA | 34 | True | NULL | 
+affected 0
+--- select trim(rdb$generator_name), rdb$generator_id > 0, rdb$system_flag, rdb$initial_value, rdb$generator_increment from rdb$generators where rdb$system_flag = 0 or rdb$generator_name starting 'RDB$' and rdb$system_flag = 6 order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$GENERATORS,RDB$SYSTEM_FLAG,False,False)
+RDB$INITIAL_VALUE:BIGINT (8,,,True,RDB$GENERATORS,RDB$INITIAL_VALUE,False,False)
+RDB$GENERATOR_INCREMENT:INTEGER (4,,,False,RDB$GENERATORS,RDB$GENERATOR_INCREMENT,False,False)
+RDB$1 | True | 6 | 1 | 1 | 
+S1 | True | 0 | 10 | 5 | 
+affected 0
+--- select gen_id(s1, 0), next value for s1, gen_id(s1, 0) from rdb$database
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+NEXT_VALUE:BIGINT (8,,,False,,NEXT_VALUE,False,False)
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+10 | 10 | 5 | 
+affected 0
+--- select trim(rdb$exception_name), rdb$exception_number > 0, rdb$message, rdb$system_flag from rdb$exceptions where rdb$system_flag = 0
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$MESSAGE:VARCHAR (1023,,,True,RDB$EXCEPTIONS,RDB$MESSAGE,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$EXCEPTIONS,RDB$SYSTEM_FLAG,False,False)
+E1 | True | message one | 0 | 
+affected 0
+--- create view v1 (a, b) as select i, v10 from ty where i > 0
+affected 0
+--- create view v2 as select i, v10 || 'x' as w, count(*) as cnt from ty group by i, v10
+affected 0
+--- select trim(rdb$relation_name), rdb$relation_type, rdb$view_blr is null, cast(rdb$view_source as varchar(80)) from rdb$relations where rdb$relation_name starting 'V' order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$RELATION_TYPE:SMALLINT (2,,,True,RDB$RELATIONS,RDB$RELATION_TYPE,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CAST:VARCHAR (80,,,True,,CAST,False,False)
+V1 | 1 | False | select i, v10 from ty where i > 0 | 
+V2 | 1 | False | select i, v10 || 'x' as w, count(*) as cnt from ty group by i, v10 | 
+affected 0
+--- select trim(rf.rdb$field_name), rf.rdb$field_position, trim(rf.rdb$field_source) starting with 'RDB$',
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$FIELD_POSITION,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_SUB_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SUB_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SCALE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SCALE,False,False)
+RDB$FIELD_PRECISION:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_PRECISION,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+COALESCE:SMALLINT (2,,,True,,COALESCE,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$NULL_FLAG,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FIELDS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+RDB$IDENTITY_TYPE:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$IDENTITY_TYPE,False,False)
+RDB$SEGMENT_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$SEGMENT_LENGTH,False,False)
+RDB$DIMENSIONS:SMALLINT (2,,,True,RDB$FIELDS,RDB$DIMENSIONS,False,False)
+A | 0 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+B | 1 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select trim(rf.rdb$field_name), rf.rdb$field_position, trim(rf.rdb$field_source) starting with 'RDB$',
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$FIELD_POSITION,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_SUB_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SUB_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SCALE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SCALE,False,False)
+RDB$FIELD_PRECISION:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_PRECISION,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+COALESCE:SMALLINT (2,,,True,,COALESCE,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$NULL_FLAG,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FIELDS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+RDB$IDENTITY_TYPE:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$IDENTITY_TYPE,False,False)
+RDB$SEGMENT_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$SEGMENT_LENGTH,False,False)
+RDB$DIMENSIONS:SMALLINT (2,,,True,RDB$FIELDS,RDB$DIMENSIONS,False,False)
+I | 0 | True | 8 | 0 | 4 | 0 | 9 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+W | 1 | True | 37 | 0 | 44 | 0 | NULL | 11 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+CNT | 2 | True | 16 | 0 | 8 | 0 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select trim(rdb$view_name), trim(rdb$relation_name), trim(rdb$view_context), trim(rdb$context_name), rdb$context_type from rdb$view_relations order by 1, 2
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (6,,,True,,TRIM,False,False)
+TRIM:VARCHAR (255,,,True,,TRIM,False,False)
+RDB$CONTEXT_TYPE:SMALLINT (2,,,True,RDB$VIEW_RELATIONS,RDB$CONTEXT_TYPE,False,False)
+V1 | TY | 1 | TY | 0 | 
+V2 | TY | 1 | TY | 0 | 
+affected 0
+--- select trim(rdb$dependent_name), trim(rdb$depended_on_name), trim(rdb$field_name), rdb$dependent_type, rdb$depended_on_type from rdb$dependencies where rdb$dependent_name starting 'V' order by 1, 2, 3
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$DEPENDENT_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDENT_TYPE,False,False)
+RDB$DEPENDED_ON_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDED_ON_TYPE,False,False)
+V1 | TY | NULL | 1 | 0 | 
+V1 | TY | I | 1 | 0 | 
+V1 | TY | V10 | 1 | 0 | 
+V2 | TY | NULL | 1 | 0 | 
+V2 | TY | I | 1 | 0 | 
+V2 | TY | V10 | 1 | 0 | 
+affected 0
+--- create procedure p1 (a integer, b varchar(5) = 'z') returns (r integer, s varchar(10)) as begin r = a; s = b; suspend; end
+affected 0
+--- create function fn1 (x integer) returns numeric(9,2) deterministic as begin return x / 3.0; end
+affected 0
+--- create trigger tr1 for ty active before insert or update position 3 as begin new.i = coalesce(new.i, 0); end
+affected 0
+--- create trigger tr2 for ty inactive after delete as begin end
+affected 0
+--- select trim(rdb$procedure_name), rdb$procedure_inputs, rdb$procedure_outputs, rdb$procedure_type, rdb$valid_blr, rdb$system_flag from rdb$procedures where rdb$system_flag = 0
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$PROCEDURE_INPUTS:SMALLINT (2,,,True,RDB$PROCEDURES,RDB$PROCEDURE_INPUTS,False,False)
+RDB$PROCEDURE_OUTPUTS:SMALLINT (2,,,True,RDB$PROCEDURES,RDB$PROCEDURE_OUTPUTS,False,False)
+RDB$PROCEDURE_TYPE:SMALLINT (2,,,True,RDB$PROCEDURES,RDB$PROCEDURE_TYPE,False,False)
+RDB$VALID_BLR:SMALLINT (2,,,True,RDB$PROCEDURES,RDB$VALID_BLR,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$PROCEDURES,RDB$SYSTEM_FLAG,False,False)
+P1 | 2 | 2 | 1 | 1 | 0 | 
+affected 0
+--- select trim(rdb$parameter_name), rdb$parameter_number, rdb$parameter_type, trim(rdb$field_source) starting 'RDB$', rdb$null_flag, cast(rdb$default_source as varchar(20)), rdb$parameter_mechanism from rdb$procedure_parameters where rdb$procedure_name = 'P1' order by rdb$parameter_type, rdb$parameter_number
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$PARAMETER_NUMBER:SMALLINT (2,,,True,RDB$PROCEDURE_PARAMETERS,RDB$PARAMETER_NUMBER,False,False)
+RDB$PARAMETER_TYPE:SMALLINT (2,,,True,RDB$PROCEDURE_PARAMETERS,RDB$PARAMETER_TYPE,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$PROCEDURE_PARAMETERS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+RDB$PARAMETER_MECHANISM:SMALLINT (2,,,True,RDB$PROCEDURE_PARAMETERS,RDB$PARAMETER_MECHANISM,False,False)
+A | 0 | 0 | True | NULL | NULL | 0 | 
+B | 1 | 0 | True | NULL | = 'z' | 0 | 
+R | 0 | 1 | True | NULL | NULL | 0 | 
+S | 1 | 1 | True | NULL | NULL | 0 | 
+affected 0
+--- select trim(rdb$function_name), rdb$return_argument, rdb$deterministic_flag, rdb$valid_blr, rdb$system_flag, rdb$legacy_flag from rdb$functions where rdb$system_flag = 0
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$RETURN_ARGUMENT:SMALLINT (2,,,True,RDB$FUNCTIONS,RDB$RETURN_ARGUMENT,False,False)
+RDB$DETERMINISTIC_FLAG:SMALLINT (2,,,True,RDB$FUNCTIONS,RDB$DETERMINISTIC_FLAG,False,False)
+RDB$VALID_BLR:SMALLINT (2,,,True,RDB$FUNCTIONS,RDB$VALID_BLR,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$FUNCTIONS,RDB$SYSTEM_FLAG,False,False)
+RDB$LEGACY_FLAG:SMALLINT (2,,,True,RDB$FUNCTIONS,RDB$LEGACY_FLAG,False,False)
+FN1 | 0 | 1 | 1 | 0 | 0 | 
+affected 0
+--- select trim(rdb$argument_name), rdb$argument_position, rdb$mechanism, trim(rdb$field_source) starting 'RDB$', rdb$null_flag from rdb$function_arguments where rdb$function_name = 'FN1' order by 2
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$ARGUMENT_POSITION:SMALLINT (2,,,True,RDB$FUNCTION_ARGUMENTS,RDB$ARGUMENT_POSITION,False,False)
+RDB$MECHANISM:SMALLINT (2,,,True,RDB$FUNCTION_ARGUMENTS,RDB$MECHANISM,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FUNCTION_ARGUMENTS,RDB$NULL_FLAG,False,False)
+NULL | 0 | NULL | True | NULL | 
+X | 1 | NULL | True | NULL | 
+affected 0
+--- select trim(rdb$trigger_name), trim(rdb$relation_name), rdb$trigger_sequence, rdb$trigger_type, rdb$trigger_inactive, rdb$system_flag, rdb$valid_blr, rdb$flags from rdb$triggers where rdb$system_flag = 0 order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$TRIGGER_SEQUENCE:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$TRIGGER_SEQUENCE,False,False)
+RDB$TRIGGER_TYPE:BIGINT (8,,,True,RDB$TRIGGERS,RDB$TRIGGER_TYPE,False,False)
+RDB$TRIGGER_INACTIVE:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$TRIGGER_INACTIVE,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$TRIGGERS,RDB$SYSTEM_FLAG,False,False)
+RDB$VALID_BLR:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$VALID_BLR,False,False)
+RDB$FLAGS:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$FLAGS,False,False)
+TR1 | TY | 3 | 17 | 0 | 0 | 1 | 1 | 
+TR2 | TY | 0 | 6 | 1 | 0 | 1 | 1 | 
+affected 0
+--- select cast(rdb$trigger_source as varchar(120)) from rdb$triggers where rdb$trigger_name = 'TR1'
+CAST:VARCHAR (120,,,True,,CAST,False,False)
+as begin new.i = coalesce(new.i, 0); end | 
+affected 0
+--- select cast(rdb$procedure_source as varchar(120)) from rdb$procedures where rdb$procedure_name = 'P1'
+CAST:VARCHAR (120,,,True,,CAST,False,False)
+begin r = a; s = b; suspend; end | 
+affected 0
+--- create index ix1 on ty (i, v10)
+affected 0
+--- create unique descending index ix2 on ty (bi)
+affected 0
+--- create index ix3 on ty computed by (upper(v10))
+affected 0
+--- select trim(rdb$index_name), trim(rdb$relation_name), rdb$index_id > 0, rdb$unique_flag, rdb$segment_count, rdb$index_inactive, rdb$index_type, trim(rdb$foreign_key), cast(rdb$expression_source as varchar(40)), rdb$system_flag from rdb$indices where rdb$relation_name = 'TY' order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$UNIQUE_FLAG:SMALLINT (2,,,True,RDB$INDICES,RDB$UNIQUE_FLAG,False,False)
+RDB$SEGMENT_COUNT:SMALLINT (2,,,True,RDB$INDICES,RDB$SEGMENT_COUNT,False,False)
+RDB$INDEX_INACTIVE:SMALLINT (2,,,True,RDB$INDICES,RDB$INDEX_INACTIVE,False,False)
+RDB$INDEX_TYPE:SMALLINT (2,,,True,RDB$INDICES,RDB$INDEX_TYPE,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+RDB$SYSTEM_FLAG:SMALLINT (2,,,False,RDB$INDICES,RDB$SYSTEM_FLAG,False,False)
+IX1 | TY | True | 0 | 2 | 0 | 0 | NULL | NULL | 0 | 
+IX2 | TY | True | 1 | 1 | 0 | 1 | NULL | NULL | 0 | 
+IX3 | TY | True | 0 | 0 | 0 | 0 | NULL | (upper(v10)) | 0 | 
+affected 0
+--- select trim(rdb$index_name), trim(rdb$field_name), rdb$field_position from rdb$index_segments where rdb$index_name starting 'IX' order by 1, 3
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$INDEX_SEGMENTS,RDB$FIELD_POSITION,False,False)
+IX1 | I | 0 | 
+IX1 | V10 | 1 | 
+IX2 | BI | 0 | 
+affected 0
+--- alter index ix1 inactive
+affected 0
+--- select rdb$index_inactive from rdb$indices where rdb$index_name = 'IX1'
+RDB$INDEX_INACTIVE:SMALLINT (2,,,True,RDB$INDICES,RDB$INDEX_INACTIVE,False,False)
+1 | 
+affected 0
+--- alter index ix1 active
+affected 0
+--- drop index ix3
+affected 0
+--- create index ix1 on ty (sm)
+ERROR 335544351 336397316 'IX1' 336068859 'IX1' '' 42000
+unsuccessful metadata update
+CREATE INDEX IX1 failed
+Index IX1 already exists
+--- create index ix9 on nosuch (a)
+ERROR 335544351 336397316 'IX9' 336068728 'IX9' '' 42000
+unsuccessful metadata update
+CREATE INDEX IX9 failed
+Unknown columns in index IX9
+--- create index ix9 on ty (nosuch)
+ERROR 335544351 336397316 'IX9' 336068728 'IX9' '' 42000
+unsuccessful metadata update
+CREATE INDEX IX9 failed
+Unknown columns in index IX9
+--- drop index nosuch
+ERROR 335544351 336397305 'NOSUCH' 336068656 '' 42000
+unsuccessful metadata update
+DROP INDEX NOSUCH failed
+Index not found
+--- alter table ty add x1 integer
+affected 0
+--- alter table ty add x2 varchar(5) default 'q' not null
+affected 0
+--- alter table ty add x3 integer not null
+affected 0
+--- alter table ty alter column x1 type bigint
+affected 0
+--- alter table ty alter column x1 type smallint
+ERROR 335544351 336397287 'TY' 336068817 'X1' 'BIGINT' 'SMALLINT' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+Cannot change datatype for X1.  Conversion from base type BIGINT to SMALLINT is not supported.
+--- alter table ty alter column v10 type varchar(20)
+affected 0
+--- alter table ty alter column v10 type varchar(5)
+ERROR 335544351 336397287 'TY' 336068816 'V10' #20 '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+New size specified for column V10 must be at least 20 characters.
+--- alter table ty alter column i type varchar(20)
+affected 0
+--- alter table ty alter column c5 type integer
+ERROR 335544351 336397287 'TY' 336068818 'C5' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+Cannot change datatype for column C5 from a character type to a non-character type.
+--- alter table ty alter column x1 to x1r
+affected 0
+--- alter table ty alter column x1r position 1
+affected 0
+--- alter table ty alter column x2 set default 'w'
+affected 0
+--- alter table ty alter column x2 drop default
+affected 0
+--- alter table ty alter column dn set not null
+affected 0
+--- alter table ty alter column nn drop not null
+affected 0
+--- alter table ty alter column cmp computed by (i * 3)
+ERROR 335544351 336397287 'TY' 335544569 335544606 336397250 '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be multiplied in dialect 3
+--- alter table ty alter column id restart with 100
+affected 0
+--- alter table ty drop x2
+affected 0
+--- alter table ty drop nosuch
+ERROR 335544351 336397287 'TY' 336068784 'NOSUCH' 'TY' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+column NOSUCH does not exist in table/view TY
+--- alter table ty add i integer
+ERROR 335544351 336397287 'TY' 335544665 'RDB$INDEX_15' 'RDB$RELATION_FIELDS' 335545072 '("RDB$FIELD_NAME" = 'I', "RDB$RELATION_NAME" = 'TY')' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'I', "RDB$RELATION_NAME" = 'TY')
+--- alter table ty alter column nosuch type integer
+ERROR 335544351 336397287 'TY' 336068784 'NOSUCH' 'TY' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+column NOSUCH does not exist in table/view TY
+--- alter table ty alter column i type integer
+ERROR 335544351 336397287 'TY' 336068818 'I' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+Cannot change datatype for column I from a character type to a non-character type.
+--- alter table ty drop v10
+ERROR 335544351 336397287 'TY' 336068660 'V10' 'TY' 'V1                                                             ' '' 42000
+unsuccessful metadata update
+ALTER TABLE TY failed
+Column V10 from table TY is referenced in view V1
+--- select trim(rf.rdb$field_name), rf.rdb$field_position, trim(rf.rdb$field_source) starting with 'RDB$',
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$FIELD_POSITION,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_SUB_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SUB_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SCALE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SCALE,False,False)
+RDB$FIELD_PRECISION:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_PRECISION,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+COALESCE:SMALLINT (2,,,True,,COALESCE,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$NULL_FLAG,False,False)
+RDB$NULL_FLAG:SMALLINT (2,,,True,RDB$FIELDS,RDB$NULL_FLAG,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+CAST:VARCHAR (50,,,True,,CAST,False,False)
+RDB$IDENTITY_TYPE:SMALLINT (2,,,True,RDB$RELATION_FIELDS,RDB$IDENTITY_TYPE,False,False)
+RDB$SEGMENT_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$SEGMENT_LENGTH,False,False)
+RDB$DIMENSIONS:SMALLINT (2,,,True,RDB$FIELDS,RDB$DIMENSIONS,False,False)
+X1R | 0 | True | 16 | 0 | 8 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+I | 1 | True | 37 | 0 | 20 | 0 | NULL | 20 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+SM | 2 | True | 7 | 0 | 2 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+BI | 3 | True | 16 | 0 | 8 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N92 | 4 | True | 8 | 1 | 4 | -2 | 9 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N182 | 5 | True | 16 | 1 | 8 | -2 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N4 | 6 | True | 7 | 1 | 2 | 0 | 4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+N10 | 7 | True | 16 | 1 | 8 | 0 | 10 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+D52 | 8 | True | 8 | 2 | 4 | -2 | 5 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+D18 | 9 | True | 16 | 2 | 8 | -4 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+F | 10 | True | 10 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DP | 11 | True | 27 | NULL | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+C5 | 12 | True | 14 | 0 | 20 | 0 | NULL | 5 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+V10 | 13 | True | 37 | 0 | 80 | 0 | NULL | 20 | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VO | 14 | True | 37 | 0 | 8 | 0 | NULL | 8 | 1 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VW | 15 | True | 37 | 0 | 10 | 0 | NULL | 10 | 53 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VA | 16 | True | 37 | 0 | 10 | 0 | NULL | 10 | 2 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VN | 17 | True | 37 | 0 | 10 | 0 | NULL | 10 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VCI | 18 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+VAI | 19 | True | 37 | 0 | 40 | 0 | NULL | 10 | 4 | 4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DT | 20 | True | 12 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+TM | 21 | True | 13 | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+TS | 22 | True | 35 | NULL | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+B | 23 | True | 23 | NULL | 1 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+BT | 24 | True | 261 | 1 | 8 | 0 | NULL | NULL | 4 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+BB | 25 | True | 261 | 0 | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+B0 | 26 | True | 261 | 0 | 8 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 80 | NULL | 
+M | 27 | False | 16 | 1 | 8 | -2 | 15 | NULL | NULL | NULL | NULL | 1 | NULL | default 0 | NULL | NULL | NULL | NULL | 
+NM | 28 | False | 37 | 0 | 120 | 0 | NULL | 30 | 4 | 3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+NN | 29 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+DF | 30 | True | 37 | 0 | 20 | 0 | NULL | 5 | 4 | 0 | NULL | NULL | default 'x' | NULL | NULL | NULL | NULL | NULL | 
+DN | 31 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | 1 | NULL | default null | NULL | NULL | NULL | NULL | NULL | 
+CMP | 32 | True | 16 | 0 | 8 | 0 | 18 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | (i * 2) | NULL | NULL | NULL | 
+CMP2 | 33 | True | 37 | 0 | 44 | 0 | NULL | 11 | 4 | 0 | NULL | NULL | NULL | NULL | (v10 || '!') | NULL | NULL | NULL | 
+ID | 34 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | 1 | NULL | NULL | NULL | NULL | 1 | NULL | NULL | 
+X3 | 36 | True | 8 | 0 | 4 | 0 | 0 | NULL | NULL | NULL | 1 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- create table ty (a integer)
+ERROR 335544351 336397286 'TY' 336068740 'TY' '' 42000
+unsuccessful metadata update
+CREATE TABLE TY failed
+Table TY already exists
+--- create table t2 (a integer, a integer)
+ERROR 335544351 336397286 'T2' 335544665 'RDB$INDEX_15' 'RDB$RELATION_FIELDS' 335545072 '("RDB$FIELD_NAME" = 'A', "RDB$RELATION_NAME" = 'T2')' '' 42000
+unsuccessful metadata update
+CREATE TABLE T2 failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'A', "RDB$RELATION_NAME" = 'T2')
+--- create table t2 (a nosuchdomain)
+ERROR 335544351 336397286 'T2' 335544436 #-607 335544570 335544641 'NOSUCHDOMAIN' '' 42000
+unsuccessful metadata update
+CREATE TABLE T2 failed
+SQL error code = -607
+Invalid command
+Specified domain or source column NOSUCHDOMAIN does not exist
+--- create table t3 (a varchar(40000))
+ERROR 335544569 335544436 #-842 335544699 336397208 #1 #28 '' 42000
+Dynamic SQL Error
+SQL error code = -842
+Short integer expected
+At line 1, column 28
+--- create table t4 (a char(0))
+ERROR 335544569 335544436 #-842 335544712 336397208 #1 #25 '' 42000
+Dynamic SQL Error
+SQL error code = -842
+Positive value expected
+At line 1, column 25
+--- create table t5 (a numeric(19,2))
+affected 0
+--- create table t6 (a numeric(5,6))
+ERROR 335544569 335544436 #-842 335544698 336397208 #1 #30 '' 42000
+Dynamic SQL Error
+SQL error code = -842
+Scale must be between zero and precision
+At line 1, column 30
+--- create table t7 (a integer default 'x')
+affected 0
+--- create table t8 (a date default current_date, b timestamp default 'now', c varchar(10) default user)
+affected 0
+--- drop table nosuch
+ERROR 335544351 336397288 'NOSUCH' 335544436 #-607 335544570 336397206 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP TABLE NOSUCH failed
+SQL error code = -607
+Invalid command
+Table NOSUCH does not exist
+--- drop view nosuch
+ERROR 335544351 336397302 'NOSUCH' 335544436 #-607 335544570 336397207 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP VIEW NOSUCH failed
+SQL error code = -607
+Invalid command
+View NOSUCH does not exist
+--- drop procedure nosuch
+ERROR 335544351 336397268 'NOSUCH' 336068748 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP PROCEDURE NOSUCH failed
+Procedure NOSUCH not found
+--- drop function nosuch
+ERROR 335544351 336397263 'NOSUCH' 336068649 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP FUNCTION NOSUCH failed
+Function NOSUCH not found
+--- drop trigger nosuch
+ERROR 335544351 336397273 'NOSUCH' 336068755 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP TRIGGER NOSUCH failed
+Trigger NOSUCH not found
+--- drop sequence nosuch
+ERROR 335544351 336397303 'NOSUCH' 335544463 'NOSUCH' '' 42000
+unsuccessful metadata update
+DROP SEQUENCE NOSUCH failed
+generator NOSUCH is not defined
+--- drop exception nosuch
+ERROR 335544351 336397284 'NOSUCH' 336068752 '' 42000
+unsuccessful metadata update
+DROP EXCEPTION NOSUCH failed
+Exception not found
+--- drop domain nosuch
+ERROR 335544351 336397279 'NOSUCH' 336068697 '' 42000
+unsuccessful metadata update
+DROP DOMAIN NOSUCH failed
+Domain not found
+--- drop domain d_money
+ERROR 335544351 336397279 'D_MONEY' 336068651 'D_MONEY' 'TY' 'M' '' 42000
+unsuccessful metadata update
+DROP DOMAIN D_MONEY failed
+Domain D_MONEY is used in table TY (local name M) and cannot be dropped
+--- drop view v1
+affected 0
+--- drop view v1
+ERROR 335544351 336397302 'V1' 335544436 #-607 335544570 336397207 'V1' '' 42000
+unsuccessful metadata update
+DROP VIEW V1 failed
+SQL error code = -607
+Invalid command
+View V1 does not exist
+--- create view v3 as select nosuch from ty
+ERROR 335544351 336397298 'V3' 335544569 335544436 #-206 335544578 335544382 'NOSUCH' 336397208 #1 #26 '' 42000
+unsuccessful metadata update
+CREATE VIEW V3 failed
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+NOSUCH
+At line 1, column 26
+--- create view v4 (a, b) as select i from ty
+ERROR 335544351 336397298 'V4' 335544436 #-607 335544570 335544599 '' 42000
+unsuccessful metadata update
+CREATE VIEW V4 failed
+SQL error code = -607
+Invalid command
+number of columns does not match select list
+--- create procedure p1 returns (r integer) as begin r = 1; suspend; end
+ERROR 335544351 336397265 'P1' 336068743 'P1' '' 42000
+unsuccessful metadata update
+CREATE PROCEDURE P1 failed
+Procedure P1 already exists
+--- create or alter procedure p1 returns (r integer) as begin r = 2; suspend; end
+affected 0
+--- recreate procedure p1 returns (q integer) as begin q = 3; suspend; end
+affected 0
+--- alter procedure nosuch as begin end
+ERROR 335544351 336397266 'NOSUCH' 336068748 'NOSUCH' '' 42000
+unsuccessful metadata update
+ALTER PROCEDURE NOSUCH failed
+Procedure NOSUCH not found
+--- create sequence s1
+ERROR 335544351 336397285 'S1' 336068862 'S1' '' 42000
+unsuccessful metadata update
+CREATE SEQUENCE S1 failed
+Sequence S1 already exists
+--- create exception e1 'again'
+ERROR 335544351 336397280 'E1' 336068861 'E1' '' 42000
+unsuccessful metadata update
+CREATE EXCEPTION E1 failed
+Exception E1 already exists
+--- create domain d_money as integer
+ERROR 335544351 336397277 'D_MONEY' 335544665 'RDB$INDEX_2' 'RDB$FIELDS' 335545072 '("RDB$FIELD_NAME" = 'D_MONEY')' '' 42000
+unsuccessful metadata update
+CREATE DOMAIN D_MONEY failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_2" on table "RDB$FIELDS"
+Problematic key value is ("RDB$FIELD_NAME" = 'D_MONEY')
+--- alter domain d_money set default 5
+affected 0
+--- alter domain d_name type varchar(50)
+affected 0
+--- alter domain d_money drop constraint
+affected 0
+--- alter domain d_money add check (value > 10)
+affected 0
+--- alter sequence s1 restart with 50
+affected 0
+--- alter sequence s1 increment by 2
+affected 0
+--- alter exception e1 'changed'
+affected 0
+--- comment on table ty is 'tab'
+affected 0
+--- comment on column ty.i is 'col'
+affected 0
+--- select trim(rdb$field_name), rdb$field_type, cast(rdb$default_source as varchar(30)), cast(rdb$validation_source as varchar(40)), rdb$field_length from rdb$fields where rdb$field_name in ('D_MONEY', 'D_NAME') order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+CAST:VARCHAR (30,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+D_MONEY | 16 | default 5 | check (value > 10) | 8 | 
+D_NAME | 37 | NULL | NULL | 200 | 
+affected 0
+--- select gen_id(s1, 0), next value for s1 from rdb$database
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+NEXT_VALUE:BIGINT (8,,,False,,NEXT_VALUE,False,False)
+47 | 47 | 
+affected 0
+--- select rdb$message from rdb$exceptions where rdb$exception_name = 'E1'
+RDB$MESSAGE:VARCHAR (1023,,,True,RDB$EXCEPTIONS,RDB$MESSAGE,False,False)
+changed | 
+affected 0
+--- select cast(rdb$description as varchar(10)) from rdb$relations where rdb$relation_name = 'TY'
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+tab | 
+affected 0
+--- select cast(rdb$description as varchar(10)) from rdb$relation_fields where rdb$relation_name = 'TY' and rdb$field_name = 'I'
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+col | 
+affected 0
+--- select trim(rdb$parameter_name) from rdb$procedure_parameters where rdb$procedure_name = 'P1'
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+Q | 
+affected 0
+--- select trim(rdb$relation_name) from rdb$relations where rdb$system_flag = 0 order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+T5 | 
+T7 | 
+T8 | 
+TY | 
+V2 | 
+affected 0

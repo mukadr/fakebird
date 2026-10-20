@@ -5,6 +5,8 @@ namespace Fakebird.Engine;
 
 public sealed class Domain
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public SqlType Type = null!;
     public Expr? Default;
@@ -17,6 +19,10 @@ public sealed class Domain
 
 public sealed class Column
 {
+    /// <summary>RDB$FIELD_POSITION when it is not the column's index: a dropped column leaves a gap.</summary>
+    public int? Position;
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public SqlType Type = null!;
     public bool NotNull;
@@ -36,6 +42,8 @@ public sealed class Column
 
 public sealed class Sequence
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public long Value;
     public int Increment = 1;
@@ -46,6 +54,7 @@ public sealed class Sequence
 
 public sealed class ExceptionDef
 {
+    public string? Description;
     public string Name = null!;
     public string Message = null!;
     public int Number;
@@ -78,12 +87,15 @@ public sealed class Constraint
 
 public sealed class View
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public List<string>? ColumnNames;
     public SelectQuery Query = null!;
     public string Source = null!;
     /// <summary>Resolved output columns (names/types), computed when the view is created.</summary>
     public List<(string Name, SqlType Type)> Columns = new();
+    public Dictionary<string, string?>? ColumnDescriptions;
     public View Clone() => (View)MemberwiseClone();
 }
 
@@ -93,11 +105,14 @@ public sealed class RoutineParam
     public SqlType Type = null!;
     public bool NotNull;
     public Expr? Default;
+    public string? DefaultSource;
     public string? Domain;
 }
 
 public sealed class Procedure
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public List<RoutineParam> Inputs = new();
     public List<RoutineParam> Outputs = new();
@@ -110,12 +125,14 @@ public sealed class Procedure
     internal int CompiledVersion = -1;
     public Procedure CloneDef() => new()
     {
-        Name = Name, Inputs = Inputs, Outputs = Outputs, Body = Body, Source = Source, Selectable = Selectable,
+        Name = Name, Inputs = Inputs, Outputs = Outputs, Body = Body, Source = Source, Selectable = Selectable, Description = Description,
     };
 }
 
 public sealed class Function
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public List<RoutineParam> Inputs = new();
     public SqlType Returns = null!;
@@ -126,12 +143,14 @@ public sealed class Function
     internal int CompiledVersion = -1;
     public Function CloneDef() => new()
     {
-        Name = Name, Inputs = Inputs, Returns = Returns, Body = Body, Source = Source, Deterministic = Deterministic,
+        Name = Name, Inputs = Inputs, Returns = Returns, Body = Body, Source = Source, Deterministic = Deterministic, Description = Description,
     };
 }
 
 public sealed class Trigger
 {
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public string Name = null!;
     public string? Table;
     public bool Active = true;
@@ -146,6 +165,6 @@ public sealed class Trigger
     public Trigger CloneDef() => new()
     {
         Name = Name, Table = Table, Active = Active, Timing = Timing, Events = Events, DbEvent = DbEvent,
-        Position = Position, Body = Body, Source = Source,
+        Position = Position, Body = Body, Source = Source, Description = Description,
     };
 }

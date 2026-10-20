@@ -454,6 +454,8 @@ public sealed class ParamDecl
     public TypeSpec Type = null!;
     public bool NotNull;
     public Expr? Default;
+    /// <summary>The default clause as written (= 'x' or DEFAULT 'x').</summary>
+    public string? DefaultSource;
     /// <summary>EXECUTE BLOCK input parameter value (= ?)</summary>
     public Expr? Value;
 }
@@ -562,6 +564,7 @@ public sealed class CreateIndexStmt : Stmt
     public bool Descending;
     public List<string> Columns = new();
     public Expr? ComputedBy;
+    public string? ComputedBySource;
 }
 
 public sealed class AlterIndexStmt : Stmt
@@ -615,6 +618,15 @@ public sealed class CreateDomainStmt : Stmt
     public string? Collate;
 }
 
+/// <summary>COMMENT ON kind name[.sub] IS 'text' | NULL.</summary>
+public sealed class CommentStmt : Stmt
+{
+    public string Kind = null!;
+    public string Name = null!;
+    public string? Sub;
+    public string? Text;
+}
+
 public sealed class AlterDomainStmt : Stmt
 {
     public string Name = null!;
@@ -622,6 +634,8 @@ public sealed class AlterDomainStmt : Stmt
     public TypeSpec? NewType;
     public bool SetDefault;
     public Expr? Default;
+    public string? DefaultSource;
+    public string? CheckSource;
     public bool DropDefault;
     public bool? NotNull;
     public bool DropConstraint;

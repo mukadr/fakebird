@@ -66,12 +66,35 @@ public sealed partial class Parser
             case "GRANT":
             case "REVOKE":
             case "COMMENT":
-                return SkipToEnd(t.Text);
+                return Comment();
             case "DECLARE":
                 if (IsAt(1, "EXTERNAL") || IsAt(1, "FILTER")) return SkipToEnd("DECLARE EXTERNAL");
                 throw Unexpected();
         }
         throw Unexpected();
+    }
+
+    Stmt Comment()
+    {
+        var pos = Advance().Pos;
+        Expect("ON");
+        var kind = AnyIdent();
+        if (kind is "GENERATOR") kind = "SEQUENCE";
+        // descriptions are kept for the objects the RDB$ tables show; the others are accepted and ignored
+        if (kind is not ("TABLE" or "VIEW" or "COLUMN" or "PROCEDURE" or "FUNCTION" or "TRIGGER" or "DOMAIN" or "SEQUENCE"
+            or "EXCEPTION" or "INDEX"))
+            return SkipToEnd("COMMENT");
+        var s = new CommentStmt { Kind = kind, Name = Ident(), Pos = pos };
+        if (kind == "COLUMN")
+        {
+            ExpectOp(".");
+            s.Sub = Ident();
+        }
+        Expect("IS");
+        if (Accept("NULL")) s.Text = null;
+        else if (Cur.Kind == Tok.String) s.Text = Advance().Text;
+        else throw Unexpected();
+        return s;
     }
 
     /// <summary>Consumes the rest of a statement that is accepted and ignored.</summary>
@@ -354,7 +377,12 @@ public sealed partial class Parser
             var p = new ParamDecl { Name = Ident(), Type = DataType(allowDomain: true) };
             if (Accept("NOT")) { Expect("NULL"); p.NotNull = true; }
             CollateOpt(p.Type);
-            if (allowDefault && (Accept("DEFAULT") || AcceptOp("="))) p.Default = Expression();
+            if (allowDefault && (Accept("DEFAULT") || AcceptOp("=")))
+            {
+                var start = _i - 1;
+                p.Default = Expression();
+                p.DefaultSource = SourceFrom(start);
+            }
             l.Add(p);
         } while (AcceptOp(","));
         ExpectOp(")");
@@ -601,7 +629,7 @@ public sealed partial class Parser
         }
         if (Accept("DEFAULT"))
         {
-            var start = _i;
+            var start = _i - 1; // Firebird keeps the clause as written, keyword included
             c.Default = DefaultValue();
             c.DefaultSource = SourceFrom(start);
         }
@@ -785,7 +813,7 @@ public sealed partial class Parser
                     if (Accept("DEFAULT"))
                     {
                         a.SetDefault = true;
-                        var start = _i;
+                        var start = _i - 1;
                         a.Default = DefaultValue();
                         a.DefaultSource = SourceFrom(start);
                     }
@@ -840,9 +868,11 @@ public sealed partial class Parser
         if (Accept("COMPUTED"))
         {
             Accept("BY");
+            var start = _i;
             ExpectOp("(");
             s.ComputedBy = Expression();
             ExpectOp(")");
+            s.ComputedBySource = SourceFrom(start);
         }
         else s.Columns = ParenIdentList();
         return s;
@@ -874,18 +904,18 @@ public sealed partial class Parser
         {
             if (Accept("DEFAULT"))
             {
-                var start = _i;
+                var start = _i - 1;
                 s.Default = DefaultValue();
                 s.DefaultSource = SourceFrom(start);
             }
             else if (Is("NOT") && IsAt(1, "NULL")) { _i += 2; s.NotNull = true; }
             else if (Accept("CHECK"))
             {
+                var start = _i - 1;
                 ExpectOp("(");
-                var start = _i;
                 s.Check = Expression();
-                s.CheckSource = SourceFrom(start);
                 ExpectOp(")");
+                s.CheckSource = SourceFrom(start);
             }
             else if (Accept("COLLATE")) s.Collate = AnyIdent();
             else break;
@@ -901,7 +931,13 @@ public sealed partial class Parser
             if (Accept("TO")) s.NewName = Ident();
             else if (Accept("SET"))
             {
-                if (Accept("DEFAULT")) { s.SetDefault = true; s.Default = DefaultValue(); }
+                if (Accept("DEFAULT"))
+                {
+                    var start = _i - 1;
+                    s.SetDefault = true;
+                    s.Default = DefaultValue();
+                    s.DefaultSource = SourceFrom(start);
+                }
                 else { Expect("NOT"); Expect("NULL"); s.NotNull = true; }
             }
             else if (Accept("DROP"))
@@ -914,9 +950,11 @@ public sealed partial class Parser
             {
                 Accept("CONSTRAINT");
                 Expect("CHECK");
+                var start = _i - 1;
                 ExpectOp("(");
                 s.AddCheck = Expression();
                 ExpectOp(")");
+                s.CheckSource = SourceFrom(start);
             }
             else if (Accept("TYPE")) s.NewType = DataType(allowDomain: false);
             else break;
@@ -936,8 +974,9 @@ public sealed partial class Parser
         Accept("SQL");
         Accept("SECURITY");
         Expect("AS");
+        var bodyTok = _i;
         s.Body = PsqlBody();
-        s.Source = SourceFrom(startTok);
+        s.Source = SourceFrom(bodyTok); // RDB$PROCEDURE_SOURCE: what follows AS
         return s;
     }
 
@@ -952,8 +991,9 @@ public sealed partial class Parser
         if (Accept("DETERMINISTIC")) s.Deterministic = true;
         if (Is("EXTERNAL")) throw Err.Unsupported("external functions");
         Expect("AS");
+        var bodyTok = _i;
         s.Body = PsqlBody();
-        s.Source = SourceFrom(startTok);
+        s.Source = SourceFrom(bodyTok);
         return s;
     }
 
@@ -1008,13 +1048,14 @@ public sealed partial class Parser
             else break;
         }
         if (Accept("SQL")) Expect("SECURITY");
+        var asTok = _i;
         if (Accept("AS"))
         {
             s.Body = PsqlBody();
         }
         else if (mode != CreateMode.Alter) throw Unexpected();
         if (!hasEvent && mode != CreateMode.Alter) throw Unexpected();
-        s.Source = SourceFrom(startTok);
+        s.Source = SourceFrom(asTok); // RDB$TRIGGER_SOURCE: from AS on
         return s;
     }
 

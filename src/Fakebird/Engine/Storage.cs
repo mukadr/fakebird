@@ -108,6 +108,9 @@ public sealed class Index
     public bool Unique;
     public bool Descending;
     public bool Active = true;
+    /// <summary>An expression index (COMPUTED BY): a placeholder with no entries; the source as written.</summary>
+    public string? ExpressionSource;
+    public string? Description;
     /// <summary>Owning constraint (PK/UK/FK) or null for user indexes.</summary>
     public string? Constraint;
     public Collation[] Collations = [];
@@ -119,7 +122,7 @@ public sealed class Index
     public Index CloneDef() => new()
     {
         Name = Name, Table = Table, Columns = Columns, Unique = Unique, Descending = Descending, Active = Active,
-        Constraint = Constraint, Collations = Collations,
+        Constraint = Constraint, Collations = Collations, ExpressionSource = ExpressionSource, Description = Description,
     };
 
     public IndexKey KeyOf(Value[] row)
@@ -216,6 +219,8 @@ public sealed class Index
 public sealed class Table
 {
     public string Name = null!;
+    /// <summary>COMMENT ON: RDB$DESCRIPTION.</summary>
+    public string? Description;
     public List<Column> Columns = new();
     public Dictionary<string, int> ColumnIndex = new(StringComparer.Ordinal);
     public List<RowSlot> Rows = new();
@@ -251,7 +256,7 @@ public sealed class Table
     {
         var t = new Table
         {
-            Name = Name, IsSystem = IsSystem, IsGtt = IsGtt, GttPreserveRows = GttPreserveRows, Virtual = Virtual,
+            Name = Name, IsSystem = IsSystem, IsGtt = IsGtt, GttPreserveRows = GttPreserveRows, Virtual = Virtual, Description = Description,
             PrimaryKey = PrimaryKey, Uniques = [.. Uniques], ForeignKeys = [.. ForeignKeys], Checks = [.. Checks],
             Indexes = [.. Indexes], ReferencedBy = [.. ReferencedBy], Triggers = [.. Triggers],
         };

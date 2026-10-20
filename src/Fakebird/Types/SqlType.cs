@@ -79,11 +79,13 @@ public sealed class SqlType : IEquatable<SqlType>
     /// <summary>NUMERIC/DECIMAL(p, s) mapped to its storage type like Firebird dialect 3.</summary>
     public static SqlType Numeric(int precision, int scale, bool isDecimal = false)
     {
-        if (precision < 1 || precision > 18) throw Err.Dsql(-842, $"Precision must be from 1 to 18");
+        if (precision < 1 || precision > 38) throw Err.Dsql(-842, $"Precision must be from 1 to 38");
         if (scale < 0 || scale > precision) throw Err.Dsql(-842, "Scale must be between zero and precision");
+        // Firebird 4+: precisions above 18 are stored as INT128
         TypeKind kind = precision <= 4 && !isDecimal ? TypeKind.SmallInt
             : precision <= 9 ? TypeKind.Integer
-            : TypeKind.BigInt;
+            : precision <= 18 ? TypeKind.BigInt
+            : TypeKind.Int128;
         return new SqlType(kind, scale: scale, precision: precision, subType: isDecimal ? 2 : 1);
     }
 
