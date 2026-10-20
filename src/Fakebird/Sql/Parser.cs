@@ -836,6 +836,10 @@ public sealed partial class Parser
     {
         ExpectOp("(");
         var f = new FuncExpr(name, new List<Expr>()) { Pos = pos, Package = package };
+        if (package == null && RankingFunctions.Contains(name) && !IsOp(")")) throw Unexpected();
+        // NTILE takes a number, a parameter or a variable
+        if (package == null && name == "NTILE" && Cur.Kind is not (Tok.Integer or Tok.Param or Tok.Colon or Tok.Ident or Tok.QuotedIdent)) throw Unexpected();
+        if (package == null && name == "NTILE" && Is("NULL")) throw Unexpected();
         // aggregates have their own grammar rules: one argument (LIST: an optional delimiter), * only in COUNT
         var aggregate = package == null && name is "COUNT" or "SUM" or "AVG" or "MIN" or "MAX" or "LIST";
         if (aggregate && (IsOp(")") || IsOp("*") && name != "COUNT")) throw Unexpected();
@@ -867,13 +871,31 @@ public sealed partial class Parser
         return Over(f);
     }
 
+    static readonly HashSet<string> RankingFunctions = ["ROW_NUMBER", "RANK", "DENSE_RANK", "PERCENT_RANK", "CUME_DIST"];
+
     Expr Over(FuncExpr f)
     {
+        if (f.Name == "NTH_VALUE" && f.Package == null && Accept("FROM"))
+        {
+            if (Accept("LAST")) f.FromLast = true;
+            else Expect("FIRST");
+        }
+        // ranking functions only exist as window functions
+        if (f.Package == null && (RankingFunctions.Contains(f.Name) || f.Name == "NTILE") && !Is("OVER")) throw Unexpected();
         if (!Accept("OVER")) return f;
         if (IsIdentStart && !IsOp("("))
-            return new WindowExpr(f, new WindowSpec { PartitionBy = null! }) { Pos = f.Pos }; // named window: unsupported later
+            return new WindowExpr(f, new WindowSpec { BaseName = Ident() }) { Pos = f.Pos };
         ExpectOp("(");
+        var w = WindowBody();
+        ExpectOp(")");
+        return new WindowExpr(f, w) { Pos = f.Pos };
+    }
+
+    /// <summary>[base window] [PARTITION BY ...] [ORDER BY ...] [ROWS | RANGE frame]</summary>
+    internal WindowSpec WindowBody()
+    {
         var w = new WindowSpec();
+        if (IsIdentStart && !Is("PARTITION") && !Is("ORDER") && !Is("ROWS") && !Is("RANGE")) w.BaseName = Ident();
         if (Accept("PARTITION"))
         {
             Expect("BY");
@@ -902,8 +924,7 @@ public sealed partial class Parser
             }
             w.Frame = new FrameSpec(unit, start, end);
         }
-        ExpectOp(")");
-        return new WindowExpr(f, w) { Pos = f.Pos };
+        return w;
     }
 
     FrameBound FrameBoundSpec()

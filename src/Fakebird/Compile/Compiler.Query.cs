@@ -254,6 +254,13 @@ public sealed partial class Compiler
         _ => [],
     };
 
+    static bool ContainsWindow(Expr? e)
+    {
+        var l = new List<WindowExpr>();
+        CollectWindows(e, l);
+        return l.Count > 0;
+    }
+
     static bool ContainsAggregate(Expr? e)
     {
         var l = new List<FuncExpr>();
@@ -540,8 +547,14 @@ public sealed partial class Compiler
     {
         var refs = new Dictionary<(int Stream, int Col), SqlType>();
         _fieldTrackers.Add(refs);
+        var savedWindows = _namedWindows;
+        _namedWindows = qs.NamedWindows;
         try { return CompileSpec(qs, outer, orderBy, queryLimit, withLock, refs); }
-        finally { _fieldTrackers.Remove(refs); }
+        finally
+        {
+            _fieldTrackers.Remove(refs);
+            _namedWindows = savedWindows;
+        }
     }
 
     /// <summary>The referenced fields of the given streams, as Firebird's sort records carry them.</summary>
@@ -567,7 +580,7 @@ public sealed partial class Compiler
         var pool = new List<Conj>();
         if (qs.Where != null)
         {
-            if (ContainsAggregate(qs.Where)) throw Err.Dsql104(FbMessages.dsql_agg_where_err);
+            if (ContainsAggregate(qs.Where) || ContainsWindow(qs.Where)) throw Err.Dsql104(FbMessages.dsql_agg_where_err);
             foreach (var c in SplitAnd(qs.Where)) pool.Add(MakeConj(c, s));
         }
         BindJoinConditions(tree, s);
@@ -616,7 +629,7 @@ public sealed partial class Compiler
                     if (p < 1 || p > qs.Items.Count) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "GROUP BY");
                     ge = qs.Items[p - 1].Expr;
                 }
-                if (ContainsAggregate(ge)) throw Err.Dsql104(FbMessages.dsql_agg_group_err);
+                if (ContainsAggregate(ge) || ContainsWindow(ge)) throw Err.Dsql104(FbMessages.dsql_agg_group_err);
                 var kn = Bind(ge, s);
                 keys.Add(kn);
                 ab.KeyCanon.Add(Canon(ge, s) ?? Guid.NewGuid().ToString());
@@ -778,21 +791,43 @@ public sealed partial class Compiler
         Derived = alias == null && n.Field is not { Length: > 0 },
     };
 
+    /// <summary>The named windows of the query specification being compiled (WINDOW clause).</summary>
+    Dictionary<string, WindowSpec>? _namedWindows;
+
+    /// <summary>A window with its named base applied: the base's partition, its order unless redefined, then the frame.</summary>
+    WindowSpec ResolveWindow(WindowSpec w, int depth = 0)
+    {
+        if (w.BaseName == null) return w;
+        if (_namedWindows == null || !_namedWindows.TryGetValue(w.BaseName, out var named) || depth > 32)
+            throw Err.Dsql(-104, "Window " + w.BaseName + " not found");
+        var b = ResolveWindow(named, depth + 1);
+        return new WindowSpec
+        {
+            PartitionBy = b.PartitionBy,
+            OrderBy = w.OrderBy.Count > 0 ? w.OrderBy : b.OrderBy,
+            Frame = w.Frame ?? b.Frame,
+        };
+    }
+
     WinSpec MakeWinSpec(WindowExpr w, Scope s)
     {
-        if (w.Window.PartitionBy == null) throw Err.Unsupported("named windows");
+        var window = ResolveWindow(w.Window);
         var f = w.Func;
+        // RANGE with an offset measures distances on a single ORDER BY value
+        if (window.Frame is { Unit: FrameUnit.Range } fr && (fr.Start.Offset != null || fr.End.Offset != null) && window.OrderBy.Count != 1)
+            throw new StatusBuilder().Gds(FbMessages.dsql_window_range_multi_key).Build();
         var spec = new WinSpec
         {
-            Partition = w.Window.PartitionBy.Select(p => Bind(p, s)).ToArray(),
-            Order = w.Window.OrderBy.Select(o =>
+            FromLast = f.FromLast,
+            Partition = window.PartitionBy.Select(p => Bind(p, s)).ToArray(),
+            Order = window.OrderBy.Select(o =>
             {
                 var n = Bind(o.Expr, s);
                 var k = MakeSortKey(o, n.Type);
                 k.Expr = n;
                 return k;
             }).ToArray(),
-            Frame = w.Window.Frame,
+            Frame = window.Frame,
         };
         if (spec.Frame != null)
         {
@@ -820,7 +855,7 @@ public sealed partial class Compiler
                 if (f.Args.Count > 1) args.Add(Bind(f.Args[1], s, SqlType.BigInt));
                 if (f.Args.Count > 2) args.Add(Bind(f.Args[2], s, a0.Type));
                 spec.Args = args.ToArray();
-                spec.Type = f.Args.Count > 2 ? Builtins.CommonType([a0.Type, args[2].Type]) : a0.Type;
+                spec.Type = a0.Type; // the default is converted to the expression's type
                 break;
             }
             case "FIRST_VALUE":

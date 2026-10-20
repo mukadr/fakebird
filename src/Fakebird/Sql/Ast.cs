@@ -168,6 +168,8 @@ public sealed class FuncExpr(string name, List<Expr> args) : Expr
     public bool Distinct;
     public bool Star;
     public string? Package;
+    /// <summary>NTH_VALUE ... FROM LAST.</summary>
+    public bool FromLast;
 }
 
 /// <summary>A bare keyword used as a function argument (e.g. YEAR in EXTRACT).</summary>
@@ -178,6 +180,8 @@ public sealed class KeywordArg(string keyword) : Expr
 
 public sealed class WindowSpec
 {
+    /// <summary>A named window this one starts from (OVER w, OVER (w ORDER BY ...)).</summary>
+    public string? BaseName;
     public List<Expr> PartitionBy = new();
     public List<OrderItem> OrderBy = new();
     public FrameSpec? Frame;

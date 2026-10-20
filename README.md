@@ -154,6 +154,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   `*`), the null-extended side of an outer join is described as nullable, ON conditions only see the
   sources joined so far, and ambiguity, alias-conflict, USING, derived-table column list and column count
   errors carry Firebird's codes and arguments (`Ambiguous field name between table R and table L`).
+* **Window functions** (Firebird 3-5): ranking, LAG/LEAD (typed by their expression), FIRST_VALUE/
+  LAST_VALUE/NTH_VALUE [FROM FIRST | LAST], aggregates over partitions, the default frame, ROWS and RANGE
+  frames with offsets (RANGE needs a single ORDER BY value; NULLs frame their NULL peers), named windows
+  (`WINDOW w AS (...)`, `OVER w`, `OVER (w ORDER BY ...)`), and Firebird's argument and grammar errors.
 * **Ordering and limits**: rows with equal ORDER BY keys come out in Firebird's sort-record order (e.g.
   INTEGER ties by their little-endian bytes, so -1 after 5); NULLs first ascending; UNION orders by
   positions only and keeps the last of duplicate rows; FIRST/SKIP/ROWS/OFFSET/FETCH follow Firebird's

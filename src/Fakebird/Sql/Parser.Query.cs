@@ -134,7 +134,18 @@ public sealed partial class Parser
             while (AcceptOp(",")) qs.GroupBy.Add(Expression());
         }
         if (Accept("HAVING")) qs.Having = Expression();
-        if (Is("WINDOW")) throw Err.Unsupported("WINDOW clause");
+        if (Accept("WINDOW"))
+        {
+            qs.NamedWindows = new(StringComparer.Ordinal);
+            do
+            {
+                var name = Ident();
+                Expect("AS");
+                ExpectOp("(");
+                qs.NamedWindows[name] = WindowBody();
+                ExpectOp(")");
+            } while (AcceptOp(","));
+        }
         if (Accept("PLAN")) SkipPlan();
         return qs;
     }

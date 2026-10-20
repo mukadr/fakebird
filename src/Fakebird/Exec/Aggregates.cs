@@ -422,6 +422,8 @@ public sealed class WinSpec
     public SortKey[] Order = [];
     public Sql.FrameSpec? Frame;
     public XNode? FrameStartOffset, FrameEndOffset;
+    /// <summary>NTH_VALUE ... FROM LAST.</summary>
+    public bool FromLast;
     public SqlType Type = SqlType.Null;
 }
 
@@ -560,7 +562,7 @@ public sealed class WindowRel : RelNode
                     for (var i = 0; i < cnt; i++)
                     {
                         var buckets = Conv.ToInt64(args[rows[i]][0]);
-                        if (buckets <= 0) throw Err.Random("Argument for NTILE must be positive");
+                        if (buckets <= 0) throw ArgError(FbMessages.sysf_argnmustbe_positive, 1, "NTILE");
                         var small = cnt / buckets;
                         var large = cnt % buckets;
                         long bucket;
@@ -576,7 +578,7 @@ public sealed class WindowRel : RelNode
                     {
                         var a = args[rows[i]];
                         var off = a.Length > 1 ? Conv.ToInt64(a[1]) : 1;
-                        if (off < 0) throw Err.Random("Argument for LAG/LEAD must be zero or positive");
+                        if (off < 0) throw ArgError(FbMessages.sysf_argnmustbe_nonneg, 2, sp.Kind == WinKind.Lag ? "LAG" : "LEAD");
                         var j = sp.Kind == WinKind.Lag ? i - off : i + off;
                         results[rows[i]][s] = j >= 0 && j < cnt
                             ? Coercion.ToType(args[rows[(int)j]][0], sp.Type)
@@ -625,8 +627,9 @@ public sealed class WindowRel : RelNode
                 case WinKind.NthValue:
                 {
                     var nth = Conv.ToInt64(args[rows[i]][1]);
-                    var idx = lo + (int)nth - 1;
-                    v = nth > 0 && idx <= hi ? args[rows[idx]][0] : Value.Null;
+                    if (nth <= 0) throw ArgError(FbMessages.sysf_argnmustbe_positive, 2, "NTH_VALUE");
+                    var idx = sp.FromLast ? hi - (int)nth + 1 : lo + (int)nth - 1;
+                    v = idx >= lo && idx <= hi ? args[rows[idx]][0] : Value.Null;
                     break;
                 }
                 default:
@@ -652,6 +655,9 @@ public sealed class WindowRel : RelNode
         }
     }
 
+    static FbError ArgError(int code, int position, string function)
+        => new StatusBuilder().Gds(code).Num(position).Str(function).Build();
+
     static int Bound(Ctx c, Sql.FrameBound b, int i, int cnt, WinSpec sp, int[] rows, List<Value[]> ord, bool start)
     {
         switch (b.Kind)
@@ -659,7 +665,9 @@ public sealed class WindowRel : RelNode
             case Sql.FrameBoundKind.UnboundedPreceding: return 0;
             case Sql.FrameBoundKind.UnboundedFollowing: return cnt - 1;
             case Sql.FrameBoundKind.CurrentRow:
-                if (sp.Frame!.Unit == Sql.FrameUnit.Rows || sp.Order.Length == 0) return start ? i : sp.Order.Length == 0 ? cnt - 1 : i;
+                if (sp.Frame!.Unit == Sql.FrameUnit.Rows) return i;
+                // RANGE: the current row's peers (without ORDER BY, the whole partition)
+                if (sp.Order.Length == 0) return start ? 0 : cnt - 1;
                 {
                     var j = i;
                     if (start) { while (j > 0 && SortRel.CompareKeys(ord[rows[j - 1]], ord[rows[i]], sp.Order) == 0) j--; }
@@ -668,12 +676,60 @@ public sealed class WindowRel : RelNode
                 }
             default:
             {
-                if (sp.Frame!.Unit != Sql.FrameUnit.Rows) throw Err.Unsupported("RANGE frames with offsets");
                 var offNode = (start ? sp.FrameStartOffset : sp.FrameEndOffset) ?? throw Err.Unsupported("frame offset");
+                if (sp.Frame!.Unit == Sql.FrameUnit.Range) return RangeBound(offNode.Eval(c), b.Kind, i, cnt, sp, rows, ord, start);
                 var off = (int)Conv.ToInt64(offNode.Eval(c));
                 var j = b.Kind == Sql.FrameBoundKind.Preceding ? i - off : i + off;
                 return Math.Clamp(j, start ? 0 : -1, start ? cnt : cnt - 1);
             }
+        }
+    }
+
+    /// <summary>
+    /// RANGE n PRECEDING/FOLLOWING: the limit is the current row's (single) ORDER BY value moved by n, earlier in sort
+    /// order for PRECEDING and later for FOLLOWING; a frame starts at the first row at or after its limit and ends at
+    /// the last row at or before it. A NULL value frames its NULL peers.
+    /// </summary>
+    static int RangeBound(Value offset, Sql.FrameBoundKind kind, int i, int cnt, WinSpec sp, int[] rows, List<Value[]> ord, bool start)
+    {
+        var key = sp.Order[0];
+        var cur = ord[rows[i]][0];
+        if (cur.IsNull)
+        {
+            var j = i;
+            if (start) { while (j > 0 && ord[rows[j - 1]][0].IsNull) j--; }
+            else { while (j + 1 < cnt && ord[rows[j + 1]][0].IsNull) j++; }
+            return j;
+        }
+        var limit = Shift(cur, offset, down: (kind == Sql.FrameBoundKind.Preceding) != key.Descending);
+        var sign = key.Descending ? -1 : 1;
+        int Side(int j) => sign * Conv.Compare(ord[rows[j]][0], limit, key.Collation);
+        if (start)
+        {
+            var j = 0;
+            while (j < cnt && (ord[rows[j]][0].IsNull || Side(j) < 0)) j++;
+            return j;
+        }
+        var k = cnt - 1;
+        while (k >= 0 && (ord[rows[k]][0].IsNull || Side(k) > 0)) k--;
+        return k;
+    }
+
+    /// <summary>The order value moved by the frame offset (numbers at their own scale, days for dates and timestamps).</summary>
+    static Value Shift(Value v, Value offset, bool down)
+    {
+        var dir = down ? -1 : 1;
+        switch (v.Tag)
+        {
+            case VTag.Date: return Value.Date(v.L + dir * Conv.ToInt64(offset));
+            case VTag.Timestamp: return Value.Timestamp(v.L + dir * (long)Math.Round(Conv.ToDouble(offset) * Value.TicksPerDay));
+            case VTag.Time: return Value.Time(v.L + dir * (long)Math.Round(Conv.ToDouble(offset) * Value.TicksPerSecond));
+            case VTag.Int or VTag.Int128:
+            {
+                var step = (Int128)Math.Round(Conv.ToDecimal(offset) * (decimal)Math.Pow(10, v.Scale));
+                return Value.Wide(v.AsInt128 + dir * step, v.Scale);
+            }
+            default: return Value.Dbl(Conv.ToDouble(v) + dir * Conv.ToDouble(offset));
         }
     }
 

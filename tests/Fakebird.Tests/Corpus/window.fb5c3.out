@@ -1,0 +1,2801 @@
+--- select id, row_number() over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, row_number() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 7 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, row_number() over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 3 | 
+2 | 1 | 
+3 | 2 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, row_number() over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 1 | 
+5 | 2 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, row_number() over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, row_number() over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, row_number() over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, rank() over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, rank() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 6 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, rank() over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 3 | 
+2 | 1 | 
+3 | 2 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, rank() over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, rank() over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, rank() over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, rank() over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, dense_rank() over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, dense_rank() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 6 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, dense_rank() over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 3 | 
+2 | 1 | 
+3 | 2 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, dense_rank() over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, dense_rank() over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, dense_rank() over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, dense_rank() over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, percent_rank() over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0 | 
+2 | 0 | 
+3 | 0 | 
+4 | 0 | 
+5 | 0 | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, percent_rank() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0.6666666666666666 | 
+2 | 0.8333333333333334 | 
+3 | 0.8333333333333334 | 
+4 | 0.3333333333333333 | 
+5 | 0 | 
+6 | 0.5 | 
+7 | 0.16666666666666666 | 
+affected 0
+--- select id, percent_rank() over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0.3333333333333333 | 
+2 | 0 | 
+3 | 0.16666666666666666 | 
+4 | 0.6666666666666666 | 
+5 | 1 | 
+6 | 0.5 | 
+7 | 0.8333333333333334 | 
+affected 0
+--- select id, percent_rank() over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0 | 
+2 | 0 | 
+3 | 0 | 
+4 | 0 | 
+5 | 0 | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, percent_rank() over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0 | 
+2 | 0.5 | 
+3 | 1 | 
+4 | 1 | 
+5 | 0 | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, percent_rank() over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 1 | 
+2 | 0.5 | 
+3 | 0 | 
+4 | 1 | 
+5 | 0 | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, percent_rank() over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+1 | 0 | 
+2 | 0.16666666666666666 | 
+3 | 0.3333333333333333 | 
+4 | 0.5 | 
+5 | 0.6666666666666666 | 
+6 | 0.8333333333333334 | 
+7 | 1 | 
+affected 0
+--- select id, cume_dist() over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, cume_dist() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 0.7142857142857143 | 
+2 | 1 | 
+3 | 1 | 
+4 | 0.42857142857142855 | 
+5 | 0.14285714285714285 | 
+6 | 0.5714285714285714 | 
+7 | 0.2857142857142857 | 
+affected 0
+--- select id, cume_dist() over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 0.42857142857142855 | 
+2 | 0.14285714285714285 | 
+3 | 0.2857142857142857 | 
+4 | 0.7142857142857143 | 
+5 | 1 | 
+6 | 0.5714285714285714 | 
+7 | 0.8571428571428571 | 
+affected 0
+--- select id, cume_dist() over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, cume_dist() over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 0.3333333333333333 | 
+2 | 0.6666666666666666 | 
+3 | 1 | 
+4 | 1 | 
+5 | 0.5 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, cume_dist() over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 1 | 
+2 | 0.6666666666666666 | 
+3 | 0.3333333333333333 | 
+4 | 1 | 
+5 | 0.5 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, cume_dist() over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 0.14285714285714285 | 
+2 | 0.2857142857142857 | 
+3 | 0.42857142857142855 | 
+4 | 0.5714285714285714 | 
+5 | 0.7142857142857143 | 
+6 | 0.8571428571428571 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(2) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 2 | 
+6 | 2 | 
+7 | 2 | 
+affected 0
+--- select id, ntile(2) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 2 | 
+2 | 2 | 
+3 | 2 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(2) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 2 | 
+5 | 2 | 
+6 | 1 | 
+7 | 2 | 
+affected 0
+--- select id, ntile(2) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 2 | 
+4 | 1 | 
+5 | 2 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(2) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 2 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(2) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 2 | 
+2 | 1 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(2) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 2 | 
+6 | 2 | 
+7 | 2 | 
+affected 0
+--- select id, ntile(4) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 2 | 
+4 | 2 | 
+5 | 3 | 
+6 | 3 | 
+7 | 4 | 
+affected 0
+--- select id, ntile(4) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 3 | 
+2 | 3 | 
+3 | 4 | 
+4 | 2 | 
+5 | 1 | 
+6 | 2 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(4) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 2 | 
+2 | 1 | 
+3 | 1 | 
+4 | 3 | 
+5 | 4 | 
+6 | 2 | 
+7 | 3 | 
+affected 0
+--- select id, ntile(4) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 1 | 
+5 | 2 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(4) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(4) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, ntile(4) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 2 | 
+4 | 2 | 
+5 | 3 | 
+6 | 3 | 
+7 | 4 | 
+affected 0
+--- select id, lag(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | 20 | 
+5 | 5 | 
+6 | NULL | 
+7 | 7 | 
+affected 0
+--- select id, lag(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 7 | 
+2 | 10 | 
+3 | 20 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, lag(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | 20 | 
+4 | 7 | 
+5 | 1 | 
+6 | 10 | 
+7 | 5 | 
+affected 0
+--- select id, lag(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | NULL | 
+5 | 5 | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | 20 | 
+5 | 5 | 
+6 | NULL | 
+7 | 7 | 
+affected 0
+--- select id, lead(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 5 | 
+4 | NULL | 
+5 | 7 | 
+6 | 1 | 
+7 | NULL | 
+affected 0
+--- select id, lead(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | 7 | 
+5 | 1 | 
+6 | 10 | 
+7 | 5 | 
+affected 0
+--- select id, lead(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 7 | 
+2 | 20 | 
+3 | 10 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, lead(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lead(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | NULL | 
+5 | 5 | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lead(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | NULL | 
+5 | 5 | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lead(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 5 | 
+4 | NULL | 
+5 | 7 | 
+6 | 1 | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | 10 | 
+4 | 20 | 
+5 | 20 | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 5 | 
+2 | 7 | 
+3 | 10 | 
+4 | NULL | 
+5 | NULL | 
+6 | 1 | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | 10 | 
+5 | 5 | 
+6 | 20 | 
+7 | 7 | 
+affected 0
+--- select id, lag(v, 2) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | 10 | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | 10 | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, lag(v, 2) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | 10 | 
+4 | 20 | 
+5 | 20 | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, lead(v, 2, -1) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 5 | 
+3 | NULL | 
+4 | 7 | 
+5 | 1 | 
+6 | -1 | 
+7 | -1 | 
+affected 0
+--- select id, lead(v, 2, -1) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | -1 | 
+3 | -1 | 
+4 | 10 | 
+5 | 5 | 
+6 | 20 | 
+7 | 7 | 
+affected 0
+--- select id, lead(v, 2, -1) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 5 | 
+2 | 10 | 
+3 | 7 | 
+4 | NULL | 
+5 | -1 | 
+6 | 1 | 
+7 | -1 | 
+affected 0
+--- select id, lead(v, 2, -1) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | -1 | 
+3 | -1 | 
+4 | -1 | 
+5 | -1 | 
+6 | -1 | 
+7 | -1 | 
+affected 0
+--- select id, lead(v, 2, -1) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | -1 | 
+3 | -1 | 
+4 | -1 | 
+5 | -1 | 
+6 | -1 | 
+7 | -1 | 
+affected 0
+--- select id, lead(v, 2, -1) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | -1 | 
+2 | -1 | 
+3 | 10 | 
+4 | -1 | 
+5 | -1 | 
+6 | -1 | 
+7 | -1 | 
+affected 0
+--- select id, lead(v, 2, -1) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:INTEGER (4,,,True,,LEAD,False,False)
+1 | 20 | 
+2 | 5 | 
+3 | NULL | 
+4 | 7 | 
+5 | 1 | 
+6 | -1 | 
+7 | -1 | 
+affected 0
+--- select id, lag(s, 1, 'none') over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | none | 
+2 | x | 
+3 | y | 
+4 | NULL | 
+5 | z | 
+6 | x | 
+7 | w | 
+affected 0
+--- select id, lag(s, 1, 'none') over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | w | 
+2 | x | 
+3 | y | 
+4 | v | 
+5 | none | 
+6 | z | 
+7 | x | 
+affected 0
+--- select id, lag(s, 1, 'none') over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | NULL | 
+2 | none | 
+3 | y | 
+4 | w | 
+5 | v | 
+6 | x | 
+7 | z | 
+affected 0
+--- select id, lag(s, 1, 'none') over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | none | 
+2 | x | 
+3 | y | 
+4 | none | 
+5 | z | 
+6 | none | 
+7 | none | 
+affected 0
+--- select id, lag(s, 1, 'none') over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | none | 
+2 | x | 
+3 | y | 
+4 | x | 
+5 | none | 
+6 | none | 
+7 | none | 
+affected 0
+--- select id, lag(s, 1, 'none') over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | y | 
+2 | NULL | 
+3 | none | 
+4 | x | 
+5 | none | 
+6 | none | 
+7 | none | 
+affected 0
+--- select id, lag(s, 1, 'none') over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:VARCHAR (5,,,True,,LAG,False,False)
+1 | none | 
+2 | x | 
+3 | y | 
+4 | NULL | 
+5 | z | 
+6 | x | 
+7 | w | 
+affected 0
+--- select id, first_value(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 10 | 
+3 | 10 | 
+4 | 10 | 
+5 | 10 | 
+6 | 10 | 
+7 | 10 | 
+affected 0
+--- select id, first_value(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, first_value(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, first_value(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 10 | 
+3 | 10 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, first_value(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 10 | 
+3 | 10 | 
+4 | NULL | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, first_value(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | NULL | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, first_value(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 10 | 
+3 | 10 | 
+4 | 10 | 
+5 | 10 | 
+6 | 10 | 
+7 | 10 | 
+affected 0
+--- select id, last_value(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | NULL | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, nth_value(v, 2) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, nth_value(v, 2) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | NULL | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, nth_value(v, 2) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, nth_value(v, 2) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | NULL | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | 5 | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | NULL | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, nth_value(v, 2) from last over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 7 | 
+2 | 7 | 
+3 | 7 | 
+4 | 7 | 
+5 | 7 | 
+6 | 7 | 
+7 | 7 | 
+affected 0
+--- select id, nth_value(v, 2) from last over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 7 | 
+2 | 20 | 
+3 | 20 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) from last over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | 20 | 
+4 | 7 | 
+5 | 1 | 
+6 | 10 | 
+7 | 5 | 
+affected 0
+--- select id, nth_value(v, 2) from last over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | 5 | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) from last over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) from last over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, nth_value(v, 2) from last over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+1 | NULL | 
+2 | 10 | 
+3 | 20 | 
+4 | 20 | 
+5 | 5 | 
+6 | NULL | 
+7 | 7 | 
+affected 0
+--- select id, sum(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 63 | 
+2 | 63 | 
+3 | 63 | 
+4 | 63 | 
+5 | 63 | 
+6 | 63 | 
+7 | 63 | 
+affected 0
+--- select id, sum(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 23 | 
+2 | 63 | 
+3 | 63 | 
+4 | 6 | 
+5 | NULL | 
+6 | 13 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 20 | 
+3 | 40 | 
+4 | 62 | 
+5 | 63 | 
+6 | 57 | 
+7 | 63 | 
+affected 0
+--- select id, sum(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 50 | 
+3 | 50 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 50 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 40 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 50 | 
+4 | 55 | 
+5 | 55 | 
+6 | 62 | 
+7 | 63 | 
+affected 0
+--- select id, avg(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 10 | 
+2 | 10 | 
+3 | 10 | 
+4 | 10 | 
+5 | 10 | 
+6 | 10 | 
+7 | 10 | 
+affected 0
+--- select id, avg(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 5 | 
+2 | 10 | 
+3 | 10 | 
+4 | 3 | 
+5 | NULL | 
+6 | 4 | 
+7 | 1 | 
+affected 0
+--- select id, avg(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 16 | 
+2 | 20 | 
+3 | 20 | 
+4 | 12 | 
+5 | 10 | 
+6 | 14 | 
+7 | 10 | 
+affected 0
+--- select id, avg(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 16 | 
+2 | 16 | 
+3 | 16 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, avg(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 10 | 
+2 | 15 | 
+3 | 16 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, avg(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 16 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, avg(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1 | 10 | 
+2 | 15 | 
+3 | 16 | 
+4 | 13 | 
+5 | 13 | 
+6 | 12 | 
+7 | 10 | 
+affected 0
+--- select id, count(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 6 | 
+2 | 6 | 
+3 | 6 | 
+4 | 6 | 
+5 | 6 | 
+6 | 6 | 
+7 | 6 | 
+affected 0
+--- select id, count(v) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 4 | 
+2 | 6 | 
+3 | 6 | 
+4 | 2 | 
+5 | 0 | 
+6 | 3 | 
+7 | 1 | 
+affected 0
+--- select id, count(v) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 1 | 
+3 | 2 | 
+4 | 5 | 
+5 | 6 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, count(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 3 | 
+3 | 3 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(v) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 1 | 
+5 | 0 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(v) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 1 | 
+5 | 0 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(v) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 4 | 
+6 | 5 | 
+7 | 6 | 
+affected 0
+--- select id, count(*) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 7 | 
+2 | 7 | 
+3 | 7 | 
+4 | 7 | 
+5 | 7 | 
+6 | 7 | 
+7 | 7 | 
+affected 0
+--- select id, count(*) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 5 | 
+2 | 7 | 
+3 | 7 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, count(*) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 1 | 
+3 | 2 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, count(*) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 3 | 
+3 | 3 | 
+4 | 2 | 
+5 | 2 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 2 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, min(s) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | v | 
+2 | v | 
+3 | v | 
+4 | v | 
+5 | v | 
+6 | v | 
+7 | v | 
+affected 0
+--- select id, min(s) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | v | 
+2 | v | 
+3 | v | 
+4 | v | 
+5 | x | 
+6 | v | 
+7 | v | 
+affected 0
+--- select id, min(s) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | x | 
+2 | y | 
+3 | y | 
+4 | w | 
+5 | v | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, min(s) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | x | 
+2 | x | 
+3 | x | 
+4 | x | 
+5 | x | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, min(s) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | x | 
+2 | x | 
+3 | x | 
+4 | x | 
+5 | x | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, min(s) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | x | 
+2 | y | 
+3 | NULL | 
+4 | x | 
+5 | x | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, min(s) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+1 | x | 
+2 | x | 
+3 | x | 
+4 | x | 
+5 | x | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, max(n) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 9.99 | 
+2 | 9.99 | 
+3 | 9.99 | 
+4 | 9.99 | 
+5 | 9.99 | 
+6 | 9.99 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 9.99 | 
+2 | 9.99 | 
+3 | 9.99 | 
+4 | 9.99 | 
+5 | -1 | 
+6 | 9.99 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 2.25 | 
+2 | 2.25 | 
+3 | 2.25 | 
+4 | 3.33 | 
+5 | 9.99 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 2.25 | 
+2 | 2.25 | 
+3 | 2.25 | 
+4 | 0.1 | 
+5 | 0.1 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 1.5 | 
+2 | 2.25 | 
+3 | 2.25 | 
+4 | 0.1 | 
+5 | -1 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 2.25 | 
+2 | 2.25 | 
+3 | NULL | 
+4 | 0.1 | 
+5 | -1 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, max(n) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+1 | 1.5 | 
+2 | 2.25 | 
+3 | 2.25 | 
+4 | 2.25 | 
+5 | 2.25 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, avg(n) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 2.69 | 
+2 | 2.69 | 
+3 | 2.69 | 
+4 | 2.69 | 
+5 | 2.69 | 
+6 | 2.69 | 
+7 | 2.69 | 
+affected 0
+--- select id, avg(n) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 2.78 | 
+2 | 2.69 | 
+3 | 2.69 | 
+4 | 3.03 | 
+5 | -1 | 
+6 | 3.1 | 
+7 | 4.49 | 
+affected 0
+--- select id, avg(n) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 1.87 | 
+2 | 2.25 | 
+3 | 2.25 | 
+4 | 1.79 | 
+5 | 2.69 | 
+6 | 2.36 | 
+7 | 3.43 | 
+affected 0
+--- select id, avg(n) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 1.87 | 
+2 | 1.87 | 
+3 | 1.87 | 
+4 | -0.45 | 
+5 | -0.45 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, avg(n) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 1.5 | 
+2 | 1.87 | 
+3 | 1.87 | 
+4 | -0.45 | 
+5 | -1 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, avg(n) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 1.87 | 
+2 | 2.25 | 
+3 | NULL | 
+4 | -0.45 | 
+5 | -1 | 
+6 | 3.33 | 
+7 | 9.99 | 
+affected 0
+--- select id, avg(n) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+1 | 1.5 | 
+2 | 1.87 | 
+3 | 1.87 | 
+4 | 1.28 | 
+5 | 0.71 | 
+6 | 1.23 | 
+7 | 2.69 | 
+affected 0
+--- select id, sum(d) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 24 | 
+2 | 24 | 
+3 | 24 | 
+4 | 24 | 
+5 | 24 | 
+6 | 24 | 
+7 | 24 | 
+affected 0
+--- select id, sum(d) over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 19 | 
+2 | 24 | 
+3 | 24 | 
+4 | 12 | 
+5 | 5 | 
+6 | 18 | 
+7 | 12 | 
+affected 0
+--- select id, sum(d) over (order by v desc nulls last, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 6 | 
+2 | 2 | 
+3 | 5 | 
+4 | 12 | 
+5 | 24 | 
+6 | 12 | 
+7 | 19 | 
+affected 0
+--- select id, sum(d) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 6 | 
+2 | 6 | 
+3 | 6 | 
+4 | 5 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, sum(d) over (partition by g order by v, id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 1 | 
+2 | 3 | 
+3 | 6 | 
+4 | 5 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, sum(d) over (partition by g order by id desc) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 6 | 
+2 | 5 | 
+3 | 3 | 
+4 | 5 | 
+5 | 5 | 
+6 | 6 | 
+7 | 7 | 
+affected 0
+--- select id, sum(d) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1 | 1 | 
+2 | 3 | 
+3 | 6 | 
+4 | 6 | 
+5 | 11 | 
+6 | 17 | 
+7 | 24 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 23 | 
+2 | 43 | 
+3 | 63 | 
+4 | 6 | 
+5 | NULL | 
+6 | 13 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (order by v, id rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 7 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, min(v) over (order by v, id rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | NULL | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 50 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 37 | 
+2 | 50 | 
+3 | 40 | 
+4 | 13 | 
+5 | 1 | 
+6 | 22 | 
+7 | 6 | 
+affected 0
+--- select id, count(*) over (order by v, id rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 3 | 
+3 | 2 | 
+4 | 3 | 
+5 | 2 | 
+6 | 3 | 
+7 | 3 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 7 | 
+2 | 10 | 
+3 | 20 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 7 | 
+5 | 1 | 
+6 | 10 | 
+7 | 5 | 
+affected 0
+--- select id, min(v) over (order by v, id rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 7 | 
+2 | 10 | 
+3 | 20 | 
+4 | 1 | 
+5 | 1 | 
+6 | 5 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between 1 preceding and 1 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 30 | 
+2 | 50 | 
+3 | 40 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 40 | 
+3 | 20 | 
+4 | 62 | 
+5 | 63 | 
+6 | 57 | 
+7 | 63 | 
+affected 0
+--- select id, count(*) over (order by v, id rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, min(v) over (order by v, id rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | 1 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 40 | 
+3 | 20 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 63 | 
+2 | 63 | 
+3 | 63 | 
+4 | 63 | 
+5 | 63 | 
+6 | 63 | 
+7 | 63 | 
+affected 0
+--- select id, count(*) over (order by v, id rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 7 | 
+2 | 7 | 
+3 | 7 | 
+4 | 7 | 
+5 | 7 | 
+6 | 7 | 
+7 | 7 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, min(v) over (order by v, id rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 50 | 
+3 | 50 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 17 | 
+2 | 30 | 
+3 | 40 | 
+4 | 6 | 
+5 | NULL | 
+6 | 12 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (order by v, id rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 2 | 
+2 | 2 | 
+3 | 2 | 
+4 | 2 | 
+5 | 1 | 
+6 | 2 | 
+7 | 2 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 7 | 
+2 | 10 | 
+3 | 20 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, min(v) over (order by v, id rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 7 | 
+2 | 10 | 
+3 | 20 | 
+4 | 1 | 
+5 | NULL | 
+6 | 5 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows 1 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 40 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | 30 | 
+5 | 12 | 
+6 | 40 | 
+7 | 17 | 
+affected 0
+--- select id, count(*) over (order by v, id rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 0 | 
+3 | 0 | 
+4 | 2 | 
+5 | 2 | 
+6 | 2 | 
+7 | 2 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | 10 | 
+5 | 5 | 
+6 | 20 | 
+7 | 7 | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | 20 | 
+5 | 7 | 
+6 | 20 | 
+7 | 10 | 
+affected 0
+--- select id, min(v) over (order by v, id rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | 10 | 
+5 | 5 | 
+6 | 20 | 
+7 | 7 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between 2 following and 3 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 20 | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, sum(v) over (order by v, id rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, count(*) over (order by v, id rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 0 | 
+2 | 0 | 
+3 | 0 | 
+4 | 0 | 
+5 | 0 | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, first_value(v) over (order by v, id rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, min(v) over (order by v, id rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, sum(v) over (partition by g order by v rows between 1 preceding and 2 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, sum(v) over (order by v, id range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 23 | 
+2 | 43 | 
+3 | 63 | 
+4 | 6 | 
+5 | NULL | 
+6 | 13 | 
+7 | 1 | 
+affected 0
+--- select id, count(*) over (order by v, id range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 7 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, first_value(v) over (order by v, id range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, min(v) over (order by v, id range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | NULL | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v range between unbounded preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 50 | 
+3 | 50 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 40 | 
+3 | 20 | 
+4 | 62 | 
+5 | 63 | 
+6 | 57 | 
+7 | 63 | 
+affected 0
+--- select id, count(*) over (order by v, id range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+4 | 5 | 
+5 | 7 | 
+6 | 4 | 
+7 | 6 | 
+affected 0
+--- select id, first_value(v) over (order by v, id range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, last_value(v) over (order by v, id range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, min(v) over (order by v, id range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 20 | 
+4 | 5 | 
+5 | 1 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v range between current row and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 40 | 
+3 | 40 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id range between 5 preceding and 5 following) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, count(*) over (order by v, id range between 5 preceding and 5 following) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, first_value(v) over (order by v, id range between 5 preceding and 5 following) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, last_value(v) over (order by v, id range between 5 preceding and 5 following) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, min(v) over (order by v, id range between 5 preceding and 5 following) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, sum(v) over (partition by g order by v range between 5 preceding and 5 following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 40 | 
+3 | 40 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 63 | 
+2 | 63 | 
+3 | 63 | 
+4 | 63 | 
+5 | 63 | 
+6 | 63 | 
+7 | 63 | 
+affected 0
+--- select id, count(*) over (order by v, id range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 7 | 
+2 | 7 | 
+3 | 7 | 
+4 | 7 | 
+5 | 7 | 
+6 | 7 | 
+7 | 7 | 
+affected 0
+--- select id, first_value(v) over (order by v, id range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+FIRST_VALUE:INTEGER (4,,,True,,FIRST_VALUE,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+5 | NULL | 
+6 | NULL | 
+7 | NULL | 
+affected 0
+--- select id, last_value(v) over (order by v, id range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAST_VALUE:INTEGER (4,,,True,,LAST_VALUE,False,False)
+1 | 20 | 
+2 | 20 | 
+3 | 20 | 
+4 | 20 | 
+5 | 20 | 
+6 | 20 | 
+7 | 20 | 
+affected 0
+--- select id, min(v) over (order by v, id range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 1 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g order by v range between unbounded preceding and unbounded following) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 50 | 
+2 | 50 | 
+3 | 50 | 
+4 | 5 | 
+5 | 5 | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id range 10 preceding) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, count(*) over (order by v, id range 10 preceding) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, first_value(v) over (order by v, id range 10 preceding) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, last_value(v) over (order by v, id range 10 preceding) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, min(v) over (order by v, id range 10 preceding) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, sum(v) over (partition by g order by v range 10 preceding) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 50 | 
+3 | 50 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, row_number() over (order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+1 | 5 | 
+2 | 6 | 
+3 | 7 | 
+4 | 3 | 
+5 | 1 | 
+6 | 4 | 
+7 | 2 | 
+affected 0
+--- select id, rank() over (order by g) , dense_rank() over (order by g nulls last) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+DENSE_RANK:BIGINT (8,,,False,,DENSE_RANK,False,False)
+1 | 2 | 1 | 
+2 | 2 | 1 | 
+3 | 2 | 1 | 
+4 | 5 | 2 | 
+5 | 5 | 2 | 
+6 | 7 | 3 | 
+7 | 1 | 4 | 
+affected 0
+--- select g, sum(v), rank() over (order by sum(v) desc) from w group by g order by g
+G:VARCHAR (2,,,True,W,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+NULL | 1 | 4 | 
+a | 50 | 1 | 
+b | 5 | 3 | 
+c | 7 | 2 | 
+affected 0
+--- select g, count(*) over (), count(*) from w group by g order by g
+G:VARCHAR (2,,,True,W,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 4 | 1 | 
+a | 4 | 3 | 
+b | 4 | 2 | 
+c | 4 | 1 | 
+affected 0
+--- select id, sum(v) over (partition by g) - v from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUBTRACT:BIGINT (8,,,True,,SUBTRACT,False,False)
+1 | 40 | 
+2 | 30 | 
+3 | 30 | 
+4 | 0 | 
+5 | NULL | 
+6 | 0 | 
+7 | 0 | 
+affected 0
+--- select id, v, v * 100 / sum(v) over () from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+V:INTEGER (4,,,True,W,V,False,False)
+DIVIDE:BIGINT (8,,,True,,DIVIDE,False,False)
+1 | 10 | 15 | 
+2 | 20 | 31 | 
+3 | 20 | 31 | 
+4 | 5 | 7 | 
+5 | NULL | NULL | 
+6 | 7 | 11 | 
+7 | 1 | 1 | 
+affected 0
+--- select id, (select max(v) from w) - max(v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUBTRACT:BIGINT (8,,,True,,SUBTRACT,False,False)
+1 | 0 | 
+2 | 0 | 
+3 | 0 | 
+4 | 15 | 
+5 | 15 | 
+6 | 13 | 
+7 | 19 | 
+affected 0
+--- select * from (select id, row_number() over (partition by g order by v desc) rn from w) where rn = 1 order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+RN:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+2 | 1 | 
+4 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, row_number() over w1, sum(v) over w1 from w window w1 as (partition by g order by id) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 1 | 10 | 
+2 | 2 | 30 | 
+3 | 3 | 50 | 
+4 | 1 | 5 | 
+5 | 2 | 5 | 
+6 | 1 | 7 | 
+7 | 1 | 1 | 
+affected 0
+--- select id, sum(v) over (w1 rows between unbounded preceding and current row) from w window w1 as (order by id) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 50 | 
+4 | 55 | 
+5 | 55 | 
+6 | 62 | 
+7 | 63 | 
+affected 0
+--- select id, ntile(0) over (order by id) from w
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTILE:BIGINT (8,,,False,,NTILE,False,False)
+ERROR 335544963 #1 'NTILE' '' 42000
+Argument #1 for NTILE must be positive
+--- select id, ntile(null) over (order by id) from w
+ERROR 335544569 335544436 #-104 335544634 #1 #18 335544382 'null' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 18
+null
+--- select id, lag(v, -1) over (order by id) from w
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+ERROR 335544962 #2 'LAG' '' 42000
+Argument #2 for LAG must be zero or positive
+--- select id, nth_value(v, 0) over (order by id) from w
+ID:INTEGER (4,,,False,W,ID,True,False)
+NTH_VALUE:INTEGER (4,,,True,,NTH_VALUE,False,False)
+ERROR 335544963 #2 'NTH_VALUE' '' 42000
+Argument #2 for NTH_VALUE must be positive
+--- select id, lag(v, 1, 'x') over (order by id) from w
+ID:INTEGER (4,,,False,W,ID,True,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+ERROR 335544334 'x' '' 22018
+conversion error from string "x"
+--- select id, lead(n, 1, 0) over (order by id), lag(d, 1, 0) over (order by id) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LEAD:NUMERIC (4,4,2,True,,LEAD,False,False)
+LAG:DOUBLE PRECISION (8,,,True,,LAG,False,False)
+1 | 2.25 | 0 | 
+2 | NULL | 1 | 
+3 | 0.1 | 2 | 
+4 | -1 | 3 | 
+5 | 3.33 | NULL | 
+6 | 9.99 | 5 | 
+7 | 0 | 6 | 
+affected 0
+--- select id, row_number() over (order by v) from w where row_number() over (order by v) > 1
+ERROR 335544569 335544436 #-104 335544822 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Cannot use an aggregate or window function in a WHERE clause, use HAVING (for aggregate only) instead
+--- select id from w group by row_number() over (order by id)
+ERROR 335544569 335544436 #-104 335544823 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Cannot use an aggregate or window function in a GROUP BY clause
+--- select id, sum(sum(v)) over () from w
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select id, rank(1) over (order by id) from w
+ERROR 335544569 335544436 #-104 335544634 #1 #17 335544382 '1' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 17
+1
+--- select id, row_number() from w
+ERROR 335544569 335544436 #-104 335544634 #1 #25 335544382 'from' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 25
+from
+--- select id, sum(v) over (order by v range between 1 preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 40 | 
+3 | 40 | 
+4 | 5 | 
+5 | NULL | 
+6 | 7 | 
+7 | 1 | 
+affected 0
+--- select id, sum(v) over (order by v, id range between 1 preceding and current row) from w order by id
+ERROR 335545117 '' 42000
+RANGE based window with <expr>
+No message for error code 335545117 found.
+--- select id, sum(v) over (rows between 1 preceding and current row) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 10 | 
+2 | 30 | 
+3 | 40 | 
+4 | 25 | 
+5 | 5 | 
+6 | 7 | 
+7 | 8 | 
+affected 0
+--- select id, list(s) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+1 | x,y | 
+2 | x,y | 
+3 | x,y | 
+4 | z,x | 
+5 | z,x | 
+6 | w | 
+7 | v | 
+affected 0
+--- select id, count(distinct v) over (partition by g) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 2 | 
+2 | 2 | 
+3 | 2 | 
+4 | 1 | 
+5 | 1 | 
+6 | 1 | 
+7 | 1 | 
+affected 0
+--- select id, percent_rank() over (partition by g order by v), cume_dist() over (partition by g order by v) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+PERCENT_RANK:DOUBLE PRECISION (8,,,False,,PERCENT_RANK,False,False)
+CUME_DIST:DOUBLE PRECISION (8,,,False,,CUME_DIST,False,False)
+1 | 0 | 0.3333333333333333 | 
+2 | 0.5 | 1 | 
+3 | 0.5 | 1 | 
+4 | 1 | 1 | 
+5 | 0 | 0.5 | 
+6 | 0 | 1 | 
+7 | 0 | 1 | 
+affected 0
