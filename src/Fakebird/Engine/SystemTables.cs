@@ -70,7 +70,7 @@ internal static class SystemTables
                     rows.Add([N(c.Name), N(t.Name), N(FieldSource(t.Name, c, i)), Value.Null, Value.Null, I(i), I(1), I(i), Value.Null,
                         Value.Null, Value.Null, I(t.IsSystem ? 1 : 0), Value.Null, Value.Null, c.NotNull ? I(1) : Value.Null,
                         c.DefaultSource == null ? Value.Null : S("DEFAULT " + c.DefaultSource), I(0), N(c.IdentitySequence),
-                        c.IdentitySequence == null ? Value.Null : I(1)]);
+                        c.IdentitySequence == null ? Value.Null : I(c.IdentityAlways ? 0 : 1)]);
                 }
             foreach (var v in d.Views.Values)
                 for (var i = 0; i < v.Columns.Count; i++)

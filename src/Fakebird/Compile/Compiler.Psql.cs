@@ -101,7 +101,9 @@ public sealed partial class Compiler
 
     static Prepared CheckNoInto(ReturningClause? r, Prepared p)
     {
-        if (r?.Into != null) throw Err.Dsql(-104, "RETURNING ... INTO is allowed only in PSQL");
+        // outside PSQL the INTO targets are not variables: Firebird reports the first as an unknown column
+        if (r?.Into is [var first, ..])
+            throw Err.ColumnUnknown(first is VariableExpr v ? v.Name : first.ToString()!, first.Line, first.Col);
         return p;
     }
 

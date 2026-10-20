@@ -28,6 +28,8 @@ public sealed class Column
     public string? ComputedBySource;
     /// <summary>Identity: name of the backing sequence.</summary>
     public string? IdentitySequence;
+    /// <summary>GENERATED ALWAYS AS IDENTITY: explicit values need OVERRIDING SYSTEM VALUE.</summary>
+    public bool IdentityAlways;
     public bool IsComputed => ComputedBy != null;
     public Column Clone() => (Column)MemberwiseClone();
 }
@@ -67,6 +69,8 @@ public sealed class Constraint
     // CHECK
     public Expr? Check;
     public string? CheckSource;
+    /// <summary>The system triggers that enforce the CHECK on insert and on update (named in its errors).</summary>
+    public string? InsertTrigger, UpdateTrigger;
     public Constraint Clone() => (Constraint)MemberwiseClone();
 }
 

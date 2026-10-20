@@ -306,7 +306,7 @@ public sealed partial class Parser
             _i++;
             var name = AnyIdent();
             if (AcceptOp(".")) return At(new ColumnRefExpr(name, AnyIdent()), pos);
-            return new VariableExpr(name) { Pos = pos };
+            return At(new VariableExpr(name), pos);
         }
         var n = AnyIdent();
         if (AcceptOp(".")) return At(new ColumnRefExpr(n, AnyIdent()), pos);

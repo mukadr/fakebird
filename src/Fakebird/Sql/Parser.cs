@@ -150,12 +150,13 @@ public sealed partial class Parser
     }
 
     /// <summary>A column list of INSERT/UPDATE OR INSERT/MERGE: columns may be qualified (t.col).</summary>
-    List<string> ParenColumnList()
+    List<string> ParenColumnList(List<(int Line, int Col)>? positions = null)
     {
         ExpectOp("(");
         var l = new List<string>();
         do
         {
+            positions?.Add((Cur.Line, Cur.Col));
             var name = Ident();
             while (AcceptOp(".")) name = Ident();
             l.Add(name);

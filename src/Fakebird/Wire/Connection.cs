@@ -724,7 +724,8 @@ internal sealed class Connection
                     if (!execute2 && p.StmtType is Isc.stmt_select or Isc.stmt_select_for_upd)
                     {
                         try { result = Executor.Run(p, tx, pars); }
-                        catch (FbError e) when (!e.AtExecute)
+                        // a DML RETURNING cursor runs its statement at execute; a query's errors wait for the fetch
+                        catch (FbError e) when (!e.AtExecute && !p.ReturningCursor)
                         {
                             if (_server.Logging) _server.Log($"[fakebird] execute failed: {e.Message.ReplaceLineEndings(" | ")}\n{s.Sql}");
                             s.FetchError = e;

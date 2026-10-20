@@ -301,6 +301,7 @@ public sealed class CteDef
 {
     public string Name = null!;
     public List<string>? Columns;
+    public List<(int Line, int Col)> ColumnPos = new();
     public SelectQuery Query = null!;
 }
 
@@ -323,6 +324,7 @@ public sealed class DerivedTableRef : TableRef
     public SelectQuery Query = null!;
     public string? Alias;
     public List<string>? Columns;
+    public List<(int Line, int Col)> ColumnPos = new();
     public bool Lateral;
 }
 
@@ -368,6 +370,7 @@ public sealed class InsertStmt : Stmt
     public string Table = null!;
     public string? Alias;
     public List<string>? Columns;
+    public List<(int Line, int Col)> ColumnPos = new();
     public List<Expr>? Values;
     public SelectQuery? Query;
     public bool DefaultValues;
@@ -410,8 +413,10 @@ public sealed class UpdateOrInsertStmt : Stmt
 {
     public string Table = null!;
     public List<string>? Columns;
+    public List<(int Line, int Col)> ColumnPos = new();
     public List<Expr> Values = new();
     public List<string>? Matching;
+    public List<(int Line, int Col)> MatchingPos = new();
     public ReturningClause? Returning;
 }
 
@@ -483,7 +488,9 @@ public sealed class ColumnDef
     public bool NotNull;
     public string? NotNullName;
     public bool Identity;
-    public long IdentityStart;
+    /// <summary>GENERATED ALWAYS (else BY DEFAULT).</summary>
+    public bool IdentityAlways;
+    public long IdentityStart = 1;
     public int IdentityIncrement = 1;
     public List<ConstraintDef> Constraints = new();
     public string? Collate;
@@ -568,6 +575,7 @@ public sealed class CreateViewStmt : Stmt
     public CreateMode Mode;
     public string Name = null!;
     public List<string>? Columns;
+    public List<(int Line, int Col)> ColumnPos = new();
     public SelectQuery Query = null!;
     public string Source = null!;
     public bool WithCheckOption;

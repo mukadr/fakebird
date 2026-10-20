@@ -112,7 +112,8 @@ public sealed partial class Compiler
             return BindSubFunctionCall(sub, f, s);
         if (Db.Functions.TryGetValue(f.Name, out var fn2))
             return BindFunctionCall(fn2, f, s);
-        throw Err.Dsql(-804, "Function unknown: " + f.Name);
+        throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-804).Gds(FbMessages.dsql_function_err)
+            .Gds(Err.isc_random).Str(f.Name).Build();
     }
 
     XNode[] BindCommon(List<Expr> exprs, Scope s, SqlType? expected, string name, out SqlType type, out bool nullable)

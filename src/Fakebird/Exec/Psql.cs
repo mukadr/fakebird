@@ -31,7 +31,11 @@ public sealed class PsqlFrame(string context, PsqlFrame? caller)
             if (f.Line > 0) sb.Append(" line: ").Append(f.Line).Append(", col: ").Append(f.Col);
         }
         var status = new List<StatusArg>(e.Status);
-        if (sb.Length > 0)
+        // a trace started by a system trigger (At trigger 'CHECK_1') goes on with the PSQL frames
+        var k = status.FindIndex(a => a.Type == Wire.Isc.arg_gds && a.Number == Err.isc_stack_trace);
+        if (sb.Length > 0 && k >= 0 && k + 1 < status.Count)
+            status[k + 1] = status[k + 1] with { Text = status[k + 1].Text + "\n" + sb };
+        else if (sb.Length > 0)
         {
             status.Add(new StatusArg(Wire.Isc.arg_gds, Err.isc_stack_trace, null));
             status.Add(new StatusArg(Wire.Isc.arg_string, 0, sb.ToString()));

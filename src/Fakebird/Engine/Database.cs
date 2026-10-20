@@ -25,7 +25,7 @@ public sealed partial class Database
     internal readonly List<Transaction> ActiveTransactions = new();
     internal int NextAttachmentId = 1;
     /// <summary>System name generators (Firebird's RDB$CONSTRAINT_NAME, RDB$INDEX_NAME, RDB$GENERATOR_NAME).</summary>
-    internal int ConstraintNameCounter, IndexNameCounter, GeneratorNameCounter;
+    internal int ConstraintNameCounter, IndexNameCounter, GeneratorNameCounter, CheckTriggerCounter;
     internal int ExceptionCounter;
     internal int ExecDepth;
     internal readonly Dictionary<string, object> PlanCache = new(StringComparer.Ordinal);
@@ -48,6 +48,8 @@ public sealed partial class Database
     internal string NewConstraintName() => "INTEG_" + (++ConstraintNameCounter);
     internal string NewIndexName(string prefix) => prefix + (++IndexNameCounter);
     internal string NewGeneratorName() => "RDB$" + (++GeneratorNameCounter);
+    /// <summary>Firebird's system triggers for CHECK constraints and foreign key actions: CHECK_1, CHECK_2...</summary>
+    internal string NewCheckTriggerName() => "CHECK_" + (++CheckTriggerCounter);
 
     internal Table GetTable(string name)
         => Tables.TryGetValue(name, out var t) ? t : throw Err.TableUnknown(name);
@@ -139,6 +141,7 @@ public sealed partial class Database
         d.ConstraintNameCounter = ConstraintNameCounter;
         d.IndexNameCounter = IndexNameCounter;
         d.GeneratorNameCounter = GeneratorNameCounter;
+        d.CheckTriggerCounter = CheckTriggerCounter;
         d.ExceptionCounter = ExceptionCounter;
     }
 

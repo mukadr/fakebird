@@ -18,6 +18,8 @@ public abstract class Prepared
     public int StreamCount;
     /// <summary>Schema version the statement was compiled against.</summary>
     public int Version;
+    /// <summary>A DML RETURNING cursor: the statement runs at execute, so its errors are not left for the fetch.</summary>
+    public bool ReturningCursor;
     public abstract ExecResult Execute(Ctx c);
 }
 

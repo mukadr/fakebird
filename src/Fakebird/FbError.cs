@@ -178,8 +178,12 @@ internal static class Err
     public static FbError NotValidDomain(string column, Types.Value value)
         => new StatusBuilder().Gds(isc_not_valid).Str(column).Str(Types.Conv.ToStr(value)).Build("23000");
 
-    public static FbError Check(string constraint, string table)
-        => new StatusBuilder().Gds(isc_check_constraint).Str(constraint).Str(table).Build("23000");
+    public static FbError Check(string constraint, string table, string? trigger = null)
+    {
+        var b = new StatusBuilder().Gds(isc_check_constraint).Str(constraint).Str(table);
+        if (trigger != null) b.Gds(isc_stack_trace).Str($"At trigger '{trigger}'");
+        return b.Build("23000");
+    }
 
     public static FbError Unique(string constraint, string table, string key)
         => new StatusBuilder().Gds(isc_unique_key_violation).Str(constraint).Str(table)

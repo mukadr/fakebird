@@ -112,7 +112,7 @@ public static class Dml
     }
 
     /// <summary>Re-casts values (triggers may assign anything), computes COMPUTED columns, validates NOT NULL/CHECK.</summary>
-    static void Finalize(Ctx c, TableRuntime rt, Value[] row)
+    static void Finalize(Ctx c, TableRuntime rt, Value[] row, bool update)
     {
         var t = rt.Table;
         for (var i = 0; i < row.Length; i++)
@@ -133,7 +133,7 @@ public static class Dml
         foreach (var (con, expr) in rt.Checks)
         {
             var v = expr.Eval(c, row);
-            if (!v.IsNull && v.Tag == VTag.Bool && !v.AsBool) throw Err.Check(con.Name, t.Name);
+            if (!v.IsNull && v.Tag == VTag.Bool && !v.AsBool) throw Err.Check(con.Name, t.Name, update ? con.UpdateTrigger : con.InsertTrigger);
         }
     }
 
@@ -250,7 +250,7 @@ public static class Dml
     public static Value[] Insert(Ctx c, TableRuntime rt, Value[] row)
     {
         Fire(c, rt, TriggerTiming.Before, TriggerEvent.Insert, null, row);
-        Finalize(c, rt, row);
+        Finalize(c, rt, row, update: false);
         CheckUnique(c, rt, row, null, null);
         CheckForeignKeys(c, rt, row, null);
         c.Tx.Insert(rt.Table, row);
@@ -261,7 +261,7 @@ public static class Dml
     public static Value[] Update(Ctx c, TableRuntime rt, RowSlot slot, Value[] oldRow, Value[] newRow)
     {
         Fire(c, rt, TriggerTiming.Before, TriggerEvent.Update, oldRow, newRow);
-        Finalize(c, rt, newRow);
+        Finalize(c, rt, newRow, update: true);
         CheckUnique(c, rt, newRow, slot, oldRow);
         CheckForeignKeys(c, rt, newRow, oldRow);
         c.Tx.Update(rt.Table, slot, newRow);

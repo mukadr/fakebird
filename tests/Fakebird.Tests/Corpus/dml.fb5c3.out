@@ -1,0 +1,596 @@
+--- insert into d (id) values (1)
+affected 1
+--- select id, s, n, b, c, u from d order by id
+ID:INTEGER (4,,,False,D,ID,True,False)
+S:VARCHAR (5,,,False,D,S,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+B:BOOLEAN (1,,,True,D,B,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+U:VARCHAR (5,,,True,D,U,False,True)
+1 | x | 1.5 | True | 3 | NULL | 
+affected 0
+--- insert into d (id, s, n, b) values (2, 'abc', 12.345, false)
+affected 1
+--- insert into d (id, s, n) values (3, 'abcdef', 1)
+ERROR 335544321 335544914 335545033 #5 #6 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 6
+--- insert into d (id, s, n) values (3, 'abcde ', 1)
+affected 1
+--- insert into d (id, n) values (4, 1234.5)
+affected 1
+--- insert into d (id, n) values (4, 999.995)
+ERROR 335544665 'INTEG_2' 'D' 335545072 '("ID" = 4)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "D"
+Problematic key value is ("ID" = 4)
+--- insert into d (id, n) values (4, 999.994)
+ERROR 335544665 'INTEG_2' 'D' 335545072 '("ID" = 4)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "D"
+Problematic key value is ("ID" = 4)
+--- insert into d (id, n) values (5, '12.3456')
+affected 1
+--- insert into d (id, n) values (6, 'x')
+ERROR 335544334 'x' '' 22018
+conversion error from string "x"
+--- insert into d (id, sm) values (7, 32768)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- insert into d (id, sm) values (7, -32768)
+affected 1
+--- insert into d (id, sm) values (8, 1.5)
+affected 1
+--- insert into d (id, sm) values (9, 2.5e0)
+affected 1
+--- insert into d (id, dt) values (10, '2024-02-30')
+ERROR 335544334 '2024-02-30' '' 22018
+conversion error from string "2024-02-30"
+--- insert into d (id, dt, ts) values (10, '2024-02-29', '2024-02-29 25:00')
+ERROR 335544334 '2024-02-29 25:00' '' 22018
+conversion error from string "2024-02-29 25:00"
+--- insert into d (id, dt, ts) values (10, '29.02.2024', '2024-02-29 23:59:59.99999')
+ERROR 335544334 '2024-02-29 23:59:59.99999' '' 22018
+conversion error from string "2024-02-29 23:59:59.99999"
+--- insert into d (id, s) values (11, null)
+ERROR 335544347 '"D"."S"' '*** null ***' '' 23000
+validation error for column "D"."S", value "*** null ***"
+--- insert into d (id, s) values (null, 'q')
+ERROR 335544347 '"D"."ID"' '*** null ***' '' 23000
+validation error for column "D"."ID", value "*** null ***"
+--- insert into d (s) values ('q')
+ERROR 335544347 '"D"."ID"' '*** null ***' '' 23000
+validation error for column "D"."ID", value "*** null ***"
+--- insert into d (id, c) values (12, 1)
+ERROR 335544359 'D.C' '' 42000
+attempted update of read-only column D.C
+--- insert into d (id, zz) values (12, 1)
+ERROR 335544569 335544436 #-206 335544578 335544382 'ZZ' 336397208 #1 #20 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+ZZ
+At line 1, column 20
+--- insert into d (id, id) values (12, 1)
+ERROR 335544569 335544436 #-206 336397210 'D.ID' 'INSERT' 336397208 #1 #20 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column D.ID cannot be repeated in INSERT statement
+At line 1, column 20
+--- insert into d (id, s) values (12)
+ERROR 335544569 335544436 #-804 335544584 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Count of read-write columns does not equal count of values
+--- insert into d (id) values (12, 'a')
+ERROR 335544569 335544436 #-804 335544584 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Count of read-write columns does not equal count of values
+--- insert into d values (12, 'a', 1, true)
+ERROR 335544569 335544436 #-804 335544584 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Count of read-write columns does not equal count of values
+--- insert into d values (12, 'a', 1, true, 'u', 1, '2024-01-01', '2024-01-01 00:00')
+affected 1
+--- insert into d default values
+ERROR 335544347 '"D"."ID"' '*** null ***' '' 23000
+validation error for column "D"."ID", value "*** null ***"
+--- insert into d (id, u) values (13, 'dup')
+affected 1
+--- insert into d (id, u) values (14, 'dup')
+ERROR 335544665 'INTEG_4' 'D' 335545072 '("U" = 'dup')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_4" on table "D"
+Problematic key value is ("U" = 'dup')
+--- insert into d (id, u) values (14, null)
+affected 1
+--- insert into d (id, u) values (15, null)
+affected 1
+--- insert into d (id) values (1)
+ERROR 335544665 'INTEG_2' 'D' 335545072 '("ID" = 1)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "D"
+Problematic key value is ("ID" = 1)
+--- insert into d (id, b) values (16, 'true')
+affected 1
+--- insert into d (id, b) values (17, 1)
+ERROR 335544334 '1' '' 22018
+conversion error from string "1"
+--- insert into d (id, b) values (17, 'yes')
+ERROR 335544334 'yes' '' 22018
+conversion error from string "yes"
+--- select id, s, n, b, c, u, sm, dt, ts from d order by id
+ID:INTEGER (4,,,False,D,ID,True,False)
+S:VARCHAR (5,,,False,D,S,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+B:BOOLEAN (1,,,True,D,B,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+U:VARCHAR (5,,,True,D,U,False,True)
+SM:SMALLINT (2,,,True,D,SM,False,False)
+DT:DATE (4,,,True,D,DT,False,False)
+TS:TIMESTAMP (8,,,True,D,TS,False,False)
+1 | x | 1.5 | True | 3 | NULL | NULL | NULL | NULL | 
+2 | abc | 12.35 | False | 24.7 | NULL | NULL | NULL | NULL | 
+3 | abcde | 1 | True | 2 | NULL | NULL | NULL | NULL | 
+4 | x | 1234.5 | True | 2469 | NULL | NULL | NULL | NULL | 
+5 | x | 12.35 | True | 24.7 | NULL | NULL | NULL | NULL | 
+7 | x | 1.5 | True | 3 | NULL | -32768 | NULL | NULL | 
+8 | x | 1.5 | True | 3 | NULL | 2 | NULL | NULL | 
+9 | x | 1.5 | True | 3 | NULL | 3 | NULL | NULL | 
+12 | a | 1 | True | 2 | u | 1 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0000 | 
+13 | x | 1.5 | True | 3 | dup | NULL | NULL | NULL | 
+14 | x | 1.5 | True | 3 | NULL | NULL | NULL | NULL | 
+15 | x | 1.5 | True | 3 | NULL | NULL | NULL | NULL | 
+16 | x | 1.5 | True | 3 | NULL | NULL | NULL | NULL | 
+affected 0
+--- insert into d (id) values (20) returning id, s, n, b, c
+ID:INTEGER (4,,,True,D,ID,True,False)
+S:VARCHAR (5,,,True,D,S,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+B:BOOLEAN (1,,,True,D,B,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+20 | x | 1.5 | True | 3 | 
+affected 1
+--- insert into d (id, n) values (21, 2) returning n * 2 as x, c, 'k' || s
+X:NUMERIC (8,8,2,True,,MULTIPLY,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+CONCATENATION:VARCHAR (6,,,True,,CONCATENATION,False,False)
+4 | 4 | kx | 
+affected 1
+--- insert into d (id) values (22) returning *
+ID:INTEGER (4,,,True,D,ID,True,False)
+S:VARCHAR (5,,,True,D,S,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+B:BOOLEAN (1,,,True,D,B,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+U:VARCHAR (5,,,True,D,U,False,True)
+SM:SMALLINT (2,,,True,D,SM,False,False)
+DT:DATE (4,,,True,D,DT,False,False)
+TS:TIMESTAMP (8,,,True,D,TS,False,False)
+22 | x | 1.5 | True | 3 | NULL | NULL | NULL | NULL | 
+affected 1
+--- insert into d (id) values (23) returning d.id, old.id
+ERROR 335544569 335544436 #-206 335544578 335544382 'OLD.ID' 336397208 #1 #48 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+OLD.ID
+At line 1, column 48
+--- insert into d (id) values (24) returning new.id, new.s
+ERROR 335544569 335544436 #-206 335544578 335544382 'NEW.ID' 336397208 #1 #42 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+NEW.ID
+At line 1, column 42
+--- update d set n = n + 1 where id = 20 returning old.n, new.n, n, c
+N:NUMERIC (4,5,2,True,D,N,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+N:NUMERIC (4,5,2,True,D,N,False,False)
+C:NUMERIC (8,18,2,True,D,C,False,False)
+1.5 | 2.5 | 2.5 | 5 | 
+affected 1
+--- update d set n = 7 where id = 999 returning id
+ID:INTEGER (4,,,True,D,ID,True,False)
+affected 0
+--- delete from d where id = 24 returning id, s, old.s
+ERROR 335544569 335544436 #-206 335544578 335544382 'OLD.S' 336397208 #1 #46 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+OLD.S
+At line 1, column 46
+--- delete from d where id = 999 returning id
+ID:INTEGER (4,,,True,D,ID,True,False)
+affected 0
+--- update d set s = 'm' where id >= 20 returning id, s
+ID:INTEGER (4,,,True,D,ID,True,False)
+S:VARCHAR (5,,,True,D,S,False,False)
+20 | m | 
+21 | m | 
+22 | m | 
+affected 3
+--- delete from d where id >= 22 returning id
+ID:INTEGER (4,,,True,D,ID,True,False)
+22 | 
+affected 1
+--- insert into d (id) values (25) returning id into :x
+ERROR 335544569 335544436 #-206 335544578 335544382 'X' 336397208 #1 #50 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+X
+At line 1, column 50
+--- update d set s = s where id < 0
+affected 0
+--- update d set s = upper(s)
+affected 15
+--- update d set n = null where n is null
+affected 0
+--- delete from d where id = 999
+affected 0
+--- select count(*) from d
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+15 | 
+affected 0
+--- update sw set a = b, b = a
+affected 2
+--- select a, b from sw order by a
+A:INTEGER (4,,,True,SW,A,False,False)
+B:INTEGER (4,,,True,SW,B,False,False)
+2 | 1 | 
+4 | 3 | 
+affected 0
+--- update sw set a = a + 1, b = a
+affected 2
+--- select a, b from sw order by a
+A:INTEGER (4,,,True,SW,A,False,False)
+B:INTEGER (4,,,True,SW,B,False,False)
+3 | 2 | 
+5 | 4 | 
+affected 0
+--- update sw set c = c || c
+affected 2
+--- update sw set c = c || c
+ERROR 335544321 335544914 335545033 #3 #4 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 4
+--- select a, b, c from sw order by a
+A:INTEGER (4,,,True,SW,A,False,False)
+B:INTEGER (4,,,True,SW,B,False,False)
+C:VARCHAR (3,,,True,SW,C,False,False)
+3 | 2 | xx | 
+5 | 4 | yy | 
+affected 0
+--- insert into cp select id + 2, v + 1 from cp
+affected 2
+--- select id, v from cp order by id
+ID:INTEGER (4,,,True,CP,ID,False,False)
+V:INTEGER (4,,,True,CP,V,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | 11 | 
+4 | 21 | 
+affected 0
+--- insert into cp select * from cp where id > 2
+affected 2
+--- select count(*), sum(v) from cp
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+6 | 94 | 
+affected 0
+--- update cp set v = (select max(v) from cp) where id = 1
+affected 1
+--- update cp set v = (select max(v) from cp c2 where c2.id < cp.id) where id > 1
+affected 5
+--- select id, v from cp order by id, v
+ID:INTEGER (4,,,True,CP,ID,False,False)
+V:INTEGER (4,,,True,CP,V,False,False)
+1 | 21 | 
+2 | 21 | 
+3 | 21 | 
+3 | 21 | 
+4 | 21 | 
+4 | 21 | 
+affected 0
+--- delete from cp where v = (select min(v) from cp)
+affected 6
+--- delete from cp where id in (select id from cp where id > 3)
+affected 0
+--- select id, v from cp order by id, v
+ID:INTEGER (4,,,True,CP,ID,False,False)
+V:INTEGER (4,,,True,CP,V,False,False)
+affected 0
+--- update cp set v = v + 1 order by id rows 2
+affected 0
+--- delete from cp order by id desc rows 1
+affected 0
+--- select id, v from cp order by id, v
+ID:INTEGER (4,,,True,CP,ID,False,False)
+V:INTEGER (4,,,True,CP,V,False,False)
+affected 0
+--- update cp set v = 1 where id = 1 rows 0
+affected 0
+--- update cp set id = id + 100 where id = 1
+affected 0
+--- update cp c set c.v = c.id where c.id > 100
+affected 0
+--- update cp c set v = c.v * 2
+affected 0
+--- update cp set cp.zz = 1
+ERROR 335544569 335544436 #-206 335544578 335544382 'CP.ZZ' 336397208 #1 #15 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+CP.ZZ
+At line 1, column 15
+--- update cp c set cp.v = 1
+ERROR 335544569 335544436 #-206 335544578 335544382 'CP.V' 336397208 #1 #17 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+CP.V
+At line 1, column 17
+--- update cp set v = 1, v = 2
+ERROR 335544569 335544436 #-206 336397210 'CP.V' 'UPDATE' 336397208 #1 #22 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column CP.V cannot be repeated in UPDATE statement
+At line 1, column 22
+--- select id, v from cp order by id, v
+ID:INTEGER (4,,,True,CP,ID,False,False)
+V:INTEGER (4,,,True,CP,V,False,False)
+affected 0
+--- insert into g (v) values ('a') returning id
+ID:INTEGER (4,,,True,G,ID,True,False)
+1 | 
+affected 1
+--- insert into g (v) values ('b') returning id
+ID:INTEGER (4,,,True,G,ID,True,False)
+2 | 
+affected 1
+--- insert into g (id, v) values (10, 'c') returning id
+ID:INTEGER (4,,,True,G,ID,True,False)
+10 | 
+affected 1
+--- insert into g (v) values ('d') returning id
+ID:INTEGER (4,,,True,G,ID,True,False)
+3 | 
+affected 1
+--- insert into g (id, v) values (null, 'e') returning id
+ERROR 335544347 '"G"."ID"' '*** null ***' '' 23000
+validation error for column "G"."ID", value "*** null ***"
+--- insert into g2 (v) values ('a') returning id
+ID:BIGINT (8,,,True,G2,ID,False,False)
+10 | 
+affected 1
+--- insert into g2 (v) values ('b') returning id
+ID:BIGINT (8,,,True,G2,ID,False,False)
+15 | 
+affected 1
+--- insert into g2 (id, v) values (1, 'c') returning id
+ERROR 335545137 'G2' '' 42000
+OVERRIDING clause should be used when an identity column defined as 'GENERATED ALWAYS' is present in the INSERT's field list for table table/view G2
+--- insert into g2 (id, v) overriding system value values (1, 'c') returning id
+ID:BIGINT (8,,,True,G2,ID,False,False)
+1 | 
+affected 1
+--- insert into g (id, v) overriding user value values (99, 'f') returning id
+ID:INTEGER (4,,,True,G,ID,True,False)
+4 | 
+affected 1
+--- update g2 set id = 3
+affected 3
+--- select id, v from g order by id
+ID:INTEGER (4,,,False,G,ID,True,False)
+V:VARCHAR (10,,,True,G,V,False,False)
+1 | a | 
+2 | b | 
+3 | d | 
+4 | f | 
+10 | c | 
+affected 0
+--- select id, v from g2 order by id
+ID:BIGINT (8,,,False,G2,ID,False,False)
+V:VARCHAR (10,,,True,G2,V,False,False)
+3 | a | 
+3 | b | 
+3 | c | 
+affected 0
+--- insert into g (v) values (next value for seq) returning id, v
+ID:INTEGER (4,,,True,G,ID,True,False)
+V:VARCHAR (10,,,True,G,V,False,False)
+5 | 100 | 
+affected 1
+--- insert into g (v) select v from g where id < 3 returning id, v
+ID:INTEGER (4,,,True,G,ID,True,False)
+V:VARCHAR (10,,,True,G,V,False,False)
+6 | a | 
+7 | b | 
+affected 2
+--- update or insert into p (id, name) values (1, 'uno')
+affected 1
+--- update or insert into p (id, name) values (3, 'tres')
+affected 1
+--- update or insert into p (id, name) values (3, 'three') returning id, name, old.name
+ID:INTEGER (4,,,True,P,ID,True,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+CONSTANT:VARCHAR (10,,,True,,CONSTANT,False,False)
+3 | three | tres | 
+affected 1
+--- update or insert into p (id, name) values (4, 'four') matching (id) returning old.name, new.name
+CONSTANT:VARCHAR (10,,,True,,CONSTANT,False,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+NULL | four | 
+affected 1
+--- update or insert into p (name, id) values ('one', 5) matching (name)
+affected 1
+--- update or insert into p (id, name) values (6, 'x') matching (zz)
+ERROR 335544569 335544436 #-206 335544578 335544382 'ZZ' 336397208 #1 #62 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+ZZ
+At line 1, column 62
+--- update or insert into sw (a, b) values (1, 1)
+ERROR 335544569 336003098 'SW' '' 42000
+Dynamic SQL Error
+Primary key required on table SW
+--- select id, name from p order by id
+ID:INTEGER (4,,,False,P,ID,True,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+1 | uno | 
+2 | two | 
+3 | three | 
+4 | four | 
+5 | one | 
+affected 0
+--- merge into p using (select 1 id, 'eins' name from rdb$database) s on p.id = s.id when matched then update set name = s.name when not matched then insert values (s.id, s.name)
+affected 1
+--- merge into p using (select 7 id, 'sieben' name from rdb$database) s on p.id = s.id when matched then update set name = s.name when not matched then insert values (s.id, s.name)
+affected 1
+--- merge into p t using (select id from p where id > 5) s on t.id = s.id when matched then delete
+affected 1
+--- merge into p t using (select 1 id from rdb$database union all select 1 from rdb$database) s on t.id = s.id when matched then update set name = 'twice'
+ERROR 335545269 '' 21000
+Multiple source records cannot match the same target during MERGE
+--- merge into p t using (select 8 id from rdb$database) s on t.id = s.id when not matched then insert (id, name) values (s.id, 'acht') returning id, name
+ERROR 335544569 335544436 #-204 336003085 'derived table S' 'table P ' 335544382 'ID' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between derived table S and table P
+ID
+--- merge into p t using (select 2 id from rdb$database) s on t.id = s.id when matched and t.name = 'zz' then delete when matched then update set name = 'zwei'
+affected 1
+--- merge into p t using (select id, name from p) s on t.id = s.id when matched then update set name = upper(s.name)
+affected 5
+--- merge into p t using p s on t.id = s.id + 100 when not matched then insert values (s.id + 100, s.name)
+affected 5
+--- select id, name from p order by id
+ID:INTEGER (4,,,False,P,ID,True,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+1 | EINS | 
+2 | ZWEI | 
+3 | THREE | 
+4 | FOUR | 
+5 | ONE | 
+101 | EINS | 
+102 | ZWEI | 
+103 | THREE | 
+104 | FOUR | 
+105 | ONE | 
+affected 0
+--- insert into ch values (1, 1, 5)
+affected 1
+--- insert into ch values (2, 9, 5)
+ERROR 335544466 'INTEG_10' 'CH' 335544838 335545072 '("PID" = 9)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_10" on table "CH"
+Foreign key reference target does not exist
+Problematic key value is ("PID" = 9)
+--- insert into ch values (3, 1, 0)
+ERROR 335544558 'INTEG_11' 'CH' 335544842 'At trigger 'CHECK_2'' '' 23000
+Operation violates CHECK constraint INTEG_11 on view or table CH
+--- insert into ch values (4, 1, null)
+affected 1
+--- insert into ch values (1, 2, 5)
+ERROR 335544665 'INTEG_9' 'CH' 335545072 '("ID" = 1)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_9" on table "CH"
+Problematic key value is ("ID" = 1)
+--- update ch set pid = 99 where id = 1
+ERROR 335544466 'INTEG_10' 'CH' 335544838 335545072 '("PID" = 99)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_10" on table "CH"
+Foreign key reference target does not exist
+Problematic key value is ("PID" = 99)
+--- update ch set v = -1 where id = 1
+ERROR 335544558 'INTEG_11' 'CH' 335544842 'At trigger 'CHECK_3'' '' 23000
+Operation violates CHECK constraint INTEG_11 on view or table CH
+--- delete from p where id = 1
+affected 1
+--- select id, pid, v from ch order by id
+ID:INTEGER (4,,,False,CH,ID,True,False)
+PID:INTEGER (4,,,True,CH,PID,False,False)
+V:INTEGER (4,,,True,CH,V,False,False)
+affected 0
+--- update p set id = 50 where id = 2
+affected 1
+--- insert into p values (1, 'again')
+affected 1
+--- insert into p (id) values (repeat('1', 11))
+ERROR 335544569 335544436 #-804 335544586 335544382 'REPEAT' '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Function unknown
+REPEAT
+--- insert into p (id, name) values (60, 'abcdefghijk')
+ERROR 335544321 335544914 335545033 #10 #11 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 10, actual 11
+--- insert into p (id, name) values (60, 'abcdefghij ')
+affected 1
+--- update p set name = name || 'abcdefghij' where id = 60
+ERROR 335544321 335544914 335545033 #10 #20 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 10, actual 20
+--- insert into p (id, name) values (2147483648, 'big')
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- insert into p (id, name) values (61.5, 'half')
+affected 1
+--- select id, name from p where id >= 60 order by id
+ID:INTEGER (4,,,False,P,ID,True,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+60 | abcdefghij | 
+62 | half | 
+101 | EINS | 
+102 | ZWEI | 
+103 | THREE | 
+104 | FOUR | 
+105 | ONE | 
+affected 0
+--- insert into p (id, name) values (?, ?)
+affected 1
+--- insert into p (id, name) values (?, ?)
+affected 1
+--- insert into p (id, name) values (?, ?)
+affected 1
+--- insert into p (id, name) values (?, ?)
+ERROR 335544321 335544914 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+--- update p set name = ? where id = ?
+affected 1
+--- update p set name = ? || name where id = ?
+affected 1
+--- delete from p where id = ? returning name
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+NULL | 
+affected 1
+--- insert into d (id, n, b, dt) values (?, ?, ?, ?) returning n, b, dt
+N:NUMERIC (4,5,2,True,D,N,False,False)
+B:BOOLEAN (1,,,True,D,B,False,False)
+DT:DATE (4,,,True,D,DT,False,False)
+1 | True | 2024-05-06 00:00:00.0000 | 
+affected 1
+--- insert into d (id, n) values (?, ?) returning n
+N:NUMERIC (4,5,2,True,D,N,False,False)
+2.67 | 
+affected 1
+--- update or insert into p (id, name) values (?, ?) returning old.name
+CONSTANT:VARCHAR (10,,,True,,CONSTANT,False,False)
+xupd | 
+affected 1
+--- select id, name from p where id >= ? order by id
+ID:INTEGER (4,,,False,P,ID,True,False)
+NAME:VARCHAR (10,,,True,P,NAME,False,False)
+70 | again | 
+72 | 72 | 
+101 | EINS | 
+102 | ZWEI | 
+103 | THREE | 
+104 | FOUR | 
+105 | ONE | 
+affected 0

@@ -155,10 +155,13 @@ public static class Ddl
             while (db.Sequences.ContainsKey(seqName)) seqName = db.NewGeneratorName();
             db.Sequences[seqName] = new Sequence
             {
-                Name = seqName, Value = def.IdentityStart, InitialValue = def.IdentityStart,
+                // Firebird 4+: START WITH is the first value generated
+                Name = seqName, Value = def.IdentityStart - def.IdentityIncrement, InitialValue = def.IdentityStart,
                 Increment = def.IdentityIncrement, IsIdentity = true,
             };
             col.IdentitySequence = seqName;
+            col.IdentityAlways = def.IdentityAlways;
+            col.NotNull = true; // identity columns are implicitly NOT NULL
         }
         return col;
     }
@@ -338,6 +341,9 @@ public static class Ddl
                     RefTable = parent.Name, RefConstraint = target.Name, RefColumns = refCols, OnDelete = def.OnDelete, OnUpdate = def.OnUpdate,
                 };
                 db.Constraints[name] = fk;
+                // each referential action is a system trigger in Firebird: it takes a CHECK_n name
+                if (def.OnUpdate != RefAction.NoAction) db.NewCheckTriggerName();
+                if (def.OnDelete != RefAction.NoAction) db.NewCheckTriggerName();
                 t.ForeignKeys.Add(name);
                 parent.ReferencedBy.Add(name);
                 if (validate)
@@ -361,7 +367,11 @@ public static class Ddl
             case ConstraintKind.Check:
             {
                 var name = ConstraintName(db, def);
-                var con = new Constraint { Name = name, Type = ConstraintType.Check, Table = t.Name, Check = def.Check, CheckSource = def.CheckSource };
+                var con = new Constraint
+                {
+                    Name = name, Type = ConstraintType.Check, Table = t.Name, Check = def.Check, CheckSource = def.CheckSource,
+                    InsertTrigger = db.NewCheckTriggerName(), UpdateTrigger = db.NewCheckTriggerName(),
+                };
                 // validate expression compiles
                 var comp = Comp(db);
                 var st = comp.NewStream(t.Columns.Count);
@@ -690,7 +700,7 @@ public static class Ddl
         {
             if (col.IdentitySequence == null) throw Err.MetaUpdate($"Column {col.Name} is not an identity column");
             var seq = db.Sequences[col.IdentitySequence];
-            seq.Value = ac.RestartWith ?? seq.InitialValue;
+            seq.Value = (ac.RestartWith ?? seq.InitialValue) - seq.Increment; // the next value is the restart value
         }
         if (ac.ComputedBy != null)
         {
@@ -759,19 +769,20 @@ public static class Ddl
         if (st.Mode == CreateMode.Alter || (st.Mode == CreateMode.CreateOrAlter && exists))
         {
             if (!exists) throw Missing("Sequence", st.Name);
-            if (st.Restart || st.Mode == CreateMode.CreateOrAlter && st.StartWith != null)
-                seq!.Value = st.StartWith ?? seq.InitialValue;
-            if (st.StartWith != null) seq!.InitialValue = st.StartWith.Value;
             if (st.IncrementBy != null) seq!.Increment = st.IncrementBy.Value;
+            // Firebird 4+: the next value after a restart is the restart value
+            if (st.Restart || st.Mode == CreateMode.CreateOrAlter && st.StartWith != null)
+                seq!.Value = (st.StartWith ?? seq.InitialValue) - seq.Increment;
+            if (st.StartWith != null) seq!.InitialValue = st.StartWith.Value;
             return;
         }
         if (st.Mode == CreateMode.Recreate && exists) db.Sequences.Remove(st.Name);
         else if (exists) throw Exists("Sequence", st.Name);
         if (st.IncrementBy == 0) throw Err.MetaUpdate("INCREMENT BY 0 is an illegal option for sequence " + st.Name);
-        db.Sequences[st.Name] = new Sequence
-        {
-            Name = st.Name, Value = st.StartWith ?? 0, InitialValue = st.StartWith ?? 0, Increment = st.IncrementBy ?? 1,
-        };
+        // Firebird 4+: START WITH (default 1) is the first NEXT VALUE
+        var start = st.StartWith ?? 1;
+        var increment = st.IncrementBy ?? 1;
+        db.Sequences[st.Name] = new Sequence { Name = st.Name, Value = start - increment, InitialValue = start, Increment = increment };
     }
 
     static void CreateException(Database db, CreateExceptionStmt st)
