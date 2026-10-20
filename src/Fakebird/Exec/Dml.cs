@@ -146,7 +146,7 @@ public static class Dml
             var v = row[cols[i]];
             sb.Append('"').Append(t.Columns[cols[i]].Name).Append("\" = ");
             if (v.IsNull) sb.Append("NULL");
-            else if (v.Tag is VTag.String or VTag.Date or VTag.Time or VTag.Timestamp) sb.Append('\'').Append(Conv.ToStr(v)).Append('\'');
+            else if (v.Tag is VTag.String || v.IsDateTime) sb.Append('\'').Append(Conv.ToStr(v)).Append('\'');
             else if (v.Tag == VTag.Bytes) sb.Append("x'").Append(Convert.ToHexString(v.AsBytes)).Append('\'');
             else sb.Append(Conv.ToStr(v));
         }

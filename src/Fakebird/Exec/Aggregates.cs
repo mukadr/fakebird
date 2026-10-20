@@ -191,10 +191,11 @@ public readonly record struct SortField(int Stream, int Col, SqlType Type);
 public static class SortImage
 {
     /// <summary>
-    /// Whether a field key's value has to be carried as data too: an ICU collation key cannot be turned back into the
-    /// text. Other text keys hold the text itself (a VARCHAR's length is stored after the record numbers).
+    /// Whether a field key's value has to be carried as data too (SortedStream::hasVolatileKey): an ICU collation key
+    /// cannot be turned back into the text, and the key of a WITH TIME ZONE value has its zone cleared. Other keys
+    /// hold the value itself (a VARCHAR's length is stored after the record numbers).
     /// </summary>
-    public static bool Volatile(SqlType t) => t.IsString && t.Collation != Collation.Binary;
+    public static bool Volatile(SqlType t) => t.IsString && t.Collation != Collation.Binary || t.IsTz;
 
     /// <summary>The data part of the current row's sort record (SortedStream: zeroed, then flags and fields).</summary>
     public static byte[] Build(Ctx c, SortField[] fields)
@@ -251,7 +252,8 @@ public static class SortImage
     {
         TypeKind.SmallInt => 2,
         TypeKind.Integer or TypeKind.Float or TypeKind.Date or TypeKind.Time => 4,
-        TypeKind.BigInt or TypeKind.Double or TypeKind.Timestamp or TypeKind.Blob => 8,
+        TypeKind.BigInt or TypeKind.Double or TypeKind.Timestamp or TypeKind.Blob or TypeKind.TimeTz => 8,
+        TypeKind.TimestampTz => 12,
         TypeKind.Int128 => 16,
         TypeKind.Boolean => 1,
         TypeKind.Char => t.Length * t.BytesPerChar,
@@ -288,8 +290,14 @@ public static class SortImage
             case TypeKind.Date:
             case TypeKind.Time: System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)v.L); break;
             case TypeKind.Timestamp:
+            case TypeKind.TimestampTz:
                 System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)Math.Floor((double)v.L / Value.TicksPerDay));
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(to[4..], (uint)(((v.L % Value.TicksPerDay) + Value.TicksPerDay) % Value.TicksPerDay));
+                if (t.Kind == TypeKind.TimestampTz) System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(to[8..], v.Zone);
+                break;
+            case TypeKind.TimeTz:
+                System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)v.L);
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(to[4..], v.Zone);
                 break;
             case TypeKind.Boolean: to[0] = (byte)(v.AsBool ? 1 : 0); break;
             case TypeKind.Char:

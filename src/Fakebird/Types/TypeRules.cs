@@ -25,6 +25,8 @@ public static class TypeRules
         TypeKind.BigInt => 19,
         TypeKind.Boolean => 21,
         TypeKind.Int128 => 24,
+        TypeKind.TimeTz => 25,
+        TypeKind.TimestampTz => 26,
         _ => 0,
     };
 
@@ -52,6 +54,8 @@ public static class TypeRules
         TypeKind.Date => 10,
         TypeKind.Time => 13,
         TypeKind.Timestamp => 25,
+        TypeKind.TimeTz => 14 + 32,
+        TypeKind.TimestampTz => 26 + 32,
         TypeKind.Blob => 9,
         TypeKind.Boolean => 5,
         _ => 0,
@@ -91,22 +95,19 @@ public static class TypeRules
                 // mixed numeric / non-numeric: the date/time operand decides
                 if (a.IsDateTime && b.IsDateTime)
                 {
+                    static bool IsTime(SqlType t) => t.Kind is TypeKind.Time or TypeKind.TimeTz;
+                    static bool IsTs(SqlType t) => t.Kind is TypeKind.Timestamp or TypeKind.TimestampTz;
                     if (op == ArithOp.Sub)
                     {
-                        if (a.Kind == b.Kind)
-                            return (a.Kind switch
-                            {
-                                TypeKind.Date => SqlType.Integer,
-                                TypeKind.Time => new SqlType(TypeKind.Integer, scale: 4, precision: 9, subType: 1),
-                                _ => new SqlType(TypeKind.BigInt, scale: 9, precision: 18, subType: 1),
-                            }, nullable);
+                        if (a.Kind == TypeKind.Date && b.Kind == TypeKind.Date) return (SqlType.Integer, nullable);
+                        if (IsTime(a) && IsTime(b)) return (new SqlType(TypeKind.Integer, scale: 4, precision: 9, subType: 1), nullable);
                         // DSQL accepts TIMESTAMP - DATE (the engine rejects it when evaluating)
-                        if (a.Kind == TypeKind.Timestamp && b.Kind == TypeKind.Date || a.Kind == TypeKind.Date && b.Kind == TypeKind.Timestamp)
+                        if (IsTs(a) && (IsTs(b) || b.Kind == TypeKind.Date) || IsTs(b) && a.Kind == TypeKind.Date)
                             return (new SqlType(TypeKind.BigInt, scale: 9, precision: 18, subType: 1), nullable);
                         throw DsqlError(Err.isc_expression_eval_err, FbMessages.dsql_invalid_datetime_subtract);
                     }
-                    if (a.Kind == TypeKind.Date && b.Kind == TypeKind.Time || a.Kind == TypeKind.Time && b.Kind == TypeKind.Date)
-                        return (SqlType.Timestamp, nullable);
+                    if (a.Kind == TypeKind.Date && IsTime(b) || IsTime(a) && b.Kind == TypeKind.Date)
+                        return (a.IsTz || b.IsTz ? SqlType.TimestampTz : SqlType.Timestamp, nullable);
                     throw DsqlError(Err.isc_expression_eval_err, FbMessages.dsql_invalid_dateortime_add);
                 }
                 if (a.IsDateTime && (b.IsNumeric || b.Kind == TypeKind.Boolean)) return (a, nullable);
@@ -204,6 +205,10 @@ public static class TypeRules
             else if (t.IsDateTime || t.Kind == TypeKind.Boolean)
             {
                 if (result == null) result = t;
+                else if (result.Kind is TypeKind.Time or TypeKind.TimeTz && t.Kind is TypeKind.Time or TypeKind.TimeTz && result.Kind != t.Kind)
+                    result = SqlType.TimeTz;
+                else if (result.Kind is TypeKind.Timestamp or TypeKind.TimestampTz && t.Kind is TypeKind.Timestamp or TypeKind.TimestampTz && result.Kind != t.Kind)
+                    result = SqlType.TimestampTz;
                 else if (result.Kind != t.Kind)
                     MakeText(t);
             }

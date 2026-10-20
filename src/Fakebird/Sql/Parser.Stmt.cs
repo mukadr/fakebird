@@ -412,7 +412,12 @@ public sealed partial class Parser
             return new SetSqlDialectStmt { Dialect = (int)IntLiteral(), Pos = pos };
         }
         if (Accept("NAMES")) return SkipToEnd("SET NAMES");
-        if (Accept("BIND") || Accept("DECFLOAT") || Accept("TIME") || Accept("ROLE")) return SkipToEnd("SET");
+        if (Is("TIME") && IsAt(1, "ZONE"))
+        {
+            _i += 2;
+            return new SetTimeZoneStmt { Zone = Accept("LOCAL") ? null : StringLiteral(), Pos = pos };
+        }
+        if (Accept("BIND") || Accept("DECFLOAT") || Accept("ROLE")) return SkipToEnd("SET");
         throw Unexpected();
     }
 

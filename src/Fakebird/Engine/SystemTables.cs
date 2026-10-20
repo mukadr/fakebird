@@ -354,6 +354,10 @@ internal static class SystemTables
             [N("RDB$FIELD_TYPE"), I(14), N("TEXT"), Value.Null, I(1)], [N("RDB$FIELD_TYPE"), I(37), N("VARYING"), Value.Null, I(1)],
             [N("RDB$FIELD_TYPE"), I(261), N("BLOB"), Value.Null, I(1)], [N("RDB$FIELD_TYPE"), I(23), N("BOOLEAN"), Value.Null, I(1)],
         ]);
+
+        // Firebird's built-in time zone regions, in id order from 65535 down
+        Add(db, "RDB$TIME_ZONES", [("RDB$TIME_ZONE_ID", Int), ("RDB$TIME_ZONE_NAME", Name)],
+            _ => TimeZones.Regions().Select(z => new[] { I(z.Id), N(z.Name) }).ToList());
     }
 
     static string FieldSource(string table, Column c, int i) => c.Domain ?? $"RDB${table}_{i}";
@@ -384,6 +388,8 @@ internal static class SystemTables
         TypeKind.Date => 12,
         TypeKind.Time => 13,
         TypeKind.Timestamp => 35,
+        TypeKind.TimeTz => 28,
+        TypeKind.TimestampTz => 29,
         TypeKind.Char => 14,
         TypeKind.VarChar => 37,
         TypeKind.Blob => 261,

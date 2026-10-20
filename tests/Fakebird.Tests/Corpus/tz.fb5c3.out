@@ -1,0 +1,2175 @@
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+Etc/UTC | 
+affected 0
+--- select char_length(cast(current_timestamp as varchar(60))), substring(cast(current_timestamp as varchar(60)) from 25), char_length(cast(current_time as varchar(60))), substring(cast(current_time as varchar(60)) from 14) from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+SUBSTRING:VARCHAR (60,,,False,,SUBSTRING,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+SUBSTRING:VARCHAR (60,,,False,,SUBSTRING,False,False)
+32 |  Etc/UTC | 21 |  Etc/UTC | 
+affected 0
+--- select current_timestamp, current_time, localtimestamp, localtime, current_date from rdb$database where 1 = 0
+CURRENT_TIMESTAMP:TIMESTAMP (8,,,False,,CURRENT_TIMESTAMP,False,False)
+CURRENT_TIME:TIME (4,,,False,,CURRENT_TIME,False,False)
+LOCALTIMESTAMP:TIMESTAMP (8,,,False,,LOCALTIMESTAMP,False,False)
+LOCALTIME:TIME (4,,,False,,LOCALTIME,False,False)
+CURRENT_DATE:DATE (4,,,False,,CURRENT_DATE,False,False)
+affected 0
+--- select cast(current_timestamp as timestamp) = localtimestamp, current_timestamp = localtimestamp, cast(current_time as time) = localtime, current_timestamp - localtimestamp, current_time - localtime from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+True | True | True | 0 | 0 | 
+affected 0
+--- select extract(timezone_hour from current_timestamp), extract(timezone_minute from current_time), extract(timezone_name from current_timestamp), extract(timezone_hour from localtimestamp) from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+0 | 0 | Etc/UTC | 0 | 
+affected 0
+--- select cast(current_timestamp as date) = current_date, cast(localtimestamp as date) = current_date from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | 
+affected 0
+--- select char_length(cast(current_timestamp(0) as varchar(60))), char_length(cast(localtimestamp(2) as varchar(60))), char_length(cast(current_time(1) as varchar(60))) from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+32 | 24 | 21 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 America/Sao_Paulo', cast(timestamp '2024-01-15 10:00:00 America/Sao_Paulo' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 13:00:00.0000 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00', cast(timestamp '2024-01-15 10:00:00 +03:00' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 -03:30', cast(timestamp '2024-01-15 10:00:00 -03:30' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 13:30:00.0000 | 2024-01-15 10:00:00.0000 -03:30 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00', cast(timestamp '2024-01-15 10:00:00' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 UTC', cast(timestamp '2024-01-15 10:00:00 UTC' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 UTC | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 GMT', cast(timestamp '2024-01-15 10:00:00 GMT' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 GMT | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 Etc/GMT+3', cast(timestamp '2024-01-15 10:00:00 Etc/GMT+3' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 13:00:00.0000 | 2024-01-15 10:00:00.0000 Etc/GMT+3 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00   europe/LONDON', cast(timestamp '2024-01-15 10:00:00   europe/LONDON' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 Europe/London | 
+affected 0
+--- select timestamp '15.01.2024 10:00 +01:00', cast(timestamp '15.01.2024 10:00 +01:00' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 09:00:00.0000 | 2024-01-15 10:00:00.0000 +01:00 | 
+affected 0
+--- select timestamp '2024-01-15 +01:00', cast(timestamp '2024-01-15 +01:00' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 23:00:00.0000 | 2024-01-15 00:00:00.0000 +01:00 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00.1234 Asia/Kolkata', cast(timestamp '2024-01-15 10:00:00.1234 Asia/Kolkata' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 04:30:00.1234 | 2024-01-15 10:00:00.1234 Asia/Kolkata | 
+affected 0
+--- select time '10:00:00 +05:00', cast(time '10:00:00 +05:00' as varchar(60)) from rdb$database
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+05:00:00.0000 | 10:00:00.0000 +05:00 | 
+affected 0
+--- select time '10:00:00 America/Sao_Paulo', cast(time '10:00:00 America/Sao_Paulo' as varchar(60)) from rdb$database
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+13:00:00.0000 | 10:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select time '10:00', cast(time '10:00' as varchar(60)) from rdb$database
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+10:00:00.0000 | 10:00:00.0000 | 
+affected 0
+--- select time '23:59:59.9999 -14:00', cast(time '23:59:59.9999 -14:00' as varchar(60)) from rdb$database
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+13:59:59.9999 | 23:59:59.9999 -14:00 | 
+affected 0
+--- select time '00:00:00 +14:00', cast(time '00:00:00 +14:00' as varchar(60)) from rdb$database
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+10:00:00.0000 | 00:00:00.0000 +14:00 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +14:00', cast(timestamp '2024-01-15 10:00:00 +14:00' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 20:00:00.0000 | 2024-01-15 10:00:00.0000 +14:00 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 - 05 : 30', cast(timestamp '2024-01-15 10:00:00 - 05 : 30' as varchar(60)) from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 15:30:00.0000 | 2024-01-15 10:00:00.0000 -05:30 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +15:00' from rdb$database
+ERROR 335545213 '+15:00' '' 22009
+Invalid time zone offset: +15:00 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 +14:01' from rdb$database
+ERROR 335545213 '+14:01' '' 22009
+Invalid time zone offset: +14:01 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 +3' from rdb$database
+ERROR 335545213 '+3' '' 22009
+Invalid time zone offset: +3 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 Mars/Olympus' from rdb$database
+ERROR 335545214 'Mars/Olympus' '' 22009
+Invalid time zone region: Mars/Olympus
+--- select timestamp '2024-01-15 10:00:00 +03:60' from rdb$database
+ERROR 335545213 '+03:60' '' 22009
+Invalid time zone offset: +03:60 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select time '10:00 +03:00 x' from rdb$database
+ERROR 335545213 '+03:00 x' '' 22009
+Invalid time zone offset: +03:00 x - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 America/Sao_Paulo x' from rdb$database
+ERROR 335545214 'America/Sao_Paulo x' '' 22009
+Invalid time zone region: America/Sao_Paulo x
+--- select timestamp '2024-01-15 10:00:00 +' from rdb$database
+ERROR 335545213 '+' '' 22009
+Invalid time zone offset: + - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 -' from rdb$database
+ERROR 335545213 '-' '' 22009
+Invalid time zone offset: - - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 3:00' from rdb$database
+ERROR 335545214 '3:00' '' 22009
+Invalid time zone region: 3:00
+--- select date '2024-01-15 +03:00' from rdb$database
+ERROR 335544334 '2024-01-15 +03:00' '' 22018
+conversion error from string "2024-01-15 +03:00"
+--- select cast('2024-01-15 10:00:00 America/Sao_Paulo' as timestamp with time zone), cast(cast('2024-01-15 10:00:00 America/Sao_Paulo' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 13:00:00.0000 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast('2024-01-15 10:00:00 +03:00' as timestamp with time zone), cast(cast('2024-01-15 10:00:00 +03:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select cast('2024-01-15 10:00:00' as timestamp with time zone), cast(cast('2024-01-15 10:00:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast('2024-01-15' as timestamp with time zone), cast(cast('2024-01-15' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 00:00:00.0000 | 2024-01-15 00:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast('10:00:00 +05:00' as timestamp with time zone), cast(cast('10:00:00 +05:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335544334 '10:00:00 +05:00' '' 22018
+conversion error from string "10:00:00 +05:00"
+--- select cast('15-JAN-2024 10:00 Europe/Paris' as timestamp with time zone), cast(cast('15-JAN-2024 10:00 Europe/Paris' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 09:00:00.0000 | 2024-01-15 10:00:00.0000 Europe/Paris | 
+affected 0
+--- select cast('2024-02-30 10:00:00 +00:00' as timestamp with time zone), cast(cast('2024-02-30 10:00:00 +00:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335544334 '2024-02-30 10:00:00 +00:00' '' 22018
+conversion error from string "2024-02-30 10:00:00 +00:00"
+--- select cast('2024-01-15 25:00:00 +00:00' as timestamp with time zone), cast(cast('2024-01-15 25:00:00 +00:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335544334 '2024-01-15 25:00:00 +00:00' '' 22018
+conversion error from string "2024-01-15 25:00:00 +00:00"
+--- select cast('2024-01-15 10:00:00 Bogus/Zone' as timestamp with time zone), cast(cast('2024-01-15 10:00:00 Bogus/Zone' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335545214 'Bogus/Zone' '' 22009
+Invalid time zone region: Bogus/Zone
+--- select cast('  2024-01-15 10:00:00   -02:00  ' as timestamp with time zone), cast(cast('  2024-01-15 10:00:00   -02:00  ' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 12:00:00.0000 | 2024-01-15 10:00:00.0000 -02:00 | 
+affected 0
+--- select cast('2024-01-15 10:00:00 +02:00:00' as timestamp with time zone), cast(cast('2024-01-15 10:00:00 +02:00:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335545213 '+02:00:00' '' 22009
+Invalid time zone offset: +02:00:00 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select cast('10:00:00 +05:00' as time with time zone), cast(cast('10:00:00 +05:00' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+05:00:00.0000 | 10:00:00.0000 +05:00 | 
+affected 0
+--- select cast('10:00:00 America/Sao_Paulo' as time with time zone), cast(cast('10:00:00 America/Sao_Paulo' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+13:00:00.0000 | 10:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast('10:00:00' as time with time zone), cast(cast('10:00:00' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+10:00:00.0000 | 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast('24:00:00 +00:00' as time with time zone), cast(cast('24:00:00 +00:00' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+ERROR 335544334 '24:00:00 +00:00' '' 22018
+conversion error from string "24:00:00 +00:00"
+--- select cast('10:00:00.5 -01:00' as time with time zone), cast(cast('10:00:00.5 -01:00' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+11:00:00.5000 | 10:00:00.5000 -01:00 | 
+affected 0
+--- select cast('10:00 Europe/Lisbon' as time with time zone), cast(cast('10:00 Europe/Lisbon' as time with time zone) as varchar(40)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+09:00:00.0000 | 10:00:00.0000 Europe/Lisbon | 
+affected 0
+--- select cast('2024-01-15 10:00:00 +03:00' as timestamp) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 
+affected 0
+--- select cast('2024-01-15 10:00:00 America/Sao_Paulo' as timestamp) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+2024-01-15 13:00:00.0000 | 
+affected 0
+--- select cast('10:00:00 +03:00' as time) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+07:00:00.0000 | 
+affected 0
+--- select cast('2024-01-15 23:00:00 -03:00' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+ERROR 335544334 '2024-01-15 23:00:00 -03:00' '' 22018
+conversion error from string "2024-01-15 23:00:00 -03:00"
+--- select cast('2024-01-15 10:00:00 +03:00' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+ERROR 335544334 '2024-01-15 10:00:00 +03:00' '' 22018
+conversion error from string "2024-01-15 10:00:00 +03:00"
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as timestamp with time zone), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-16 01:30:00.0000 | 2024-01-15 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as time with time zone), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+01:30:00.0000 | 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as timestamp), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as timestamp) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-16 01:30:00.0000 | 2024-01-16 01:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as time), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+01:30:00.0000 | 01:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as date), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as date) as varchar(60)) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-16 00:00:00.0000 | 2024-01-16 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as varchar(60)), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000 America/Sao_Paulo | 2024-01-15 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as char(60)), cast(cast(timestamp '2024-01-15 22:30:00 America/Sao_Paulo' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000 America/Sao_Paulo                   | 2024-01-15 22:30:00.0000 America/Sao_Paulo                   | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as timestamp with time zone), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 20:30:00.0000 | 2024-01-15 01:30:00.0000 +05:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as time with time zone), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+20:30:00.0000 | 01:30:00.0000 +05:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as timestamp), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as timestamp) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 20:30:00.0000 | 2024-01-14 20:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as time), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+20:30:00.0000 | 20:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as date), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as date) as varchar(60)) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 00:00:00.0000 | 2024-01-14 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as varchar(60)), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 01:30:00.0000 +05:00 | 2024-01-15 01:30:00.0000 +05:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 01:30:00 +05:00' as char(60)), cast(cast(timestamp '2024-01-15 01:30:00 +05:00' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 01:30:00.0000 +05:00                              | 2024-01-15 01:30:00.0000 +05:00                              | 
+affected 0
+--- select cast(time '22:30:00 -03:00' as time with time zone), cast(cast(time '22:30:00 -03:00' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+01:30:00.0000 | 22:30:00.0000 -03:00 | 
+affected 0
+--- select cast(time '22:30:00 -03:00' as time), cast(cast(time '22:30:00 -03:00' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+01:30:00.0000 | 01:30:00.0000 | 
+affected 0
+--- select cast(time '22:30:00 -03:00' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+ERROR 335544334 '22:30:00.0000 -03:00' '' 22018
+conversion error from string "22:30:00.0000 -03:00"
+--- select cast(time '22:30:00 -03:00' as varchar(60)), cast(cast(time '22:30:00 -03:00' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 -03:00 | 22:30:00.0000 -03:00 | 
+affected 0
+--- select cast(time '22:30:00 -03:00' as char(60)), cast(cast(time '22:30:00 -03:00' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 -03:00                                         | 22:30:00.0000 -03:00                                         | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as timestamp with time zone), cast(cast(timestamp '2024-01-15 22:30:00' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000 | 2024-01-15 22:30:00.0000 Etc/UTC | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as time with time zone), cast(cast(timestamp '2024-01-15 22:30:00' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 | 22:30:00.0000 Etc/UTC | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as timestamp), cast(cast(timestamp '2024-01-15 22:30:00' as timestamp) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000 | 2024-01-15 22:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as time), cast(cast(timestamp '2024-01-15 22:30:00' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 | 22:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as date), cast(cast(timestamp '2024-01-15 22:30:00' as date) as varchar(60)) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 00:00:00.0000 | 2024-01-15 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as varchar(60)), cast(cast(timestamp '2024-01-15 22:30:00' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000 | 2024-01-15 22:30:00.0000 | 
+affected 0
+--- select cast(timestamp '2024-01-15 22:30:00' as char(60)), cast(cast(timestamp '2024-01-15 22:30:00' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 22:30:00.0000                                     | 2024-01-15 22:30:00.0000                                     | 
+affected 0
+--- select cast(time '22:30:00' as time with time zone), cast(cast(time '22:30:00' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 | 22:30:00.0000 Etc/UTC | 
+affected 0
+--- select cast(time '22:30:00' as time), cast(cast(time '22:30:00' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 | 22:30:00.0000 | 
+affected 0
+--- select cast(time '22:30:00' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+ERROR 335544334 '22:30:00.0000' '' 22018
+conversion error from string "22:30:00.0000"
+--- select cast(time '22:30:00' as varchar(60)), cast(cast(time '22:30:00' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000 | 22:30:00.0000 | 
+affected 0
+--- select cast(time '22:30:00' as char(60)), cast(cast(time '22:30:00' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+22:30:00.0000                                                | 22:30:00.0000                                                | 
+affected 0
+--- select cast(date '2024-01-15' as timestamp with time zone), cast(cast(date '2024-01-15' as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 00:00:00.0000 | 2024-01-15 00:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(date '2024-01-15' as time with time zone), cast(cast(date '2024-01-15' as time with time zone) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335544334 '2024-01-15' '' 22018
+conversion error from string "2024-01-15"
+--- select cast(date '2024-01-15' as timestamp), cast(cast(date '2024-01-15' as timestamp) as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 00:00:00.0000 | 2024-01-15 00:00:00.0000 | 
+affected 0
+--- select cast(date '2024-01-15' as time), cast(cast(date '2024-01-15' as time) as varchar(60)) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335544334 '2024-01-15' '' 22018
+conversion error from string "2024-01-15"
+--- select cast(date '2024-01-15' as date), cast(cast(date '2024-01-15' as date) as varchar(60)) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 00:00:00.0000 | 2024-01-15 | 
+affected 0
+--- select cast(date '2024-01-15' as varchar(60)), cast(cast(date '2024-01-15' as varchar(60)) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 | 2024-01-15 | 
+affected 0
+--- select cast(date '2024-01-15' as char(60)), cast(cast(date '2024-01-15' as char(60)) as varchar(60)) from rdb$database
+CAST:CHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15                                                   | 2024-01-15                                                   | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as integer) from rdb$database
+CAST:INTEGER (4,,,False,,CAST,False,False)
+ERROR 335544334 '15-JAN-2024 10:00:00.0000 +03:00' '' 22018
+conversion error from string "15-JAN-2024 10:00:00.0000 +03:00"
+--- select cast(time '10:00:00 +03:00' as integer) from rdb$database
+CAST:INTEGER (4,,,False,,CAST,False,False)
+ERROR 335544334 '10:00:00.0000 +03:00' '' 22018
+conversion error from string "10:00:00.0000 +03:00"
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as bigint) from rdb$database
+CAST:BIGINT (8,,,False,,CAST,False,False)
+ERROR 335544334 '15-JAN-2024 10:00:00.0000 +03:00' '' 22018
+conversion error from string "15-JAN-2024 10:00:00.0000 +03:00"
+--- select cast(time '10:00:00 +03:00' as bigint) from rdb$database
+CAST:BIGINT (8,,,False,,CAST,False,False)
+ERROR 335544334 '10:00:00.0000 +03:00' '' 22018
+conversion error from string "10:00:00.0000 +03:00"
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as double precision) from rdb$database
+CAST:DOUBLE PRECISION (8,,,False,,CAST,False,False)
+ERROR 335544334 '15-JAN-2024 10:00:00.0000 +03:00' '' 22018
+conversion error from string "15-JAN-2024 10:00:00.0000 +03:00"
+--- select cast(time '10:00:00 +03:00' as double precision) from rdb$database
+CAST:DOUBLE PRECISION (8,,,False,,CAST,False,False)
+ERROR 335544334 '10:00:00.0000 +03:00' '' 22018
+conversion error from string "10:00:00.0000 +03:00"
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as numeric(18,4)) from rdb$database
+CAST:NUMERIC (8,8,4,False,,CAST,False,False)
+ERROR 335544334 '15-JAN-2024 10:00:00.0000 +03:00' '' 22018
+conversion error from string "15-JAN-2024 10:00:00.0000 +03:00"
+--- select cast(time '10:00:00 +03:00' as numeric(18,4)) from rdb$database
+CAST:NUMERIC (8,8,4,False,,CAST,False,False)
+ERROR 335544334 '10:00:00.0000 +03:00' '' 22018
+conversion error from string "10:00:00.0000 +03:00"
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as boolean) from rdb$database
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+ERROR 335544334 '15-JAN-2024 10:00:00.0000 +03:00' '' 22018
+conversion error from string "15-JAN-2024 10:00:00.0000 +03:00"
+--- select cast(time '10:00:00 +03:00' as boolean) from rdb$database
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+ERROR 335544334 '10:00:00.0000 +03:00' '' 22018
+conversion error from string "10:00:00.0000 +03:00"
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as blob sub_type text) from rdb$database
+CAST:BLOB SUB_TYPE 1 (2147483647,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select cast(time '10:00:00 +03:00' as blob sub_type text) from rdb$database
+CAST:BLOB SUB_TYPE 1 (2147483647,,,False,,CAST,False,False)
+10:00:00.0000 +03:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as varchar(10)) from rdb$database
+CAST:VARCHAR (10,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #10 #31 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 10, actual 31
+--- select cast(time '10:00:00 +03:00' as varchar(10)) from rdb$database
+CAST:VARCHAR (10,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #10 #20 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 10, actual 20
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as char(20)) from rdb$database
+CAST:CHAR (20,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #20 #31 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 20, actual 31
+--- select cast(time '10:00:00 +03:00' as char(20)) from rdb$database
+CAST:CHAR (20,,,False,,CAST,False,False)
+10:00:00.0000 +03:00 | 
+affected 0
+--- select cast(12 as timestamp with time zone) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+ERROR 335544334 '12' '' 22018
+conversion error from string "12"
+--- select cast(true as time with time zone) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+ERROR 335544334 'BOOLEAN' '' 22018
+conversion error from string "BOOLEAN"
+--- select cast(1.5e0 as timestamp with time zone) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+ERROR 335544334 '1.500000000000000' '' 22018
+conversion error from string "1.500000000000000"
+--- select cast(null as timestamp with time zone), cast(null as time with time zone) from rdb$database
+CAST:TIMESTAMP (8,,,True,,CAST,False,False)
+CAST:TIME (4,,,True,,CAST,False,False)
+NULL | NULL | 
+affected 0
+--- select cast('2024-03-10 01:59:59 America/New_York' as timestamp with time zone), cast(cast('2024-03-10 01:59:59 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-10 01:59:59 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-10 01:59:59 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-10 06:59:59.0000 | 2024-03-10 01:59:59.0000 America/New_York | -5 | 0 | 
+affected 0
+--- select cast('2024-03-10 02:00:00 America/New_York' as timestamp with time zone), cast(cast('2024-03-10 02:00:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-10 02:00:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-10 02:00:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-10 07:00:00.0000 | 2024-03-10 03:00:00.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-03-10 02:30:00 America/New_York' as timestamp with time zone), cast(cast('2024-03-10 02:30:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-10 02:30:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-10 02:30:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-10 07:30:00.0000 | 2024-03-10 03:30:00.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-03-10 03:00:00 America/New_York' as timestamp with time zone), cast(cast('2024-03-10 03:00:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-10 03:00:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-10 03:00:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-10 07:00:00.0000 | 2024-03-10 03:00:00.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-11-03 00:59:59 America/New_York' as timestamp with time zone), cast(cast('2024-11-03 00:59:59 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-11-03 00:59:59 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-11-03 00:59:59 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-11-03 04:59:59.0000 | 2024-11-03 00:59:59.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-11-03 01:00:00 America/New_York' as timestamp with time zone), cast(cast('2024-11-03 01:00:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-11-03 01:00:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-11-03 01:00:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-11-03 05:00:00.0000 | 2024-11-03 01:00:00.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-11-03 01:30:00 America/New_York' as timestamp with time zone), cast(cast('2024-11-03 01:30:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-11-03 01:30:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-11-03 01:30:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-11-03 05:30:00.0000 | 2024-11-03 01:30:00.0000 America/New_York | -4 | 0 | 
+affected 0
+--- select cast('2024-11-03 02:00:00 America/New_York' as timestamp with time zone), cast(cast('2024-11-03 02:00:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-11-03 02:00:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2024-11-03 02:00:00 America/New_York' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-11-03 07:00:00.0000 | 2024-11-03 02:00:00.0000 America/New_York | -5 | 0 | 
+affected 0
+--- select cast('2024-03-31 02:30:00 Europe/Berlin' as timestamp with time zone), cast(cast('2024-03-31 02:30:00 Europe/Berlin' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-31 02:30:00 Europe/Berlin' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-31 02:30:00 Europe/Berlin' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-31 01:30:00.0000 | 2024-03-31 03:30:00.0000 Europe/Berlin | 2 | 0 | 
+affected 0
+--- select cast('2024-10-27 02:30:00 Europe/Berlin' as timestamp with time zone), cast(cast('2024-10-27 02:30:00 Europe/Berlin' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-10-27 02:30:00 Europe/Berlin' as timestamp with time zone)), extract(timezone_minute from cast('2024-10-27 02:30:00 Europe/Berlin' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-10-27 00:30:00.0000 | 2024-10-27 02:30:00.0000 Europe/Berlin | 2 | 0 | 
+affected 0
+--- select cast('2024-10-27 03:00:00 Europe/Berlin' as timestamp with time zone), cast(cast('2024-10-27 03:00:00 Europe/Berlin' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-10-27 03:00:00 Europe/Berlin' as timestamp with time zone)), extract(timezone_minute from cast('2024-10-27 03:00:00 Europe/Berlin' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-10-27 02:00:00.0000 | 2024-10-27 03:00:00.0000 Europe/Berlin | 1 | 0 | 
+affected 0
+--- select cast('2024-04-07 02:30:00 Australia/Sydney' as timestamp with time zone), cast(cast('2024-04-07 02:30:00 Australia/Sydney' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-04-07 02:30:00 Australia/Sydney' as timestamp with time zone)), extract(timezone_minute from cast('2024-04-07 02:30:00 Australia/Sydney' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-04-06 15:30:00.0000 | 2024-04-07 02:30:00.0000 Australia/Sydney | 11 | 0 | 
+affected 0
+--- select cast('2024-10-06 02:30:00 Australia/Sydney' as timestamp with time zone), cast(cast('2024-10-06 02:30:00 Australia/Sydney' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-10-06 02:30:00 Australia/Sydney' as timestamp with time zone)), extract(timezone_minute from cast('2024-10-06 02:30:00 Australia/Sydney' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-10-05 16:30:00.0000 | 2024-10-06 03:30:00.0000 Australia/Sydney | 11 | 0 | 
+affected 0
+--- select cast('2018-11-04 00:30:00 America/Sao_Paulo' as timestamp with time zone), cast(cast('2018-11-04 00:30:00 America/Sao_Paulo' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2018-11-04 00:30:00 America/Sao_Paulo' as timestamp with time zone)), extract(timezone_minute from cast('2018-11-04 00:30:00 America/Sao_Paulo' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2018-11-04 03:30:00.0000 | 2018-11-04 01:30:00.0000 America/Sao_Paulo | -2 | 0 | 
+affected 0
+--- select cast('2019-02-16 23:30:00 America/Sao_Paulo' as timestamp with time zone), cast(cast('2019-02-16 23:30:00 America/Sao_Paulo' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2019-02-16 23:30:00 America/Sao_Paulo' as timestamp with time zone)), extract(timezone_minute from cast('2019-02-16 23:30:00 America/Sao_Paulo' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2019-02-17 01:30:00.0000 | 2019-02-16 23:30:00.0000 America/Sao_Paulo | -2 | 0 | 
+affected 0
+--- select cast('2024-03-10 02:30:00 US/Eastern' as timestamp with time zone), cast(cast('2024-03-10 02:30:00 US/Eastern' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-03-10 02:30:00 US/Eastern' as timestamp with time zone)), extract(timezone_minute from cast('2024-03-10 02:30:00 US/Eastern' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-03-10 07:30:00.0000 | 2024-03-10 03:30:00.0000 US/Eastern | -4 | 0 | 
+affected 0
+--- select cast('1980-06-01 12:00:00 Europe/London' as timestamp with time zone), cast(cast('1980-06-01 12:00:00 Europe/London' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('1980-06-01 12:00:00 Europe/London' as timestamp with time zone)), extract(timezone_minute from cast('1980-06-01 12:00:00 Europe/London' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1980-06-01 11:00:00.0000 | 1980-06-01 12:00:00.0000 Europe/London | 1 | 0 | 
+affected 0
+--- select cast('1900-01-01 00:00:00 Europe/Amsterdam' as timestamp with time zone), cast(cast('1900-01-01 00:00:00 Europe/Amsterdam' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('1900-01-01 00:00:00 Europe/Amsterdam' as timestamp with time zone)), extract(timezone_minute from cast('1900-01-01 00:00:00 Europe/Amsterdam' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1900-01-01 00:00:00.0000 | 1900-01-01 00:00:00.0000 Europe/Amsterdam | 0 | 0 | 
+affected 0
+--- select cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone), cast(cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone)), extract(timezone_minute from cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-06-01 06:15:00.0000 | 2024-06-01 12:00:00.0000 Asia/Kathmandu | 5 | 45 | 
+affected 0
+--- select cast('2024-06-01 12:00:00 Pacific/Chatham' as timestamp with time zone), cast(cast('2024-06-01 12:00:00 Pacific/Chatham' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-06-01 12:00:00 Pacific/Chatham' as timestamp with time zone)), extract(timezone_minute from cast('2024-06-01 12:00:00 Pacific/Chatham' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-05-31 23:15:00.0000 | 2024-06-01 12:00:00.0000 Pacific/Chatham | 12 | 45 | 
+affected 0
+--- select cast('2024-06-01 12:00:00 Australia/Eucla' as timestamp with time zone), cast(cast('2024-06-01 12:00:00 Australia/Eucla' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-06-01 12:00:00 Australia/Eucla' as timestamp with time zone)), extract(timezone_minute from cast('2024-06-01 12:00:00 Australia/Eucla' as timestamp with time zone)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024-06-01 03:15:00.0000 | 2024-06-01 12:00:00.0000 Australia/Eucla | 8 | 45 | 
+affected 0
+--- select dateadd(1 hour to timestamp '2024-03-10 01:30:00 America/New_York'), cast(dateadd(1 hour to timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)) from rdb$database
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-10 07:30:00.0000 | 2024-03-10 03:30:00.0000 America/New_York | 
+affected 0
+--- select cast(dateadd(1 day to timestamp '2024-03-09 02:30:00 America/New_York') as varchar(60)), cast(dateadd(-1 day to timestamp '2024-11-04 01:30:00 America/New_York') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-10 03:30:00.0000 America/New_York | 2024-11-03 01:30:00.0000 America/New_York | 
+affected 0
+--- select cast(timestamp '2024-03-10 01:30:00 America/New_York' + 1 as varchar(60)), cast(timestamp '2024-03-10 01:30:00 America/New_York' + 0.5 as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-11 02:30:00.0000 America/New_York | 2024-03-10 14:30:00.0000 America/New_York | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone '+05:30' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 15:30:00.0000 +05:30 | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone '-00:00' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 +00:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone 'utc' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 UTC | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone ' Asia/Tokyo ' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 19:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone 'Europe/Berlin' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 11:00:00.0000 Europe/Berlin | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00' at local, cast(timestamp '2024-01-15 10:00:00' at local as varchar(60)) from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 | 2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 04:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone '+05:30' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 12:30:00.0000 +05:30 | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone '-00:00' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 +00:00 | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone 'utc' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 UTC | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone ' Asia/Tokyo ' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 16:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' at time zone 'Europe/Berlin' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 08:00:00.0000 Europe/Berlin | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' at local, cast(timestamp '2024-01-15 10:00:00 +03:00' at local as varchar(60)) from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 07:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(time '10:00:00' at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+07:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(time '10:00:00' at time zone '+05:30' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+15:30:00.0000 +05:30 | 
+affected 0
+--- select cast(time '10:00:00' at time zone '-00:00' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+10:00:00.0000 +00:00 | 
+affected 0
+--- select cast(time '10:00:00' at time zone 'utc' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+10:00:00.0000 UTC | 
+affected 0
+--- select cast(time '10:00:00' at time zone ' Asia/Tokyo ' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+19:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(time '10:00:00' at time zone 'Europe/Berlin' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+11:00:00.0000 Europe/Berlin | 
+affected 0
+--- select time '10:00:00' at local, cast(time '10:00:00' at local as varchar(60)) from rdb$database
+AT:TIME (4,,,False,,AT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+10:00:00.0000 | 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+04:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone '+05:30' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+12:30:00.0000 +05:30 | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone '-00:00' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+07:00:00.0000 +00:00 | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone 'utc' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+07:00:00.0000 UTC | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone ' Asia/Tokyo ' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+16:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(time '10:00:00 +03:00' at time zone 'Europe/Berlin' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+08:00:00.0000 Europe/Berlin | 
+affected 0
+--- select time '10:00:00 +03:00' at local, cast(time '10:00:00 +03:00' at local as varchar(60)) from rdb$database
+AT:TIME (4,,,False,,AT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+07:00:00.0000 | 07:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 05:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone '+05:30' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 13:30:00.0000 +05:30 | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone '-00:00' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 08:00:00.0000 +00:00 | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone 'utc' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 08:00:00.0000 UTC | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone ' Asia/Tokyo ' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 17:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at time zone 'Europe/Berlin' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 10:00:00.0000 Europe/Berlin | 
+affected 0
+--- select timestamp '2024-07-01 10:00:00 Europe/Berlin' at local, cast(timestamp '2024-07-01 10:00:00 Europe/Berlin' at local as varchar(60)) from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-07-01 08:00:00.0000 | 2024-07-01 08:00:00.0000 Etc/UTC | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00' at time zone 'America/Sao_Paulo', time '10:00:00' at time zone '-02:00' from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+AT:TIME (4,,,False,,AT,False,False)
+2024-01-15 10:00:00.0000 | 10:00:00.0000 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00' at time zone 'Nowhere' from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+ERROR 335545214 'Nowhere' '' 22009
+Invalid time zone region: Nowhere
+--- select timestamp '2024-01-15 10:00:00' at time zone '+25:00' from rdb$database
+AT:TIMESTAMP (8,,,False,,AT,False,False)
+ERROR 335545213 '+25:00' '' 22009
+Invalid time zone offset: +25:00 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00' at time zone null from rdb$database
+AT:TIMESTAMP (8,,,True,,AT,False,False)
+NULL | 
+affected 0
+--- select cast(null as timestamp) at time zone 'UTC' from rdb$database
+AT:TIMESTAMP (8,,,True,,AT,False,False)
+NULL | 
+affected 0
+--- select date '2024-01-15' at time zone 'UTC' from rdb$database
+ERROR 335544569 335544606 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+--- select '2024-01-15 10:00:00' at time zone 'UTC' from rdb$database
+ERROR 335544569 335544606 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+--- select 1 at local from rdb$database
+ERROR 335544569 335544606 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone 'America/Sao_Paulo' at time zone 'Asia/Tokyo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 19:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone 'America/' || 'Sao_Paulo' as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+ERROR 335545214 'America/' '' 22009
+Invalid time zone region: America/
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone ('America/' || 'Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +01:00' at time zone 'UTC' collate unicode as varchar(60)) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544640 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Invalid use of CHARACTER SET or COLLATE
+--- select cast(ts at time zone 'Asia/Tokyo' as varchar(60)), cast(lts at time zone 'Asia/Tokyo' as varchar(60)), cast(t at local as varchar(40)) from tz order by id
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+2024-01-15 22:00:00.0000 Asia/Tokyo | 2024-01-15 19:00:00.0000 Asia/Tokyo | 13:00:00.0000 Etc/UTC | 
+2024-01-15 22:00:00.0000 Asia/Tokyo | 2024-01-15 22:00:00.0000 Asia/Tokyo | 13:00:00.0000 Etc/UTC | 
+2024-07-01 19:00:00.0000 Asia/Tokyo | 2024-07-01 21:00:00.0000 Asia/Tokyo | 10:00:00.0000 Etc/UTC | 
+2024-03-10 15:59:59.9999 Asia/Tokyo | 2024-03-10 10:59:59.9999 Asia/Tokyo | 18:00:00.0000 Etc/UTC | 
+NULL | NULL | NULL | 
+2024-01-15 22:00:00.0000 Asia/Tokyo | 2024-01-16 01:00:00.0000 Asia/Tokyo | 13:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(? at time zone 'America/Sao_Paulo' as varchar(60)) from rdb$database
+ERROR 335544569 335544606 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone ? as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+2024-01-15 11:00:00.0000 Europe/Rome | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at time zone ? as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+ERROR 335545213 '+99:00' '' 22009
+Invalid time zone offset: +99:00 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- select timestamp '2024-01-15 10:00:00 +03:00' = timestamp '2024-01-15 07:00:00 +00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' = timestamp '2024-01-15 07:00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 07:00:00' = timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 America/Sao_Paulo' > timestamp '2024-01-15 12:59:59 +00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 America/Sao_Paulo' < timestamp '2024-01-15 13:00:00.0001 UTC' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select time '10:00:00 +03:00' = time '07:00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select time '10:00:00 +03:00' = time '07:00:00 +00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select time '01:00:00 +03:00' < time '23:00:00 +00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 00:00:00 +00:00' = date '2024-01-15' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select date '2024-01-15' < timestamp '2024-01-15 00:00:00 -00:01' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' = '2024-01-15 07:00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select '2024-01-15 10:00:00 +03:00' = timestamp '2024-01-15 07:00:00 UTC' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select time '10:00:00 +03:00' = '07:00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' is distinct from timestamp '2024-01-15 07:00:00 +00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' = time '07:00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select time '07:00:00 +00:00' = date '2024-01-15' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544334 '2024-01-15' '' 22018
+conversion error from string "2024-01-15"
+--- select timestamp '2024-01-15 10:00:00 +03:00' = 1 from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544334 '1' '' 22018
+conversion error from string "1"
+--- select timestamp '2024-01-15 10:00:00 +03:00' between timestamp '2024-01-15 07:00:00' and timestamp '2024-01-15 07:00:00 -00:00' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' in (timestamp '2024-01-15 07:00:00', timestamp '2024-01-15 10:00:00') from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select id from tz where ts = timestamp '2024-01-15 13:00:00 UTC' order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- select id from tz where ts = '2024-01-15 13:00:00' order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- select id from tz where t = time '13:00:00' order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- select id from tz where ts > lts order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+4 | 
+affected 0
+--- select id from tz where ts between timestamp '2024-01-15 12:00:00 +00:00' and timestamp '2024-07-01 10:00:00' order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+6 | 
+affected 0
+--- select a.id, b.id from tz a join tz b on a.ts = b.ts and a.id < b.id order by 1, 2
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 2 | 
+1 | 6 | 
+2 | 6 | 
+affected 0
+--- select id, ts = lts, t = lt, ts > lts, t < lt from tz order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | True | False | 
+2 | True | True | False | False | 
+3 | False | False | False | True | 
+4 | False | False | True | True | 
+5 | NULL | NULL | NULL | NULL | 
+6 | False | False | False | True | 
+affected 0
+--- select id, cast(ts as varchar(60)) from tz order by ts, id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+5 | NULL | 
+1 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 
+2 | 2024-01-15 13:00:00.0000 +00:00 | 
+6 | 2024-01-15 16:00:00.0000 +03:00 | 
+4 | 2024-03-10 01:59:59.9999 America/New_York | 
+3 | 2024-07-01 12:00:00.0000 Europe/Berlin | 
+affected 0
+--- select id, cast(ts as varchar(60)) from tz order by ts desc nulls last, id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+3 | 2024-07-01 12:00:00.0000 Europe/Berlin | 
+4 | 2024-03-10 01:59:59.9999 America/New_York | 
+1 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 
+2 | 2024-01-15 13:00:00.0000 +00:00 | 
+6 | 2024-01-15 16:00:00.0000 +03:00 | 
+5 | NULL | 
+affected 0
+--- select id, cast(t as varchar(40)) from tz order by t, id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+5 | NULL | 
+3 | 12:00:00.0000 +02:00 | 
+1 | 10:00:00.0000 -03:00 | 
+2 | 13:00:00.0000 +00:00 | 
+6 | 16:00:00.0000 +03:00 | 
+4 | 23:30:00.0000 +05:30 | 
+affected 0
+--- select cast(ts as varchar(60)), count(*) from tz group by ts order by 1
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+2024-01-15 10:00:00.0000 America/Sao_Paulo | 3 | 
+2024-03-10 01:59:59.9999 America/New_York | 1 | 
+2024-07-01 12:00:00.0000 Europe/Berlin | 1 | 
+affected 0
+--- select count(distinct ts), count(distinct t), count(*) from tz
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 3 | 6 | 
+affected 0
+--- select cast(min(ts) as varchar(60)), cast(max(ts) as varchar(60)), cast(min(t) as varchar(40)), cast(max(t) as varchar(40)) from tz
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+2024-01-15 10:00:00.0000 America/Sao_Paulo | 2024-07-01 12:00:00.0000 Europe/Berlin | 12:00:00.0000 +02:00 | 23:30:00.0000 +05:30 | 
+affected 0
+--- select min(ts), max(lts) from tz
+MIN:TIMESTAMP (8,,,True,,MIN,False,False)
+MAX:TIMESTAMP (8,,,True,,MAX,False,False)
+2024-01-15 13:00:00.0000 | 2024-07-01 12:00:00.0000 | 
+affected 0
+--- select cast(list(cast(ts as varchar(60)), '|') as varchar(500)) from (select ts from tz order by id)
+CAST:VARCHAR (500,,,True,,CAST,False,False)
+2024-01-15 10:00:00.0000 America/Sao_Paulo|2024-01-15 13:00:00.0000 +00:00|2024-07-01 12:00:00.0000 Europe/Berlin|2024-03-10 01:59:59.9999 America/New_York|2024-01-15 16:00:00.0000 +03:00 | 
+affected 0
+--- select distinct cast(ts as varchar(60)) from tz where id in (2, 6) order by 1
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+2024-01-15 13:00:00.0000 +00:00 | 
+2024-01-15 16:00:00.0000 +03:00 | 
+affected 0
+--- select cast(x as varchar(60)) from (select distinct ts x from tz where id in (2, 6))
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+2024-01-15 16:00:00.0000 +03:00 | 
+affected 0
+--- select cast(ts as varchar(60)), id from tz where id in (2, 6) order by ts, id desc
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+2024-01-15 16:00:00.0000 +03:00 | 6 | 
+2024-01-15 13:00:00.0000 +00:00 | 2 | 
+affected 0
+--- select timestamp '2024-01-15 23:00:00 -03:00' + 1, cast(timestamp '2024-01-15 23:00:00 -03:00' + 1 as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-17 02:00:00.0000 | 2024-01-16 23:00:00.0000 -03:00 | 
+affected 0
+--- select timestamp '2024-01-15 23:00:00 -03:00' - 1.25, cast(timestamp '2024-01-15 23:00:00 -03:00' - 1.25 as varchar(60)) from rdb$database
+SUBTRACT:TIMESTAMP (8,,,False,,SUBTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-14 20:00:00.0000 | 2024-01-14 17:00:00.0000 -03:00 | 
+affected 0
+--- select 1 + timestamp '2024-01-15 23:00:00 Asia/Tokyo', cast(1 + timestamp '2024-01-15 23:00:00 Asia/Tokyo' as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-16 14:00:00.0000 | 2024-01-16 23:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select time '23:00:00 -03:00' + 3600, cast(time '23:00:00 -03:00' + 3600 as varchar(60)) from rdb$database
+ADD:TIME (4,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+03:00:00.0000 | 00:00:00.0000 -03:00 | 
+affected 0
+--- select time '23:00:00 +03:00' - 86401, cast(time '23:00:00 +03:00' - 86401 as varchar(60)) from rdb$database
+SUBTRACT:TIME (4,,,False,,SUBTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+19:59:59.0000 | 22:59:59.0000 +03:00 | 
+affected 0
+--- select 7200 + time '23:00:00 Europe/Berlin', cast(7200 + time '23:00:00 Europe/Berlin' as varchar(60)) from rdb$database
+ADD:TIME (4,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+23:00:00.0000 | 01:00:00.0000 Europe/Berlin | 
+affected 0
+--- select date '2024-01-15' + time '10:00:00 +03:00', cast(date '2024-01-15' + time '10:00:00 +03:00' as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select time '10:00:00 +03:00' + date '2024-01-15', cast(time '10:00:00 +03:00' + date '2024-01-15' as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select date '2024-01-15' + time '10:00:00 America/Sao_Paulo', cast(date '2024-01-15' + time '10:00:00 America/Sao_Paulo' as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 13:00:00.0000 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select timestamp '2024-12-31 23:00:00 +00:00' + 0.5, cast(timestamp '2024-12-31 23:00:00 +00:00' + 0.5 as varchar(60)) from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2025-01-01 11:00:00.0000 | 2025-01-01 11:00:00.0000 +00:00 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' - timestamp '2024-01-15 10:00:00 +00:00' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+-0.125 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' - timestamp '2024-01-15 07:00:00' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+0 | 
+affected 0
+--- select timestamp '2024-01-15 07:00:00' - timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+0 | 
+affected 0
+--- select timestamp '2024-01-16 00:00:00 America/Sao_Paulo' - timestamp '2024-01-15 00:00:00 Asia/Tokyo' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+1.5 | 
+affected 0
+--- select time '10:00:00 +03:00' - time '10:00:00 +00:00' from rdb$database
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+-10800 | 
+affected 0
+--- select time '10:00:00 +03:00' - time '07:00:00' from rdb$database
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+0 | 
+affected 0
+--- select time '07:00:00' - time '10:00:00 +03:00' from rdb$database
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+0 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' - date '2024-01-15' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+ERROR 335544606 335544937 '' 42000
+expression evaluation not supported
+Invalid data type in DATE/TIME/TIMESTAMP addition or subtraction in add_datettime()
+--- select date '2024-01-16' - timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+ERROR 335544606 335544937 '' 42000
+expression evaluation not supported
+Invalid data type in DATE/TIME/TIMESTAMP addition or subtraction in add_datettime()
+--- select timestamp '2024-01-15 10:00:00 +03:00' - time '10:00:00' from rdb$database
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select time '10:00:00 +03:00' - timestamp '2024-01-15 10:00:00' from rdb$database
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select timestamp '2024-01-15 10:00:00 +03:00' + timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select time '10:00:00 +03:00' + time '10:00:00' from rdb$database
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select timestamp '2024-01-15 10:00:00 +03:00' * 2 from rdb$database
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select time '10:00:00 +03:00' / 2 from rdb$database
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select -timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+ERROR 335544569 335544606 336397256 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for negation (minus operator)
+--- select timestamp '2024-01-15 10:00:00 +03:00' - '2024-01-15 07:00:00' from rdb$database
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select timestamp '2024-01-15 10:00:00 +03:00' + '1' from rdb$database
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select date '2024-01-15' + time '10:00:00 +03:00' + 1 from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+2024-01-16 07:00:00.0000 | 
+affected 0
+--- select timestamp '9999-12-31 23:00:00 -03:00' + 1 from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select id, cast(ts + 1 as varchar(60)), ts - lts, t - lt, cast(t + 60 as varchar(40)) from tz order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (4,4,4,True,,SUBTRACT,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+1 | 2024-01-16 10:00:00.0000 America/Sao_Paulo | 0.125 | 10800 | 10:01:00.0000 -03:00 | 
+2 | 2024-01-16 13:00:00.0000 +00:00 | 0 | 0 | 13:01:00.0000 +00:00 | 
+3 | 2024-07-02 12:00:00.0000 Europe/Berlin | -0.083333333 | -7200 | 12:01:00.0000 +02:00 | 
+4 | 2024-03-11 02:59:59.9999 America/New_York | 0.208333333 | -19800 | 23:31:00.0000 +05:30 | 
+5 | NULL | NULL | NULL | NULL | 
+6 | 2024-01-16 16:00:00.0000 +03:00 | -0.125 | -10800 | 16:01:00.0000 +03:00 | 
+affected 0
+--- select cast(dateadd(2 year to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2026-01-31 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 month to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-31 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 week to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-02-14 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 day to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-02-02 22:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 hour to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-02-01 00:30:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 minute to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-31 22:32:00.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 second to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-31 22:30:02.0000 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(2 millisecond to timestamp '2024-01-31 22:30:00 America/Sao_Paulo') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-31 22:30:00.0020 America/Sao_Paulo | 
+affected 0
+--- select cast(dateadd(hour, -90, time '00:30:00 +05:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+06:30:00.0000 +05:00 | 
+affected 0
+--- select cast(dateadd(minute, -90, time '00:30:00 +05:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+23:00:00.0000 +05:00 | 
+affected 0
+--- select cast(dateadd(second, -90, time '00:30:00 +05:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+00:28:30.0000 +05:00 | 
+affected 0
+--- select cast(dateadd(millisecond, -90, time '00:30:00 +05:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+00:29:59.9100 +05:00 | 
+affected 0
+--- select cast(dateadd(day, -90, time '00:30:00 +05:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select datediff(year, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(year from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+0 | -1 | 
+affected 0
+--- select datediff(quarter, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(quarter from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+ERROR 335544606 335544959 'QUARTER' 'DATEDIFF' '' 42000
+expression evaluation not supported
+Invalid part QUARTER to express the difference between two DATE/TIME/TIMESTAMP values in DATEDIFF
+--- select datediff(month, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(month from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+0 | -1 | 
+affected 0
+--- select datediff(week, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(week from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+0 | 0 | 
+affected 0
+--- select datediff(day, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(day from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+0 | -1 | 
+affected 0
+--- select datediff(hour, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(hour from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+1 | -3 | 
+affected 0
+--- select datediff(minute, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(minute from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+60 | -180 | 
+affected 0
+--- select datediff(second, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(second from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+3600 | -10800 | 
+affected 0
+--- select datediff(millisecond, timestamp '2023-12-31 22:00:00 -03:00', timestamp '2024-01-01 02:00:00 +00:00'), datediff(millisecond from timestamp '2024-01-01 01:00:00' to timestamp '2024-01-01 01:00:00 +03:00') from rdb$database
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+3600000 | -10800000 | 
+affected 0
+--- select datediff(hour, time '10:00:00 +03:00', time '10:00:00 -02:00'), datediff(hour, time '10:00:00', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+5 | -3 | 
+affected 0
+--- select datediff(minute, time '10:00:00 +03:00', time '10:00:00 -02:00'), datediff(minute, time '10:00:00', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+300 | -180 | 
+affected 0
+--- select datediff(second, time '10:00:00 +03:00', time '10:00:00 -02:00'), datediff(second, time '10:00:00', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+18000 | -10800 | 
+affected 0
+--- select datediff(millisecond, time '10:00:00 +03:00', time '10:00:00 -02:00'), datediff(millisecond, time '10:00:00', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+18000000 | -10800000 | 
+affected 0
+--- select datediff(day, time '10:00:00 +03:00', time '10:00:00 -02:00'), datediff(day, time '10:00:00', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select datediff(hour, timestamp '2024-01-15 10:00:00 +03:00', time '10:00:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+ERROR 335544606 335544957 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-TIMESTAMP or TIMESTAMP-TIME in DATEDIFF cannot be expressed in HOUR, MINUTE, SECOND or MILLISECOND
+--- select datediff(hour, date '2024-01-15', time '10:00:00 +03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+ERROR 335544606 335544958 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of DATE-TIME or TIME-DATE in DATEDIFF cannot be expressed in HOUR, MINUTE, SECOND and MILLISECOND
+--- select datediff(day, date '2024-01-15', timestamp '2024-01-15 23:00:00 -03:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+1 | 
+affected 0
+--- select extract(year from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(year from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2024 | 2025 | 
+affected 0
+--- select extract(quarter from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(quarter from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+4 | 1 | 
+affected 0
+--- select extract(month from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(month from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+12 | 1 | 
+affected 0
+--- select extract(week from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(week from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1 | 1 | 
+affected 0
+--- select extract(day from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(day from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+31 | 1 | 
+affected 0
+--- select extract(weekday from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(weekday from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+2 | 3 | 
+affected 0
+--- select extract(yearday from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(yearday from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+365 | 0 | 
+affected 0
+--- select extract(hour from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(hour from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+22 | 1 | 
+affected 0
+--- select extract(minute from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(minute from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+30 | 30 | 
+affected 0
+--- select extract(second from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(second from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:DECIMAL (4,4,4,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,4,False,,EXTRACT,False,False)
+45.6789 | 45.6789 | 
+affected 0
+--- select extract(millisecond from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(millisecond from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:DECIMAL (4,4,1,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,1,False,,EXTRACT,False,False)
+678.9 | 678.9 | 
+affected 0
+--- select extract(timezone_hour from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(timezone_hour from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+-3 | 3 | 
+affected 0
+--- select extract(timezone_minute from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(timezone_minute from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+0 | 0 | 
+affected 0
+--- select extract(timezone_name from timestamp '2024-12-31 22:30:45.6789 America/Sao_Paulo'), extract(timezone_name from timestamp '2025-01-01 01:30:45.6789 +03:00') from rdb$database
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+America/Sao_Paulo | +03:00 | 
+affected 0
+--- select extract(hour from time '23:30:45.6789 -09:30'), extract(hour from time '23:30:45.6789'), extract(hour from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+23 | 23 | 10 | 
+affected 0
+--- select extract(minute from time '23:30:45.6789 -09:30'), extract(minute from time '23:30:45.6789'), extract(minute from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+30 | 30 | 0 | 
+affected 0
+--- select extract(second from time '23:30:45.6789 -09:30'), extract(second from time '23:30:45.6789'), extract(second from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:DECIMAL (4,4,4,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,4,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,4,False,,EXTRACT,False,False)
+45.6789 | 45.6789 | 0 | 
+affected 0
+--- select extract(millisecond from time '23:30:45.6789 -09:30'), extract(millisecond from time '23:30:45.6789'), extract(millisecond from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:DECIMAL (4,4,1,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,1,False,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,1,False,,EXTRACT,False,False)
+678.9 | 678.9 | 0 | 
+affected 0
+--- select extract(timezone_hour from time '23:30:45.6789 -09:30'), extract(timezone_hour from time '23:30:45.6789'), extract(timezone_hour from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+-9 | 0 | 0 | 
+affected 0
+--- select extract(timezone_minute from time '23:30:45.6789 -09:30'), extract(timezone_minute from time '23:30:45.6789'), extract(timezone_minute from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+-30 | 0 | 0 | 
+affected 0
+--- select extract(timezone_name from time '23:30:45.6789 -09:30'), extract(timezone_name from time '23:30:45.6789'), extract(timezone_name from timestamp '2024-01-15 10:00:00') from rdb$database
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+-09:30 | Etc/UTC | Etc/UTC | 
+affected 0
+--- select extract(year from time '10:00:00 +03:00') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(day from time '10:00:00 +03:00') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(weekday from time '10:00:00 +03:00') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(timezone_hour from date '2024-01-15') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(timezone_hour from 1) from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(timezone_name from date '2024-01-15') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(timezone_name from 1) from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(timezone_hour from cast(null as timestamp with time zone)), extract(timezone_name from cast(null as time)) from rdb$database
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:VARCHAR (32,,,True,,EXTRACT,False,False)
+NULL | NULL | 
+affected 0
+--- select extract(timezone_hour from timestamp '2024-01-15 10:00:00 -03:30'), extract(timezone_minute from timestamp '2024-01-15 10:00:00 -03:30'), extract(timezone_hour from timestamp '2024-01-15 10:00:00 -00:30'), extract(timezone_minute from timestamp '2024-01-15 10:00:00 -00:30') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+-3 | -30 | 0 | -30 | 
+affected 0
+--- select cast(first_day(of year from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(first_day(of year from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-01 01:30:00.0000 America/New_York | 2024-01-01 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(last_day(of year from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(last_day(of year from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-12-31 01:30:00.0000 America/New_York | 2024-12-31 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(first_day(of quarter from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(first_day(of quarter from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-01 01:30:00.0000 America/New_York | 2024-01-01 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(last_day(of quarter from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(last_day(of quarter from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-31 01:30:00.0000 America/New_York | 2024-03-31 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(first_day(of month from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(first_day(of month from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-01 01:30:00.0000 America/New_York | 2024-01-01 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(last_day(of month from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(last_day(of month from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-31 01:30:00.0000 America/New_York | 2024-01-31 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(first_day(of week from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(first_day(of week from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-10 01:30:00.0000 America/New_York | 2023-12-31 01:00:00.0000 +03:00 | 
+affected 0
+--- select cast(last_day(of week from timestamp '2024-03-10 01:30:00 America/New_York') as varchar(60)), cast(last_day(of week from timestamp '2024-01-01 01:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-03-16 01:30:00.0000 America/New_York | 2024-01-06 01:00:00.0000 +03:00 | 
+affected 0
+--- select first_day(of month from timestamp '2024-03-10 01:30:00 America/New_York'), last_day(of year from timestamp '2024-12-31 23:00:00 -03:00') from rdb$database
+FIRST_DAY:TIMESTAMP (8,,,False,,FIRST_DAY,False,False)
+LAST_DAY:TIMESTAMP (8,,,False,,LAST_DAY,False,False)
+2024-03-01 06:30:00.0000 | 2025-01-01 02:00:00.0000 | 
+affected 0
+--- select first_day(of month from time '10:00:00 +03:00') from rdb$database
+FIRST_DAY:DATE (4,,,False,,FIRST_DAY,False,False)
+ERROR 335544606 335545157 'FIRST_DAY' '' 42000
+expression evaluation not supported
+Expected DATE/TIMESTAMP value in FIRST_DAY
+--- select last_day(of week from time '10:00:00') from rdb$database
+LAST_DAY:DATE (4,,,False,,LAST_DAY,False,False)
+ERROR 335544606 335545157 'LAST_DAY' '' 42000
+expression evaluation not supported
+Expected DATE/TIMESTAMP value in LAST_DAY
+--- select coalesce(timestamp '2024-01-15 10:00:00 +03:00', timestamp '2024-01-15 10:00:00'), cast(coalesce(cast(null as timestamp), timestamp '2024-01-15 10:00:00 +03:00') as varchar(60)) from rdb$database
+COALESCE:TIMESTAMP (8,,,False,,COALESCE,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+2024-01-15 07:00:00.0000 | 2024-01-15 10:00:00.0000 +03:00 | 
+affected 0
+--- select cast(coalesce(timestamp '2024-01-15 10:00:00', timestamp '2024-01-15 10:00:00 +03:00') as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(coalesce(time '10:00:00', time '10:00:00 +03:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+10:00:00.0000 Etc/UTC | 
+affected 0
+--- select coalesce(time '10:00:00 +03:00', timestamp '2024-01-15 10:00:00') from rdb$database
+ERROR 335544436 #-104 336003088 '' 'COALESCE' '' 00000
+SQL error code = -104
+Datatypes are not comparable in expression COALESCE
+--- select coalesce(date '2024-01-15', timestamp '2024-01-15 10:00:00 +03:00') from rdb$database
+ERROR 335544436 #-104 336003088 '' 'COALESCE' '' 00000
+SQL error code = -104
+Datatypes are not comparable in expression COALESCE
+--- select cast(case when 1 = 1 then timestamp '2024-01-15 10:00:00' else timestamp '2024-01-15 10:00:00 Asia/Tokyo' end as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select iif(1 = 0, time '10:00:00 +01:00', time '10:00:00') from rdb$database
+CASE:TIME (4,,,False,,CASE,False,False)
+10:00:00.0000 | 
+affected 0
+--- select nullif(timestamp '2024-01-15 10:00:00 +03:00', timestamp '2024-01-15 07:00:00') from rdb$database
+CASE:TIMESTAMP (8,,,True,,CASE,False,False)
+NULL | 
+affected 0
+--- select cast(maxvalue(timestamp '2024-01-15 10:00:00 +03:00', timestamp '2024-01-15 08:00:00') as varchar(60)), cast(minvalue(time '10:00:00 +03:00', time '08:00:00') as varchar(40)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (40,,,False,,CAST,False,False)
+2024-01-15 08:00:00.0000 Etc/UTC | 10:00:00.0000 +03:00 | 
+affected 0
+--- select decode(timestamp '2024-01-15 10:00:00 +03:00', timestamp '2024-01-15 07:00:00', 'same', 'other') from rdb$database
+DECODE:CHAR (5,,,True,,DECODE,False,False)
+same  | 
+affected 0
+--- select cast(x as varchar(60)) from (select timestamp '2024-01-15 10:00:00' x from rdb$database union all select timestamp '2024-01-15 10:00:00 -05:00' from rdb$database) order by 1
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 -05:00 | 
+2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select x from (select time '10:00:00' x from rdb$database union all select time '10:00:00 -05:00' from rdb$database) order by 1
+X:TIME (4,,,False,,,False,False)
+10:00:00.0000 | 
+15:00:00.0000 | 
+affected 0
+--- select cast(x as varchar(60)) from (select timestamp '2024-01-15 10:00:00 +03:00' x from rdb$database union select timestamp '2024-01-15 07:00:00 UTC' from rdb$database)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 07:00:00.0000 UTC | 
+affected 0
+--- select x from (select date '2024-01-15' x from rdb$database union all select timestamp '2024-01-15 10:00:00 +03:00' from rdb$database)
+ERROR 335544436 #-104 336003088 '' 'UNION' '' 00000
+SQL error code = -104
+Datatypes are not comparable in expression UNION
+--- select timestamp '2024-01-15 10:00:00 +03:00' || '', time '10:00:00 +03:00' || '!', char_length(timestamp '2024-01-15 10:00:00 Asia/Tokyo' || '') from rdb$database
+CONCATENATION:VARCHAR (58,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (47,,,False,,CONCATENATION,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+2024-01-15 10:00:00.0000 +03:00 | 10:00:00.0000 +03:00! | 35 | 
+affected 0
+--- select trim(cast(timestamp '2024-01-15 10:00:00 +03:00' as char(60))), octet_length(cast(time '10:00:00 +03:00' as varchar(60))) from rdb$database
+TRIM:VARCHAR (60,,,False,,TRIM,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+2024-01-15 10:00:00.0000 +03:00 | 20 | 
+affected 0
+--- select upper(timestamp '2024-01-15 10:00:00 america/sao_paulo'), substring(timestamp '2024-01-15 10:00:00 Asia/Tokyo' from 26) from rdb$database
+UPPER:VARCHAR (58,,,False,,UPPER,False,False)
+SUBSTRING:VARCHAR (58,,,False,,SUBSTRING,False,False)
+2024-01-15 10:00:00.0000 AMERICA/SAO_PAULO | Asia/Tokyo | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +03:00' like '2024%+03:00', time '10:00:00 Europe/Paris' containing 'Paris' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00 +03:00' as varchar(20)) from rdb$database
+CAST:VARCHAR (20,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #20 #31 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 20, actual 31
+--- select cast(time '10:00:00 America/Sao_Paulo' as varchar(20)) from rdb$database
+CAST:VARCHAR (20,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #20 #31 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 20, actual 31
+--- select cast(cast(? as timestamp with time zone) as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+2024-01-15 10:00:00.0000 Etc/UTC | 
+affected 0
+--- select cast(cast(? as time with time zone) as varchar(40)) from rdb$database
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+10:00:00.0000 Etc/UTC | 
+affected 0
+--- select id from tz where ts = ? order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- select id from tz where t = ? order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- select ? - timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select timestamp '2024-01-15 10:00:00 +03:00' + ? from rdb$database
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select extract(timezone_hour from cast(? as timestamp with time zone)) from rdb$database
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+0 | 
+affected 0
+--- select id, ts, t, cast(ts as varchar(60)), cast(t as varchar(40)) from tz order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+TS:TIMESTAMP (8,,,True,TZ,TS,False,False)
+T:TIME (4,,,True,TZ,T,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+1 | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 10:00:00.0000 -03:00 | 
+2 | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 2024-01-15 13:00:00.0000 +00:00 | 13:00:00.0000 +00:00 | 
+3 | 2024-07-01 10:00:00.0000 | 10:00:00.0000 | 2024-07-01 12:00:00.0000 Europe/Berlin | 12:00:00.0000 +02:00 | 
+4 | 2024-03-10 06:59:59.9999 | 18:00:00.0000 | 2024-03-10 01:59:59.9999 America/New_York | 23:30:00.0000 +05:30 | 
+5 | NULL | NULL | NULL | NULL | 
+6 | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 2024-01-15 16:00:00.0000 +03:00 | 16:00:00.0000 +03:00 | 
+affected 0
+--- insert into tz (id, ts, t) values (10, '2024-05-05 05:05:05 Pacific/Auckland', '05:05:05 Pacific/Auckland')
+affected 1
+--- insert into tz (id, ts, t) values (11, timestamp '2024-05-05 05:05:05', time '05:05:05')
+affected 1
+--- insert into tz (id, ts, t) values (?, ?, ?)
+affected 1
+--- insert into tz (id, lts, lt) values (13, timestamp '2024-05-05 05:05:05 +09:00', time '05:05:05 +09:00')
+affected 1
+--- insert into tz (id, ts) values (14, '2024-05-05 05:05:05 Nowhere/Land')
+ERROR 335545214 'Nowhere/Land' '' 22009
+Invalid time zone region: Nowhere/Land
+--- insert into tz (id, t) values (15, '25:00:00 +00:00')
+ERROR 335544334 '25:00:00 +00:00' '' 22018
+conversion error from string "25:00:00 +00:00"
+--- select id, cast(ts as varchar(60)), cast(t as varchar(40)), lts, lt from tz where id >= 10 order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+LTS:TIMESTAMP (8,,,True,TZ,LTS,False,False)
+LT:TIME (4,,,True,TZ,LT,False,False)
+10 | 2024-05-05 05:05:05.0000 Pacific/Auckland | 05:05:05.0000 Pacific/Auckland | NULL | NULL | 
+11 | 2024-05-05 05:05:05.0000 Etc/UTC | 05:05:05.0000 Etc/UTC | NULL | NULL | 
+12 | 2024-05-05 05:05:05.0000 Etc/UTC | 05:05:05.0000 Etc/UTC | NULL | NULL | 
+13 | NULL | NULL | 2024-05-04 20:05:05.0000 | 20:05:05.0000 | 
+affected 0
+--- update tz set ts = ts + 1, t = t at time zone '+01:00' where id = 10
+affected 1
+--- select cast(ts as varchar(60)), cast(t as varchar(40)) from tz where id = 10
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+2024-05-06 05:05:05.0000 Pacific/Auckland | 17:05:05.0000 +01:00 | 
+affected 0
+--- update tz set lts = ts, lt = t where id in (1, 3, 4)
+affected 3
+--- select id, lts, lt from tz where id in (1, 3, 4) order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+LTS:TIMESTAMP (8,,,True,TZ,LTS,False,False)
+LT:TIME (4,,,True,TZ,LT,False,False)
+1 | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 
+3 | 2024-07-01 10:00:00.0000 | 10:00:00.0000 | 
+4 | 2024-03-10 06:59:59.9999 | 18:00:00.0000 | 
+affected 0
+--- insert into tzk values ('2024-01-15 10:00:00 +03:00', 1)
+affected 1
+--- insert into tzk values ('2024-01-15 07:00:00 +00:00', 2)
+ERROR 335544665 'INTEG_4' 'TZK' 335545072 '("K" = '2024-01-15 07:00:00.0000 +00:00')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_4" on table "TZK"
+Problematic key value is ("K" = '2024-01-15 07:00:00.0000 +00:00')
+--- insert into tzk values ('2024-01-15 04:00:00 America/Sao_Paulo', 3)
+ERROR 335544665 'INTEG_4' 'TZK' 335545072 '("K" = '2024-01-15 04:00:00.0000 America/Sao_Paulo')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_4" on table "TZK"
+Problematic key value is ("K" = '2024-01-15 04:00:00.0000 America/Sao_Paulo')
+--- insert into tzk values ('2024-01-15 07:00:00.0001 +00:00', 4)
+affected 1
+--- select cast(k as varchar(60)), n from tzk order by k, n
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+N:INTEGER (4,,,True,TZK,N,False,False)
+2024-01-15 10:00:00.0000 +03:00 | 1 | 
+2024-01-15 07:00:00.0001 +00:00 | 4 | 
+affected 0
+--- update or insert into tzk (k, n) values ('2024-01-15 08:00:00 +01:00', 9) matching (k)
+affected 1
+--- select cast(k as varchar(60)), n from tzk order by k, n
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+N:INTEGER (4,,,True,TZK,N,False,False)
+2024-01-15 08:00:00.0000 +01:00 | 9 | 
+2024-01-15 07:00:00.0001 +00:00 | 4 | 
+affected 0
+--- merge into tzk d using (select timestamp '2024-01-15 02:00:00 -05:00' k from rdb$database) s on d.k = s.k when matched then update set n = 99 when not matched then insert values (s.k, 0)
+affected 1
+--- select cast(k as varchar(60)), n from tzk order by k, n
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+N:INTEGER (4,,,True,TZK,N,False,False)
+2024-01-15 08:00:00.0000 +01:00 | 99 | 
+2024-01-15 07:00:00.0001 +00:00 | 4 | 
+affected 0
+--- insert into tzd (id) values (1)
+affected 1
+--- select created is not null, createdz is not null, extract(timezone_name from createdz), created = createdz, cast(createdz as timestamp) = created from tzd
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+EXTRACT:VARCHAR (32,,,True,,EXTRACT,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | Etc/UTC | True | True | 
+affected 0
+--- delete from tzk where k = '2024-01-15 07:00:00'
+affected 1
+--- select count(*) from tzk
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 
+affected 0
+--- set time zone 'America/Sao_Paulo'
+affected 0
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE'), extract(timezone_name from current_timestamp), extract(timezone_hour from current_time) from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+EXTRACT:VARCHAR (32,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+America/Sao_Paulo | America/Sao_Paulo | -3 | 
+affected 0
+--- select cast(cast('2024-01-15 10:00:00' as timestamp with time zone) as varchar(60)), cast(timestamp '2024-01-15 10:00:00 +00:00' as timestamp), cast(time '10:00:00 +00:00' as time), cast(timestamp '2024-01-15 01:00:00 +00:00' as date) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:DATE (4,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 America/Sao_Paulo | 2024-01-15 07:00:00.0000 | 07:00:00.0000 | 2024-01-14 00:00:00.0000 | 
+affected 0
+--- select timestamp '2024-01-15 10:00:00 +00:00', time '10:00:00 +00:00', timestamp '2024-01-15 10:00:00 +00:00' = timestamp '2024-01-15 07:00:00' from rdb$database
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+2024-01-15 07:00:00.0000 | 07:00:00.0000 | True | 
+affected 0
+--- select cast(timestamp '2024-01-15 10:00:00' at local as varchar(60)), cast(timestamp '2024-01-15 10:00:00 +05:00' at local as varchar(60)) from rdb$database
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2024-01-15 10:00:00.0000 America/Sao_Paulo | 2024-01-15 02:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- select datediff(hour, timestamp '2024-01-15 10:00:00', timestamp '2024-01-15 10:00:00 +00:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+-3 | 
+affected 0
+--- select extract(timezone_hour from timestamp '2024-01-15 10:00:00'), extract(timezone_hour from time '10:00:00') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+-3 | -3 | 
+affected 0
+--- select current_timestamp - localtimestamp, cast(current_timestamp as timestamp) = localtimestamp, cast(current_timestamp as date) = current_date from rdb$database
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+0 | True | True | 
+affected 0
+--- select id, ts, t from tz where id in (1, 2, 3) order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+TS:TIMESTAMP (8,,,True,TZ,TS,False,False)
+T:TIME (4,,,True,TZ,T,False,False)
+1 | 2024-01-15 10:00:00.0000 | 10:00:00.0000 | 
+2 | 2024-01-15 10:00:00.0000 | 10:00:00.0000 | 
+3 | 2024-07-01 07:00:00.0000 | 07:00:00.0000 | 
+affected 0
+--- select id from tz where ts = ? order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+1 | 
+2 | 
+6 | 
+affected 0
+--- insert into tz (id, ts, t) values (?, ?, ?)
+affected 1
+--- select cast(ts as varchar(60)), cast(t as varchar(40)) from tz where id = 20
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (40,,,True,,CAST,False,False)
+2024-02-02 02:02:02.0000 America/Sao_Paulo | 02:02:02.0000 America/Sao_Paulo | 
+affected 0
+--- set time zone '-05:00'
+affected 0
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE'), cast(cast('2024-01-15 10:00:00' as timestamp with time zone) as varchar(60)), timestamp '2024-01-15 10:00:00 +00:00', time '10:00:00 +00:00' from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+CONSTANT:TIME (4,,,False,,CONSTANT,False,False)
+-05:00 | 2024-01-15 10:00:00.0000 -05:00 | 2024-01-15 05:00:00.0000 | 05:00:00.0000 | 
+affected 0
+--- set time zone '+5:7'
+affected 0
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
++05:07 | 
+affected 0
+--- set time zone 'utc'
+affected 0
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+UTC | 
+affected 0
+--- set time zone 'Atlantis/Lost'
+ERROR 335545214 'Atlantis/Lost' '' 22009
+Invalid time zone region: Atlantis/Lost
+--- set time zone '+14:30'
+ERROR 335545213 '+14:30' '' 22009
+Invalid time zone offset: +14:30 - must use format +/-hours:minutes and be between -14:00 and +14:00
+--- set time zone ''
+ERROR 335545214 '' '' 22009
+Invalid time zone region:
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+UTC | 
+affected 0
+--- set time zone local
+affected 0
+--- select rdb$get_context('SYSTEM', 'SESSION_TIMEZONE'), timestamp '2024-01-15 10:00:00 +03:00' from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+CONSTANT:TIMESTAMP (8,,,False,,CONSTANT,False,False)
+Etc/UTC | 2024-01-15 07:00:00.0000 | 
+affected 0
+--- create table tz2 (a timestamp with time zone, b time with time zone, c timestamp without time zone, d time without time zone)
+affected 0
+--- select trim(rf.rdb$field_name), f.rdb$field_type, f.rdb$field_length, f.rdb$field_sub_type from rdb$relation_fields rf join rdb$fields f on f.rdb$field_name = rf.rdb$field_source where rf.rdb$relation_name = 'TZ2' order by rf.rdb$field_position
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_TYPE,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$FIELD_SUB_TYPE:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_SUB_TYPE,False,False)
+A | 29 | 12 | NULL | 
+B | 28 | 8 | NULL | 
+C | 35 | 8 | NULL | 
+D | 13 | 4 | NULL | 
+affected 0
+--- select a, b, c, d from tz2
+A:TIMESTAMP (8,,,True,TZ2,A,False,False)
+B:TIME (4,,,True,TZ2,B,False,False)
+C:TIMESTAMP (8,,,True,TZ2,C,False,False)
+D:TIME (4,,,True,TZ2,D,False,False)
+affected 0
+--- create domain dtz as timestamp with time zone default '2024-01-01 00:00:00 +03:00' not null
+affected 0
+--- create table tz3 (id integer, v dtz)
+affected 0
+--- insert into tz3 (id) values (1)
+affected 1
+--- select id, v, cast(v as varchar(60)) from tz3
+ID:INTEGER (4,,,True,TZ3,ID,False,False)
+V:TIMESTAMP (8,,,False,TZ3,V,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+1 | 2023-12-31 21:00:00.0000 | 2024-01-01 00:00:00.0000 +03:00 | 
+affected 0
+--- alter table tz2 alter a type timestamp
+ERROR 335544351 336397287 'TZ2' 336068817 'A' 'TIMESTAMP WITH TIME ZONE' 'TIMESTAMP' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for A.  Conversion from base type TIMESTAMP WITH TIME ZONE to TIMESTAMP is not supported.
+--- alter table tz2 alter a type time with time zone
+affected 0
+--- alter table tz2 alter a type date
+ERROR 335544351 336397287 'TZ2' 336068817 'A' 'TIME WITH TIME ZONE' 'DATE' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for A.  Conversion from base type TIME WITH TIME ZONE to DATE is not supported.
+--- alter table tz2 alter a type varchar(80)
+affected 0
+--- alter table tz2 alter a type varchar(10)
+ERROR 335544351 336397287 'TZ2' 336068816 'A' #80 '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+New size specified for column A must be at least 80 characters.
+--- alter table tz2 alter b type time
+ERROR 335544351 336397287 'TZ2' 336068817 'B' 'TIME WITH TIME ZONE' 'TIME' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for B.  Conversion from base type TIME WITH TIME ZONE to TIME is not supported.
+--- alter table tz2 alter b type timestamp with time zone
+ERROR 335544351 336397287 'TZ2' 336068817 'B' 'TIME WITH TIME ZONE' 'TIMESTAMP WITH TIME ZONE' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for B.  Conversion from base type TIME WITH TIME ZONE to TIMESTAMP WITH TIME ZONE is not supported.
+--- alter table tz2 alter c type timestamp with time zone
+ERROR 335544351 336397287 'TZ2' 336068817 'C' 'TIMESTAMP' 'TIMESTAMP WITH TIME ZONE' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for C.  Conversion from base type TIMESTAMP to TIMESTAMP WITH TIME ZONE is not supported.
+--- alter table tz2 alter d type time with time zone
+ERROR 335544351 336397287 'TZ2' 336068817 'D' 'TIME' 'TIME WITH TIME ZONE' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for D.  Conversion from base type TIME to TIME WITH TIME ZONE is not supported.
+--- alter table tz2 alter a type integer
+ERROR 335544351 336397287 'TZ2' 336068818 'A' '' 42000
+unsuccessful metadata update
+ALTER TABLE TZ2 failed
+Cannot change datatype for column A from a character type to a non-character type.
+--- alter table tz2 alter b type varchar(60)
+affected 0
+--- select count(*), min(rdb$time_zone_id), max(rdb$time_zone_id) from rdb$time_zones
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+638 | 64898 | 65535 | 
+affected 0
+--- select rdb$time_zone_id, trim(rdb$time_zone_name) from rdb$time_zones where rdb$time_zone_name in ('UTC', 'America/Sao_Paulo', 'Etc/UTC', 'GMT', 'Europe/Kyiv', 'Asia/Kolkata') order by 1
+RDB$TIME_ZONE_ID:INTEGER (4,,,True,RDB$TIME_ZONES,RDB$TIME_ZONE_ID,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+64900 | Europe/Kyiv | 
+64909 | UTC | 
+65100 | Etc/UTC | 
+65248 | Asia/Kolkata | 
+65332 | America/Sao_Paulo | 
+65535 | GMT | 
+affected 0
+--- select first 3 rdb$time_zone_id, trim(rdb$time_zone_name) from rdb$time_zones order by rdb$time_zone_id
+RDB$TIME_ZONE_ID:INTEGER (4,,,True,RDB$TIME_ZONES,RDB$TIME_ZONE_ID,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+64898 | America/Coyhaique | 
+64899 | America/Ciudad_Juarez | 
+64900 | Europe/Kyiv | 
+affected 0
+--- select rdb$time_zone_id, rdb$time_zone_name from rdb$time_zones where rdb$time_zone_id = 65535
+RDB$TIME_ZONE_ID:INTEGER (4,,,True,RDB$TIME_ZONES,RDB$TIME_ZONE_ID,False,False)
+RDB$TIME_ZONE_NAME:CHAR (63,,,True,RDB$TIME_ZONES,RDB$TIME_ZONE_NAME,False,False)
+65535 | GMT                                                             | 
+affected 0
+--- execute block returns (a varchar(60), b varchar(60), c timestamp, d time) as
+A:VARCHAR (60,,,True,,A,False,False)
+B:VARCHAR (60,,,True,,B,False,False)
+C:TIMESTAMP (8,,,True,,C,False,False)
+D:TIME (4,,,True,,D,False,False)
+2024-01-15 10:00:00.0000 America/Sao_Paulo | 10:00:00.0000 America/Sao_Paulo | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 
+2024-01-15 22:00:00.0000 Asia/Tokyo | 11:00:00.0000 America/Sao_Paulo | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 
+affected 0
+--- execute block returns (z varchar(60)) as
+Z:VARCHAR (60,,,True,,Z,False,False)
+Etc/UTC | 
+affected 0
+--- select id, cast(lag(ts) over (order by id) as varchar(60)), cast(first_value(ts) over (order by ts, id) as varchar(60)), rank() over (order by ts) from tz where ts is not null order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | NULL | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 1 | 
+2 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 1 | 
+3 | 2024-01-15 13:00:00.0000 +00:00 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 9 | 
+4 | 2024-07-01 12:00:00.0000 Europe/Berlin | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 5 | 
+6 | 2024-03-10 01:59:59.9999 America/New_York | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 1 | 
+10 | 2024-01-15 16:00:00.0000 +03:00 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 8 | 
+11 | 2024-05-06 05:05:05.0000 Pacific/Auckland | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 6 | 
+12 | 2024-05-05 05:05:05.0000 Etc/UTC | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 6 | 
+20 | 2024-05-05 05:05:05.0000 Etc/UTC | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 4 | 
+affected 0
+--- select id, cast(max(ts) over (partition by extract(month from ts)) as varchar(60)), count(*) over (order by t range between unbounded preceding and current row) from tz where ts is not null order by id
+ID:INTEGER (4,,,False,TZ,ID,True,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 7 | 
+2 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 7 | 
+3 | 2024-07-01 12:00:00.0000 Europe/Berlin | 4 | 
+4 | 2024-03-10 01:59:59.9999 America/New_York | 9 | 
+6 | 2024-01-15 10:00:00.0000 America/Sao_Paulo | 7 | 
+10 | 2024-05-06 05:05:05.0000 Pacific/Auckland | 8 | 
+11 | 2024-05-06 05:05:05.0000 Pacific/Auckland | 3 | 
+12 | 2024-05-06 05:05:05.0000 Pacific/Auckland | 3 | 
+20 | 2024-02-02 02:02:02.0000 America/Sao_Paulo | 1 | 
+affected 0
+--- create view vtz as select id, ts at time zone 'Asia/Tokyo' tokyo, cast(ts as timestamp) utc, t from tz
+affected 0
+--- select id, cast(tokyo as varchar(60)), utc, t from vtz where id <= 4 order by id
+ID:INTEGER (4,,,True,VTZ,ID,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+UTC:TIMESTAMP (8,,,True,VTZ,UTC,False,False)
+T:TIME (4,,,True,VTZ,T,False,False)
+1 | 2024-01-15 22:00:00.0000 Asia/Tokyo | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 
+2 | 2024-01-15 22:00:00.0000 Asia/Tokyo | 2024-01-15 13:00:00.0000 | 13:00:00.0000 | 
+3 | 2024-07-01 19:00:00.0000 Asia/Tokyo | 2024-07-01 10:00:00.0000 | 10:00:00.0000 | 
+4 | 2024-03-10 15:59:59.9999 Asia/Tokyo | 2024-03-10 06:59:59.9999 | 18:00:00.0000 | 
+affected 0
+--- create table tzc (a timestamp with time zone, b computed by (cast(a as varchar(60))), c computed by (a at time zone '+01:00'), check (a > timestamp '2000-01-01 00:00:00 +00:00'))
+affected 0
+--- insert into tzc (a) values ('2024-01-15 10:00:00 Asia/Tokyo')
+affected 1
+--- insert into tzc (a) values ('1999-12-31 23:00:00 -05:00')
+affected 1
+--- insert into tzc (a) values ('2000-01-01 00:00:00 +00:00')
+ERROR 335544558 'INTEG_6' 'TZC' 335544842 'At trigger 'CHECK_1'' '' 23000
+Operation violates CHECK constraint INTEG_6 on view or table TZC
+--- insert into tzc (a) values ('2000-01-01 01:00:00 +02:00')
+ERROR 335544558 'INTEG_6' 'TZC' 335544842 'At trigger 'CHECK_1'' '' 23000
+Operation violates CHECK constraint INTEG_6 on view or table TZC
+--- select a, b, cast(c as varchar(60)), c from tzc order by a
+A:TIMESTAMP (8,,,True,TZC,A,False,False)
+B:VARCHAR (60,,,True,TZC,B,False,False)
+CAST:VARCHAR (60,,,True,,CAST,False,False)
+C:TIMESTAMP (8,,,True,TZC,C,False,False)
+2000-01-01 04:00:00.0000 | 1999-12-31 23:00:00.0000 -05:00 | 2000-01-01 05:00:00.0000 +01:00 | 2000-01-01 04:00:00.0000 | 
+2024-01-15 01:00:00.0000 | 2024-01-15 10:00:00.0000 Asia/Tokyo | 2024-01-15 02:00:00.0000 +01:00 | 2024-01-15 01:00:00.0000 | 
+affected 0
+--- create index tzc_a on tzc (a)
+affected 0
+--- select b from tzc where a = timestamp '2024-01-15 01:00:00 UTC'
+B:VARCHAR (60,,,True,TZC,B,False,False)
+2024-01-15 10:00:00.0000 Asia/Tokyo | 
+affected 0
+--- select b from tzc where a >= '2024-01-15 10:00:00 Asia/Tokyo' order by a
+B:VARCHAR (60,,,True,TZC,B,False,False)
+2024-01-15 10:00:00.0000 Asia/Tokyo | 
+affected 0
+--- create trigger tzc_bi for tzc before insert as
+affected 0
+--- insert into tzc (a) values ('2024-06-01 12:00:00 Europe/Paris')
+affected 1
+--- select b from tzc where a > timestamp '2024-05-01 00:00:00 UTC'
+B:VARCHAR (60,,,True,TZC,B,False,False)
+2024-06-01 07:00:00.0000 America/Sao_Paulo | 
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement 'select cast(timestamp ''2024-01-15 10:00:00 +03:00'' at time zone ''-01:00'' as varchar(60)) from rdb$database' into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+2024-01-15 06:00:00.0000 -01:00 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement ('select cast(cast(? as timestamp with time zone) as varchar(60)) from rdb$database') ('2024-01-15 10:00:00 Pacific/Fiji') into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+2024-01-15 10:00:00.0000 Pacific/Fiji | 
+affected 0

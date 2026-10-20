@@ -23,6 +23,9 @@ public class CorpusTests(ServerFixture fx, ITestOutputHelper output)
 
     static readonly bool Record = Environment.GetEnvironmentVariable("FAKEBIRD_RECORD") == "1";
 
+    /// <summary>The session time zone of the real servers (the containers run in UTC).</summary>
+    public const string RealTimeZone = "Etc/UTC";
+
     public static string CorpusDir
     {
         get
@@ -59,6 +62,7 @@ public class CorpusTests(ServerFixture fx, ITestOutputHelper output)
 
         Assert.True(File.Exists(goldenPath), $"{goldenPath} missing: record it with {mode.EnvVar} set");
         var db = fx.Server.CreateDatabase($"corpus_{area}_{Guid.NewGuid():N}");
+        db.DefaultTimeZone = RealTimeZone;
         CorpusRunner.RunSetup(db.ConnectionString(), file.Setup);
         var fake = CorpusRunner.Golden(file, CorpusRunner.Run(db.ConnectionString(), file));
         fx.Server.DropDatabase(db.Name);

@@ -32,6 +32,7 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         var file = CorpusFile.Parse("probe", text);
 
         var db = fx.Server.CreateDatabase("probe_" + Guid.NewGuid().ToString("N"));
+        db.DefaultTimeZone = CorpusTests.RealTimeZone;
         CorpusRunner.RunSetup(db.ConnectionString(), file.Setup);
         var fake = CorpusRunner.Run(db.ConnectionString(), file);
         var real = Servers

@@ -250,6 +250,7 @@ public sealed partial class Compiler
         CaseExpr c => [.. c.Operand == null ? [] : new[] { c.Operand }, .. c.Whens.SelectMany(w => new[] { w.When, w.Then }), .. c.Else == null ? [] : new[] { c.Else }],
         CastExpr ca => [ca.Operand],
         CollateExpr co => [co.Operand],
+        AtExpr at => at.Zone == null ? [at.Operand] : [at.Operand, at.Zone],
         FuncExpr f => f.Args,
         _ => [],
     };
@@ -1309,7 +1310,7 @@ public sealed partial class Compiler
         if (a.IsString && b.IsString) return a.IsOctets == b.IsOctets;
         if (a.IsExact && b.IsExact) return true;
         if (a.IsApprox && b.IsApprox) return true;
-        return a.Kind == b.Kind && a.Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp or TypeKind.Boolean;
+        return a.Kind == b.Kind && a.Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp or TypeKind.TimeTz or TypeKind.TimestampTz or TypeKind.Boolean;
     }
 
     /// <summary>For col = expr where col belongs to stream and expr does not, returns the column and other side.</summary>

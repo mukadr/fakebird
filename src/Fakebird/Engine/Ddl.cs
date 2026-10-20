@@ -652,7 +652,7 @@ public static class Ddl
     internal static void CheckTypeChange(string column, SqlType from, SqlType to)
     {
         static bool Text(SqlType t) => t.Kind is TypeKind.Char or TypeKind.VarChar;
-        static bool DateTime(SqlType t) => t.Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp;
+        static bool DateTime(SqlType t) => t.IsDateTime;
         FbError Invalid() => new StatusBuilder().Gds(FbMessages.dyn_invalid_dtype_conversion).Str(column).Str(DtypeName(from)).Str(DtypeName(to)).Build();
         FbError TooSmall(int len) => new StatusBuilder().Gds(FbMessages.dyn_char_fld_too_small).Str(column).Num(len).Build();
         var fromLen = Text(from) ? from.Length : TypeRules.StringLength(from);
@@ -672,9 +672,15 @@ public static class Ddl
         }
         if (DateTime(from))
         {
-            var ok = to.Kind == TypeKind.Date ? from.Kind != TypeKind.Time
-                : to.Kind == TypeKind.Time ? from.Kind != TypeKind.Date
-                : to.Kind == TypeKind.Timestamp && from.Kind != TypeKind.Time;
+            var ok = to.Kind switch
+            {
+                TypeKind.Date => from.Kind is not (TypeKind.Time or TypeKind.TimeTz or TypeKind.TimestampTz),
+                TypeKind.Time => from.Kind is not (TypeKind.Date or TypeKind.TimeTz or TypeKind.TimestampTz),
+                TypeKind.TimeTz => from.Kind is TypeKind.TimeTz or TypeKind.TimestampTz,
+                TypeKind.Timestamp => from.Kind is not (TypeKind.Time or TypeKind.TimeTz or TypeKind.TimestampTz),
+                TypeKind.TimestampTz => from.Kind == TypeKind.TimestampTz,
+                _ => false,
+            };
             if (!ok) throw Invalid();
             return;
         }
@@ -724,6 +730,8 @@ public static class Ddl
         TypeKind.Date => "DATE",
         TypeKind.Time => "TIME",
         TypeKind.Timestamp => "TIMESTAMP",
+        TypeKind.TimeTz => "TIME WITH TIME ZONE",
+        TypeKind.TimestampTz => "TIMESTAMP WITH TIME ZONE",
         TypeKind.Blob => "BLOB",
         TypeKind.Boolean => "BOOLEAN",
         _ => "<dtype_unknown>",

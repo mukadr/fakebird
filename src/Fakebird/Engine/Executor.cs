@@ -67,6 +67,7 @@ public static class Executor
         Init();
         var db = tx.Db;
         if (!tx.Active) throw Err.Random("transaction is not active");
+        TimeZones.Session = tx.Att.SessionTimeZone;
         var c = parent != null ? parent.Child(p.StreamCount) : new Ctx(tx, p.StreamCount);
         c.Tx = tx;
         c.Params = parameters;

@@ -2,12 +2,13 @@ using System.Runtime.CompilerServices;
 
 namespace Fakebird.Types;
 
-public enum VTag : byte { Null, Bool, Int, Double, String, Bytes, Date, Time, Timestamp, Int128 }
+public enum VTag : byte { Null, Bool, Int, Double, String, Bytes, Date, Time, Timestamp, Int128, TimestampTz, TimeTz }
 
 /// <summary>
 /// Runtime SQL value. Unboxed for numbers/dates: exact numerics are a scaled long (L, Scale), doubles are
 /// stored as raw bits in L, DATE is the Firebird day number, TIME is 1/10000 seconds since midnight and
-/// TIMESTAMP is day*TicksPerDay+time. Strings are .NET strings, binary data is byte[].
+/// TIMESTAMP is day*TicksPerDay+time. WITH TIME ZONE values hold the UTC timestamp or time of day in L and the
+/// zone id boxed in O. Strings are .NET strings, binary data is byte[].
 /// </summary>
 public readonly struct Value
 {
@@ -68,6 +69,13 @@ public readonly struct Value
     public static Value Date(long day) => new(VTag.Date, day, null, 0);
     public static Value Time(long ticks) => new(VTag.Time, ticks, null, 0);
     public static Value Timestamp(long ticks) => new(VTag.Timestamp, ticks, null, 0);
+    public static Value TimestampTz(long utcTicks, ushort zone) => new(VTag.TimestampTz, utcTicks, TimeZones.Box(zone), 0);
+    public static Value TimeTz(long utcTime, ushort zone) => new(VTag.TimeTz, utcTime, TimeZones.Box(zone), 0);
+    /// <summary>The zone id of a WITH TIME ZONE value.</summary>
+    public ushort Zone => (ushort)O!;
+    public bool IsTz => Tag is VTag.TimestampTz or VTag.TimeTz;
+    /// <summary>DATE, TIME or TIMESTAMP, with or without time zone.</summary>
+    public bool IsDateTime => Tag is VTag.Date or VTag.Time or VTag.Timestamp or VTag.TimestampTz or VTag.TimeTz;
 
     public bool AsBool => L != 0;
     public double AsDouble => BitConverter.Int64BitsToDouble(L);
@@ -109,6 +117,8 @@ public readonly struct Value
         VTag.Date => Conv.DateToDateTime(L),
         VTag.Time => TimeSpan.FromTicks(L * 1000),
         VTag.Timestamp => Conv.TimestampToDateTime(L),
+        VTag.TimestampTz => new DateTimeOffset(Conv.TimestampToDateTime(L)).ToOffset(TimeSpan.FromMinutes(TimeZones.OffsetAt(Zone, L))),
+        VTag.TimeTz => TimeSpan.FromTicks(TimeZones.TimeToLocal(L, Zone) * 1000),
         _ => null,
     };
 }

@@ -77,6 +77,8 @@ internal sealed class Connection
             while (true)
             {
                 var op = _xdr.ReadOperation();
+                // conversions between the types with and without time zone use the session's zone
+                if (_att != null) TimeZones.Session = _att.SessionTimeZone;
                 if (!Dispatch(op)) break;
             }
         }
@@ -1054,6 +1056,8 @@ internal sealed class Connection
             {
                 var t = cols[i].Type;
                 v = Coercion.ToType(v, t);
+                // DataTypeCompatibility 3.0 binds the WITH TIME ZONE types to TIMESTAMP and TIME in the session zone
+                if (t.IsTz) v = Conv.Cast(v, t.Bound);
                 if (t.Kind == TypeKind.Int128)
                 {
                     if (v.Tag == VTag.Int128 && !v.FitsLong)

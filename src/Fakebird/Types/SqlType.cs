@@ -19,6 +19,9 @@ public enum TypeKind : byte
     Boolean,
     /// <summary>Firebird 4+ INT128 (also the internal type of exact multiplication/division with a BIGINT, and of SUM(BIGINT)).</summary>
     Int128,
+    /// <summary>Firebird 4+ TIMESTAMP WITH TIME ZONE and TIME WITH TIME ZONE.</summary>
+    TimestampTz,
+    TimeTz,
 }
 
 public enum Charset : byte { None, Octets, Utf8, Ascii, Win1252, Iso8859_1, UnicodeFss, Win1250, Win1251 }
@@ -66,6 +69,8 @@ public sealed class SqlType : IEquatable<SqlType>
     public static readonly SqlType Date = new(TypeKind.Date);
     public static readonly SqlType Time = new(TypeKind.Time);
     public static readonly SqlType Timestamp = new(TypeKind.Timestamp);
+    public static readonly SqlType TimestampTz = new(TypeKind.TimestampTz);
+    public static readonly SqlType TimeTz = new(TypeKind.TimeTz);
     public static readonly SqlType Boolean = new(TypeKind.Boolean);
     public static readonly SqlType BlobText = new(TypeKind.Blob, subType: 1);
     public static readonly SqlType BlobBinary = new(TypeKind.Blob, subType: 0);
@@ -108,7 +113,8 @@ public sealed class SqlType : IEquatable<SqlType>
     public bool IsString => Kind is TypeKind.Char or TypeKind.VarChar;
     public bool IsTextBlob => Kind == TypeKind.Blob && SubType == 1;
     public bool IsTextual => IsString || IsTextBlob;
-    public bool IsDateTime => Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp;
+    public bool IsDateTime => Kind is TypeKind.Date or TypeKind.Time or TypeKind.Timestamp or TypeKind.TimestampTz or TypeKind.TimeTz;
+    public bool IsTz => Kind is TypeKind.TimestampTz or TypeKind.TimeTz;
     public bool IsOctets => Charset == Charset.Octets && IsString;
     /// <summary>Values of this type are carried as byte[] (OCTETS strings and binary blobs).</summary>
     public bool IsBinary => (IsString && Charset == Charset.Octets) || (Kind == TypeKind.Blob && SubType != 1);
@@ -133,6 +139,8 @@ public sealed class SqlType : IEquatable<SqlType>
         TypeKind.Date => 4,
         TypeKind.Time => 4,
         TypeKind.Timestamp => 8,
+        TypeKind.TimestampTz => 12,
+        TypeKind.TimeTz => 8,
         TypeKind.Boolean => 1,
         TypeKind.Blob => 8,
         _ => 0,
@@ -167,6 +175,8 @@ public sealed class SqlType : IEquatable<SqlType>
         TypeKind.Date => Isc.SQL_TYPE_DATE,
         TypeKind.Time => Isc.SQL_TYPE_TIME,
         TypeKind.Timestamp => Isc.SQL_TIMESTAMP,
+        TypeKind.TimestampTz => Isc.SQL_TIMESTAMP_TZ,
+        TypeKind.TimeTz => Isc.SQL_TIME_TZ,
         TypeKind.Boolean => Isc.SQL_BOOLEAN,
         _ => throw new InvalidOperationException(),
     };
@@ -181,9 +191,16 @@ public sealed class SqlType : IEquatable<SqlType>
 
     /// <summary>
     /// The type as described to clients with DataTypeCompatibility = 3.0 (Firebird's "legacy" bindings): INT128
-    /// becomes BIGINT with the same scale and subtype.
+    /// becomes BIGINT with the same scale and subtype, and the WITH TIME ZONE types become TIMESTAMP and TIME (in the
+    /// session time zone).
     /// </summary>
-    public SqlType Bound => Kind == TypeKind.Int128 ? new SqlType(TypeKind.BigInt, scale: Scale, precision: 18, subType: SubType) : this;
+    public SqlType Bound => Kind switch
+    {
+        TypeKind.Int128 => new SqlType(TypeKind.BigInt, scale: Scale, precision: 18, subType: SubType),
+        TypeKind.TimestampTz => Timestamp,
+        TypeKind.TimeTz => Time,
+        _ => this,
+    };
 
     public SqlType WithCollation(Collation c) => c == Collation ? this
         : new SqlType(Kind, Length, Scale, Precision, SubType, Charset, c);
@@ -215,6 +232,8 @@ public sealed class SqlType : IEquatable<SqlType>
         TypeKind.Date => "DATE",
         TypeKind.Time => "TIME",
         TypeKind.Timestamp => "TIMESTAMP",
+        TypeKind.TimestampTz => "TIMESTAMP WITH TIME ZONE",
+        TypeKind.TimeTz => "TIME WITH TIME ZONE",
         TypeKind.Boolean => "BOOLEAN",
         _ => "NULL",
     };

@@ -192,6 +192,8 @@ public sealed partial class Compiler
                 "DATE" => SqlType.Date,
                 "TIME" => SqlType.Time,
                 "TIMESTAMP" => SqlType.Timestamp,
+                "TIME WITH TIME ZONE" => SqlType.TimeTz,
+                "TIMESTAMP WITH TIME ZONE" => SqlType.TimestampTz,
                 "BOOLEAN" => SqlType.Boolean,
                 "NUMERIC" => SqlType.Numeric(ts.Precision ?? 9, ts.Scale ?? 0),
                 "DECIMAL" => SqlType.Numeric(ts.Precision ?? 9, ts.Scale ?? 0, isDecimal: true),
@@ -371,7 +373,7 @@ public sealed partial class Compiler
             {
                 var t = ResolveType(ca.Type);
                 var x = Bind(ca.Operand, s, t);
-                if (x is ParamNode pn)
+                if (x is ParamNode pn && ca.Operand is ParamExpr)
                 {
                     pn.Name = "CAST";
                     return pn;
@@ -388,6 +390,8 @@ public sealed partial class Compiler
                 x.Type = x.Type.WithCollation(CollationOf(co.Collation));
                 return x;
             }
+            case AtExpr at:
+                return BindAt(at, s, expected);
             case FuncExpr f:
                 return BindFunction(f, s, expected);
             case WindowExpr w:
@@ -580,6 +584,8 @@ public sealed partial class Compiler
         TypeKind.Date => 10,
         TypeKind.Time => 13,
         TypeKind.Timestamp => 24,
+        TypeKind.TimeTz => 14 + 32,
+        TypeKind.TimestampTz => 26 + 32,
         TypeKind.Boolean => 5,
         TypeKind.Null => 0,
         _ => 255,
@@ -741,29 +747,67 @@ public sealed partial class Compiler
         return new CaseNode(sw, els) { Type = type, NotNull = !nullable };
     }
 
+    /// <summary>AtNode: a TIME or TIMESTAMP moved to WITH TIME ZONE, then given the zone (AT LOCAL: the session's).</summary>
+    XNode BindAt(AtExpr at, Scope s, SqlType? expected)
+    {
+        var x = Bind(at.Operand, s, expected);
+        var zone = at.Zone == null ? null : Bind(at.Zone, s, SqlType.Char(32, Charset.Ascii));
+        var t = x.Type.Kind is TypeKind.Time or TypeKind.TimeTz ? SqlType.TimeTz
+            : x.Type.Kind is TypeKind.Timestamp or TypeKind.TimestampTz ? SqlType.TimestampTz
+            : throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Build();
+        XNode[] args = zone == null ? [x] : [x, zone];
+        return new FuncNode("AT", (c, a, _) =>
+        {
+            var v = a[0].Eval(c);
+            if (v.IsNull) return v;
+            ushort z;
+            if (a.Length > 1)
+            {
+                var zv = a[1].Eval(c);
+                if (zv.IsNull) return zv;
+                z = TimeZones.Parse(Conv.ToStr(zv));
+            }
+            else z = c.Att.SessionTimeZone;
+            var m = Conv.Cast(v, t);
+            return t.Kind == TypeKind.TimeTz ? Value.TimeTz(m.L, z) : Value.TimestampTz(m.L, z);
+        }, args, t, deterministic: false) { NotNull = x.NotNull && (zone == null || zone.NotNull) };
+    }
+
     XNode BindContextVar(ContextVarExpr cv)
     {
+        // the request's timestamp is UTC (Ctx.Now); its zone is the session's
         switch (cv.Name)
         {
             case "CURRENT_DATE":
-                return new CtxFuncNode(c => Value.Date(Conv.SplitTimestamp(c.Now.L).day), SqlType.Date, "CURRENT_DATE") { NotNull = true };
+                return new CtxFuncNode(c => Value.Date(Conv.SplitTimestamp(TimeZones.ToLocal(c.Now.L, c.Att.SessionTimeZone)).day),
+                    SqlType.Date, "CURRENT_DATE") { NotNull = true };
             case "CURRENT_TIME":
             case "LOCALTIME":
             {
                 var prec = cv.Precision < 0 ? 0 : cv.Precision;
                 var div = Value.Pow10[4 - Math.Min(prec, 3)];
+                var local = cv.Name == "LOCALTIME";
                 return new CtxFuncNode(c =>
                 {
-                    var t = Conv.SplitTimestamp(c.Now.L).time;
-                    return Value.Time(t - t % div);
-                }, SqlType.Time, cv.Name) { NotNull = true };
+                    var zone = c.Att.SessionTimeZone;
+                    var t = Conv.SplitTimestamp(TimeZones.ToLocal(c.Now.L, zone)).time;
+                    if (local) return Value.Time(t - t % div);
+                    t = TimeZones.TimeToUtc(t, zone);
+                    return Value.TimeTz(t - t % div, zone);
+                }, local ? SqlType.Time : SqlType.TimeTz, cv.Name) { NotNull = true };
             }
             case "CURRENT_TIMESTAMP":
             case "LOCALTIMESTAMP":
             {
                 var prec = cv.Precision < 0 ? 3 : cv.Precision;
                 var div = Value.Pow10[4 - Math.Min(prec, 3)];
-                return new CtxFuncNode(c => Value.Timestamp(c.Now.L - (c.Now.L % div + div) % div), SqlType.Timestamp, cv.Name) { NotNull = true };
+                var local = cv.Name == "LOCALTIMESTAMP";
+                return new CtxFuncNode(c =>
+                {
+                    var zone = c.Att.SessionTimeZone;
+                    var ts = c.Now.L - (c.Now.L % div + div) % div;
+                    return local ? Value.Timestamp(TimeZones.ToLocal(ts, zone)) : Value.TimestampTz(ts, zone);
+                }, local ? SqlType.Timestamp : SqlType.TimestampTz, cv.Name) { NotNull = true };
             }
             case "CURRENT_USER":
             case "USER":
@@ -980,6 +1024,12 @@ public sealed partial class Compiler
                 sb.Append("CAST(");
                 if (!CanonInto(ca.Operand, s, sb)) return false;
                 sb.Append(" AS ").Append(ResolveType(ca.Type)).Append(')');
+                return true;
+            case AtExpr at:
+                sb.Append("AT(");
+                if (!CanonInto(at.Operand, s, sb)) return false;
+                if (at.Zone != null && !CanonInto(at.Zone, s, sb)) return false;
+                sb.Append(')');
                 return true;
             case CollateExpr co:
                 sb.Append("COLL(");

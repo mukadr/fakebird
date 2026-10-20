@@ -150,6 +150,13 @@ public sealed class CastExpr(Expr operand, TypeSpec type) : Expr
     public readonly TypeSpec Type = type;
 }
 
+/// <summary>value AT TIME ZONE zone, or AT LOCAL (Zone null).</summary>
+public sealed class AtExpr(Expr operand, Expr? zone) : Expr
+{
+    public readonly Expr Operand = operand;
+    public readonly Expr? Zone = zone;
+}
+
 public sealed class CollateExpr(Expr operand, string collation) : Expr
 {
     public readonly Expr Operand = operand;
@@ -705,6 +712,8 @@ public sealed class NoOpStmt : Stmt
 }
 
 public sealed class SetSqlDialectStmt : Stmt { public int Dialect; }
+/// <summary>SET TIME ZONE 'zone' | LOCAL (null).</summary>
+public sealed class SetTimeZoneStmt : Stmt { public string? Zone; }
 
 // =====================================================================================
 // PSQL

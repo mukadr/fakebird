@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Fakebird.Engine;
+using Fakebird.Types;
 using Fakebird.Wire;
 
 namespace Fakebird;
@@ -16,6 +17,11 @@ public sealed class FakebirdOptions
     public bool AllowCreateDatabase { get; set; } = true;
     /// <summary>Default user put in generated connection strings.</summary>
     public string User { get; set; } = "SYSDBA";
+    /// <summary>
+    /// Session time zone of new attachments, as a region ("America/Sao_Paulo") or offset ("-03:00"), like
+    /// Firebird's DefaultTimeZone setting; null uses the operating system's zone.
+    /// </summary>
+    public string? TimeZone { get; set; }
     /// <summary>Receives diagnostics (failed statements with their SQL text). Defaults to stderr when the
     /// FAKEBIRD_LOG environment variable is set.</summary>
     public Action<string>? Log { get; set; } = DefaultLog();
@@ -99,6 +105,8 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
     }
 
     internal void Log(string message) => _options.Log?.Invoke(message);
+
+    ushort? DefaultZone => _options.TimeZone == null ? null : TimeZones.Parse(_options.TimeZone);
     internal bool Logging => _options.Log != null;
 
     internal void Authenticate(string? user, string? password)
@@ -130,7 +138,7 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
             if (_dbs.ContainsKey(name))
                 throw new StatusBuilder().Gds(335544344).Str("create").Str(name)
                     .Gds(Err.isc_random).Str("database already exists").Build("08001");
-            var e = new DbEntry { Name = name, Database = new Database(name) };
+            var e = new DbEntry { Name = name, Database = new Database(name) { DefaultTimeZone = DefaultZone } };
             _dbs[name] = e;
             return e;
         }
@@ -140,6 +148,7 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
     public FakeDatabase CreateDatabase(string name, DatabaseSnapshot? from = null)
     {
         var db = from == null ? new Database(name) : Database.FromSnapshot(from.Frozen, name);
+        db.DefaultTimeZone = DefaultZone;
         lock (_dbs)
         {
             if (_dbs.ContainsKey(name)) throw new InvalidOperationException($"Database '{name}' already exists");
@@ -156,10 +165,14 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         {
             if (!_dbs.TryGetValue(name, out var e))
             {
-                _dbs[name] = new DbEntry { Name = name, Database = Database.FromSnapshot(snapshot.Frozen, name) };
+                var fresh = Database.FromSnapshot(snapshot.Frozen, name);
+                fresh.DefaultTimeZone = DefaultZone;
+                _dbs[name] = new DbEntry { Name = name, Database = fresh };
                 return;
             }
+            var zone = e.Database.DefaultTimeZone;
             e.Database = Database.FromSnapshot(snapshot.Frozen, name);
+            e.Database.DefaultTimeZone = zone;
             e.Generation++;
         }
     }
@@ -233,6 +246,16 @@ public sealed class FakeDatabase
 
     /// <summary>Freezes the committed state of the database as a snapshot.</summary>
     public DatabaseSnapshot Snapshot() => new(Db.Snapshot());
+
+    /// <summary>
+    /// Session time zone of new attachments to this database (region or "+hh:mm" offset); null is the server's
+    /// <see cref="FakebirdOptions.TimeZone"/> or the operating system's zone.
+    /// </summary>
+    public string? DefaultTimeZone
+    {
+        get => Db.DefaultTimeZone is { } z ? TimeZones.Name(z) : null;
+        set => Db.DefaultTimeZone = value == null ? null : TimeZones.Parse(value);
+    }
 
     /// <summary>
     /// Runs an isql-style script (statements separated by ';', SET TERM supported). Each statement runs and

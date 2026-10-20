@@ -33,10 +33,10 @@ public static class Conv
         return (day, time);
     }
 
+    /// <summary>The current UTC timestamp, rounded to whole milliseconds like Firebird.</summary>
     public static Value Now()
     {
-        var now = DateTime.Now;
-        // CURRENT_TIMESTAMP has millisecond precision in Firebird 3
+        var now = DateTime.UtcNow;
         var ticks = now.Ticks - now.Ticks % TimeSpan.TicksPerMillisecond;
         return Value.Timestamp(DateTimeToTimestamp(new DateTime(ticks)));
     }
@@ -193,6 +193,8 @@ public static class Conv
         VTag.Date => FormatDate(v.L),
         VTag.Time => FormatTime(v.L),
         VTag.Timestamp => FormatTimestamp(v.L),
+        VTag.TimestampTz => FormatTimestamp(TimeZones.ToLocal(v.L, v.Zone)) + " " + TimeZones.Name(v.Zone),
+        VTag.TimeTz => FormatTime(TimeZones.TimeToLocal(v.L, v.Zone)) + " " + TimeZones.Name(v.Zone),
         VTag.Bytes => Utf8.GetString(v.AsBytes),
         _ => "",
     };
@@ -248,7 +250,7 @@ public static class Conv
         switch (t.Kind)
         {
             case TypeKind.Int128:
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.IsDateTime) throw Cvt.ConversionError(v);
                 if (v.Tag is VTag.Int or VTag.Int128) return Value.Wide(Cvt.Int128SetScale(v.AsInt128, v.Scale, t.Scale), t.Scale);
                 if (v.Tag == VTag.Double) return Value.Wide(Cvt.DoubleToInt128(v.AsDouble, t.Scale), t.Scale);
                 if (v.Tag == VTag.String) return Value.Wide(Cvt.StringToInt128(v.AsString, t.Scale), t.Scale);
@@ -261,11 +263,11 @@ public static class Conv
                     CheckRange(v.L, t.Kind);
                     return v;
                 }
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.IsDateTime) throw Cvt.ConversionError(v);
                 return CastExact(v, t.Scale, t.Kind);
             case TypeKind.Float:
             {
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.IsDateTime) throw Cvt.ConversionError(v);
                 if (v.IsFloat) return v;
                 var d = ToDouble(v);
                 if (Math.Abs(d) > float.MaxValue) throw Err.NumericOverflow();
@@ -273,7 +275,7 @@ public static class Conv
             }
             case TypeKind.Double:
                 if (v.Tag == VTag.Double) return v.IsFloat ? Value.Dbl(v.AsDouble) : v;
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.IsDateTime) throw Cvt.ConversionError(v);
                 return Value.Dbl(ToDouble(v));
             case TypeKind.Boolean:
                 if (v.Tag == VTag.Bool) return v;
@@ -290,6 +292,7 @@ public static class Conv
                 {
                     case VTag.Date: return v;
                     case VTag.Timestamp: return Value.Date(SplitTimestamp(v.L).day);
+                    case VTag.TimestampTz: return Value.Date(SplitTimestamp(TimeZones.ToLocal(v.L, TimeZones.Session)).day);
                     case VTag.String: return Value.Date(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Date));
                 }
                 throw Cvt.ConversionError(v);
@@ -298,6 +301,8 @@ public static class Conv
                 {
                     case VTag.Time: return v;
                     case VTag.Timestamp: return Value.Time(SplitTimestamp(v.L).time);
+                    case VTag.TimestampTz: return Value.Time(SplitTimestamp(TimeZones.ToLocal(v.L, TimeZones.Session)).time);
+                    case VTag.TimeTz: return Value.Time(TimeZones.TimeTzToTime(v.L, v.Zone));
                     case VTag.String: return Value.Time(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Time));
                 }
                 throw Cvt.ConversionError(v);
@@ -306,10 +311,48 @@ public static class Conv
                 {
                     case VTag.Timestamp: return v;
                     case VTag.Date: return Value.Timestamp(v.L * Value.TicksPerDay);
-                    case VTag.Time: return Value.Timestamp(DateToDay(DateOnly.FromDateTime(DateTime.Now)) * Value.TicksPerDay + v.L);
+                    case VTag.Time: return Value.Timestamp(TimeZones.LocalToday() * Value.TicksPerDay + v.L);
+                    case VTag.TimestampTz: return Value.Timestamp(TimeZones.ToLocal(v.L, TimeZones.Session));
+                    case VTag.TimeTz: return Value.Timestamp(TimeZones.ToLocal(TimeZones.TimeTzToTimestampTz(v.L, v.Zone), TimeZones.Session));
                     case VTag.String: return Value.Timestamp(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Timestamp));
                 }
                 throw Cvt.ConversionError(v);
+            case TypeKind.TimestampTz:
+            {
+                var session = TimeZones.Session;
+                switch (v.Tag)
+                {
+                    case VTag.TimestampTz: return v;
+                    case VTag.Timestamp: return Value.TimestampTz(TimeZones.ToUtc(v.L, session), session);
+                    case VTag.Date: return Value.TimestampTz(TimeZones.ToUtc(v.L * Value.TicksPerDay, session), session);
+                    case VTag.Time: return Value.TimestampTz(TimeZones.ToUtc(TimeZones.LocalToday() * Value.TicksPerDay + v.L, session), session);
+                    case VTag.TimeTz: return Value.TimestampTz(TimeZones.TimeTzToTimestampTz(v.L, v.Zone), v.Zone);
+                    case VTag.String:
+                    {
+                        var ts = Cvt.StringToDateTime(v.AsString, Cvt.Expect.TimestampTz, out var zone);
+                        return Value.TimestampTz(ts, zone);
+                    }
+                }
+                throw Cvt.ConversionError(v);
+            }
+            case TypeKind.TimeTz:
+            {
+                var session = TimeZones.Session;
+                switch (v.Tag)
+                {
+                    case VTag.TimeTz: return v;
+                    case VTag.Time: return Value.TimeTz(TimeZones.TimeToUtc(v.L, session), session);
+                    case VTag.Timestamp:
+                        return Value.TimeTz(TimeZones.TimestampTzToTimeTz(TimeZones.ToUtc(v.L, session), session), session);
+                    case VTag.TimestampTz: return Value.TimeTz(TimeZones.TimestampTzToTimeTz(v.L, v.Zone), v.Zone);
+                    case VTag.String:
+                    {
+                        var time = Cvt.StringToDateTime(v.AsString, Cvt.Expect.TimeTz, out var zone);
+                        return Value.TimeTz(time, zone);
+                    }
+                }
+                throw Cvt.ConversionError(v);
+            }
             case TypeKind.Char:
             case TypeKind.VarChar:
                 return CastString(v, t);
@@ -412,6 +455,8 @@ public static class Conv
                 case VTag.Date:
                 case VTag.Time:
                 case VTag.Timestamp:
+                case VTag.TimestampTz:
+                case VTag.TimeTz:
                 case VTag.Bool:
                     return a.L.CompareTo(b.L);
                 case VTag.Bytes: return CompareBytes(a.AsBytes, b.AsBytes);
@@ -443,14 +488,14 @@ public static class Conv
                 return Compare(a, ParseNumber(b.AsString), collation);
             case VTag.String when b.Tag is VTag.Int or VTag.Int128 or VTag.Double:
                 return Compare(ParseNumber(a.AsString), b, collation);
-            case VTag.Date when b.Tag == VTag.Timestamp:
-                return (a.L * Value.TicksPerDay).CompareTo(b.L);
-            case VTag.Timestamp when b.Tag == VTag.Date:
-                return a.L.CompareTo(b.L * Value.TicksPerDay);
-            case VTag.Date or VTag.Time or VTag.Timestamp when b.Tag == VTag.String:
-                return a.L.CompareTo(Cast(b, TypeOfTag(a.Tag)).L);
-            case VTag.String when b.Tag is VTag.Date or VTag.Time or VTag.Timestamp:
-                return Cast(a, TypeOfTag(b.Tag)).L.CompareTo(b.L);
+            // the operand of lower priority moves to the other's type (a TIMESTAMP compared with a TIMESTAMP WITH
+            // TIME ZONE is in the session zone)
+            case VTag.Date or VTag.Time or VTag.Timestamp or VTag.TimestampTz or VTag.TimeTz
+                when b.IsDateTime || b.Tag == VTag.String:
+            case VTag.String when b.IsDateTime:
+                return ComparePriority(a.Tag) >= ComparePriority(b.Tag)
+                    ? a.L.CompareTo(Cast(b, TypeOfTag(a.Tag)).L)
+                    : Cast(a, TypeOfTag(b.Tag)).L.CompareTo(b.L);
             case VTag.Bool when b.Tag == VTag.String:
                 return a.L.CompareTo(Cast(b, SqlType.Boolean).L);
             case VTag.String when b.Tag == VTag.Bool:
@@ -473,7 +518,9 @@ public static class Conv
         VTag.Double => 14,
         VTag.Date => 18,
         VTag.Time => 19,
+        VTag.TimeTz => 20,
         VTag.Timestamp => 21,
+        VTag.TimestampTz => 22,
         VTag.Bool => 26,
         _ => 0,
     };
@@ -482,6 +529,8 @@ public static class Conv
     {
         VTag.Date => SqlType.Date,
         VTag.Time => SqlType.Time,
+        VTag.TimeTz => SqlType.TimeTz,
+        VTag.TimestampTz => SqlType.TimestampTz,
         _ => SqlType.Timestamp,
     };
 

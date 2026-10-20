@@ -17,7 +17,7 @@ public static class Arith
         if (a.IsNull || b.IsNull) return Value.Null;
         switch (type.Kind)
         {
-            case TypeKind.BigInt when a.Tag is not (VTag.Date or VTag.Time or VTag.Timestamp) && b.Tag is not (VTag.Date or VTag.Time or VTag.Timestamp):
+            case TypeKind.BigInt when !a.IsDateTime && !b.IsDateTime:
                 return op switch
                 {
                     ArithOp.Add => AddI64(a, b, type.Scale, false),
@@ -188,6 +188,7 @@ public static class Arith
     public static Value Add(in Value a, in Value b)
     {
         if (a.IsNull || b.IsNull) return Value.Null;
+        if (a.IsTz || b.IsTz) return WithZone(a, b, sub: false);
         if (a.Tag == VTag.Int && b.Tag == VTag.Int)
         {
             if (a.Scale == b.Scale)
@@ -219,6 +220,32 @@ public static class Arith
         CheckNumeric(x);
         CheckNumeric(y);
         return Value.Dbl(Conv.ToDouble(x) + Conv.ToDouble(y));
+    }
+
+    /// <summary>
+    /// addTimeStamp / addSqlTime with a WITH TIME ZONE operand: a TIME or TIMESTAMP operand moves to WITH TIME ZONE
+    /// (session zone) first, the arithmetic is done on the UTC values and a date/time result keeps the zone.
+    /// </summary>
+    static Value WithZone(Value a, Value b, bool sub)
+    {
+        if (a.IsTz && b.Tag is VTag.Time or VTag.Timestamp) b = ToTz(b);
+        if (b.IsTz && a.Tag is VTag.Time or VTag.Timestamp) a = ToTz(a);
+        var zone = a.IsTz ? a.Zone : b.Zone;
+        var r = sub ? Sub(Plain(a), Plain(b)) : Add(Plain(a), Plain(b));
+        return r.Tag switch
+        {
+            VTag.Timestamp => Value.TimestampTz(r.L, zone),
+            VTag.Time => Value.TimeTz(r.L, zone),
+            _ => r,
+        };
+
+        static Value ToTz(in Value v) => Conv.Cast(v, v.Tag == VTag.Time ? SqlType.TimeTz : SqlType.TimestampTz);
+        static Value Plain(in Value v) => v.Tag switch
+        {
+            VTag.TimestampTz => Value.Timestamp(v.L),
+            VTag.TimeTz => Value.Time(v.L),
+            _ => v,
+        };
     }
 
     static void CheckNumeric(in Value v)
@@ -287,6 +314,7 @@ public static class Arith
     public static Value Sub(in Value a, in Value b)
     {
         if (a.IsNull || b.IsNull) return Value.Null;
+        if (a.IsTz || b.IsTz) return WithZone(a, b, sub: true);
         if (a.Tag == VTag.Int && b.Tag == VTag.Int)
         {
             if (a.Scale == b.Scale)

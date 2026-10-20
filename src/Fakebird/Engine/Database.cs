@@ -31,6 +31,8 @@ public sealed partial class Database
     internal readonly Dictionary<string, object> PlanCache = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, Exec.TableRuntime> Runtimes = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, string> GlobalContext = new(StringComparer.Ordinal);
+    /// <summary>Session time zone of new attachments (Firebird's DefaultTimeZone); null is the system's zone.</summary>
+    public ushort? DefaultTimeZone;
 
     public Database(string name)
     {
@@ -183,11 +185,14 @@ public sealed class Attachment
     public string Role = "NONE";
     public readonly Dictionary<string, string> SessionContext = new(StringComparer.Ordinal);
     internal readonly List<Transaction> Transactions = new();
+    /// <summary>The session time zone (SET TIME ZONE) and the one the attachment started with (SET TIME ZONE LOCAL).</summary>
+    public ushort SessionTimeZone, OriginalTimeZone;
 
     public Attachment(Database db)
     {
         Db = db;
         Id = db.NextAttachmentId++;
+        SessionTimeZone = OriginalTimeZone = db.DefaultTimeZone ?? TimeZones.System;
     }
 
     public Transaction StartTransaction(bool snapshot = false, bool readOnly = false, bool wait = true)

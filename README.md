@@ -45,11 +45,12 @@ simplicity and speed over the machinery a shared production server needs.
 ## What is supported
 
 Firebird 5, dialect 3 semantics, as a server configured with `DataTypeCompatibility = 3.0` shows them
-(the Firebird 4+ types INT128, DECFLOAT and TIME ZONE are not available yet). Every behaviour below is
+(the Firebird 4+ DECFLOAT type is not available yet). Every behaviour below is
 checked against a real Firebird 5 by the corpus (see "Checking against a real Firebird"):
 
 * **Types**: SMALLINT, INTEGER, BIGINT, NUMERIC/DECIMAL (exact scaled integers), FLOAT, DOUBLE
-  PRECISION, CHAR (blank padded), VARCHAR (length checked), DATE, TIME, TIMESTAMP, BOOLEAN,
+  PRECISION, CHAR (blank padded), VARCHAR (length checked), DATE, TIME, TIMESTAMP, TIME and TIMESTAMP
+  WITH TIME ZONE, BOOLEAN,
   BLOB SUB_TYPE TEXT/BINARY, CHAR(16) CHARACTER SET OCTETS (GUIDs), collations `*_CI` / `*_CI_AI`.
 * **DDL**: tables (incl. GTT), constraints (PK, UNIQUE, FK with CASCADE/SET NULL/SET DEFAULT/NO
   ACTION, CHECK, NOT NULL), defaults, identity and computed columns, ALTER TABLE (add/drop/alter
@@ -94,6 +95,19 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   deleted and children being stored by uncommitted transactions (failing at once under NOWAIT, waiting
   otherwise), a timed-out lock wait is an update conflict, and the context reports the isolation
   (CONSISTENCY included) and LOCK_TIMEOUT (0 for NOWAIT) of the transaction.
+* **Time zones** (Firebird 4+): TIME / TIMESTAMP WITH TIME ZONE hold a UTC value and a zone, a region
+  of Firebird's built-in list (`tools/gentz.py`, the ids of RDB$TIME_ZONES) or an offset up to ±14:00.
+  Literals and text naming a zone (`timestamp '2024-01-15 10:00 America/Sao_Paulo'`) are zoned;
+  CURRENT_TIMESTAMP and CURRENT_TIME are zoned in the session's zone (so a cast to text shows it), and
+  LOCALTIMESTAMP / LOCALTIME / CURRENT_DATE are local to it. Values move between the types with and
+  without zone through the session zone (`SET TIME ZONE 'zone' | LOCAL`, `SESSION_TIMEZONE`), compare
+  and sort by their UTC instant, and keep their zone through arithmetic, DATEADD, FIRST_DAY/LAST_DAY and
+  AT TIME ZONE / AT LOCAL; EXTRACT gives TIMEZONE_HOUR / TIMEZONE_MINUTE / TIMEZONE_NAME. Wall times in a
+  DST overlap are their first occurrence, and those in a gap use the offset before it, like Firebird's ICU
+  calls. As with `DataTypeCompatibility = 3.0`, the client gets zoned values (columns, results and
+  parameters) as TIMESTAMP / TIME in the session zone. The session zone starts as
+  `FakebirdOptions.TimeZone`, a database's `DefaultTimeZone`, or the operating system's zone (Firebird's
+  DefaultTimeZone); region rules come from the system's tz database.
 * **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...,
   and Firebird 4's HEX_ENCODE/HEX_DECODE, BASE64_ENCODE/BASE64_DECODE, BLOB_APPEND, CRYPT_HASH (MD5,
   SHA1, SHA2, SHA3) and HASH ... USING CRC32; HASH is Firebird 5's 64-bit hash; a wrong number of
@@ -188,8 +202,8 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
 Anything not implemented raises an error such as
 `Fakebird: unsupported feature: PACKAGE` instead of silently doing something different.
 Not supported: packages, database (ON CONNECT/TRANSACTION) triggers, DDL triggers, events,
-the services API (backup/restore), external tables/functions, WHERE CURRENT OF, TIME ZONE /
-INT128 / DECFLOAT types (Firebird 4), DML on views.
+the services API (backup/restore), external tables/functions, WHERE CURRENT OF, the DECFLOAT type
+(Firebird 4), DML on views.
 
 ## Differences from a real server
 
@@ -201,11 +215,14 @@ INT128 / DECFLOAT types (Firebird 4), DML on views.
   singleton subquery, fail at execute, also like Firebird).
 * NO ACTION foreign keys are verified at the end of each statement.
 * All text is treated as Unicode; columns are described to the client as UTF8.
+* Time zone rules come from the operating system's tz database (on Windows, .NET's ICU data), which can
+  differ from the ICU data of a Firebird build where rules changed recently.
 
 ## Checking against a real Firebird
 
 The corpus in `tests/Fakebird.Tests/Corpus/*.sql` is run against Fakebird and compared with the output
-of a real Firebird 5 (configured with `DataTypeCompatibility = 3.0`) recorded in `*.fb5c3.out`: column
+of a real Firebird 5 (configured with `DataTypeCompatibility = 3.0`, session time zone `Etc/UTC` as in the
+docker image) recorded in `*.fb5c3.out`: column
 names, client types, describe information (size, precision, scale, nullability, base table and column),
 values, rows affected, and errors (the whole status vector and the message). The comparison runs in
 every `dotnet test`, no server needed. A corpus file looks like this:
@@ -245,7 +262,9 @@ Error codes, SQLCODEs, SQLSTATEs and message texts come from Firebird's own mess
 `tools/genmsg.py <firebird>/src/include/firebird/impl/msg > src/Fakebird/FbMessages.g.cs` (that
 generated file stays under Firebird's Initial Developer's Public License, see its header). The types and
 nullability of the system tables' columns come from Firebird's relation definitions:
-`tools/gensys.py <firebird>/src/jrd > src/Fakebird/Engine/SystemSchema.g.cs` (same license).
+`tools/gensys.py <firebird>/src/jrd > src/Fakebird/Engine/SystemSchema.g.cs` (same license), and the
+time zone list (whose order fixes the zone ids) from its `TimeZones.h`:
+`tools/gentz.py <firebird>/src/common/TimeZones.h > src/Fakebird/Types/TimeZoneList.g.cs`.
 
 ## Loading a real-world schema
 

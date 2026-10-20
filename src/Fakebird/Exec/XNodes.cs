@@ -364,7 +364,10 @@ public sealed class CastNode : XNode
     public readonly XNode X;
     public CastNode(XNode x, SqlType t) { X = x; Type = t; Name = "CAST"; NotNull = x.NotNull; }
     public override Value Eval(Ctx c) => Conv.Cast(X.Eval(c), Type);
-    public override bool IsConstant => X.IsConstant;
+    // a move between the WITH and WITHOUT TIME ZONE types, or from text (that may name a zone or say NOW), depends on
+    // the session time zone and the clock
+    public override bool IsConstant => X.IsConstant
+        && !(Type.IsDateTime && (Type.IsTz || X.Type.IsTz || X.Type.IsTextual || X.Type.Kind == TypeKind.Null));
 }
 
 /// <summary>Built-in function implemented by a delegate receiving the unevaluated argument nodes.</summary>
@@ -442,6 +445,8 @@ public static class Coercion
             case TypeKind.Date: if (v.Tag == VTag.Date) return v; break;
             case TypeKind.Time: if (v.Tag == VTag.Time) return v; break;
             case TypeKind.Timestamp: if (v.Tag == VTag.Timestamp) return v; break;
+            case TypeKind.TimestampTz: if (v.Tag == VTag.TimestampTz) return v; break;
+            case TypeKind.TimeTz: if (v.Tag == VTag.TimeTz) return v; break;
             case TypeKind.Boolean: if (v.Tag == VTag.Bool) return v; break;
             case TypeKind.Null: return v;
         }

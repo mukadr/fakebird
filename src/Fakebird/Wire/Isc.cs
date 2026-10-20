@@ -178,6 +178,8 @@ internal static class Isc
     public const int SQL_TYPE_DATE = 570;
     public const int SQL_INT64 = 580;
     public const int SQL_INT128 = 32752;
+    public const int SQL_TIMESTAMP_TZ = 32754;
+    public const int SQL_TIME_TZ = 32756;
     public const int SQL_BOOLEAN = 32764;
     public const int SQL_NULL = 32766;
 

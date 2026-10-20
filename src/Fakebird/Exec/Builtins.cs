@@ -168,6 +168,7 @@ public static class Builtins
 
     public static SqlType ExtractType(string part) => part switch
     {
+        "TIMEZONE_NAME" => SqlType.VarChar(32, Charset.Ascii),
         "SECOND" => SqlType.ExactExpr(TypeKind.Integer, 4),
         "MILLISECOND" => SqlType.ExactExpr(TypeKind.Integer, 1),
         _ => SqlType.SmallInt,
@@ -627,12 +628,12 @@ public static class Builtins
             DateFuncs.CheckExtract(((ConstNode)a[0]).Value.AsString, a[1].Type);
             return ExtractType(((ConstNode)a[0]).Value.AsString);
         }, (c, a, f) => DateFuncs.Extract(((ConstNode)a[0]).Value.AsString, a[1].Eval(c)), (i, a) => SqlType.Timestamp);
-        Def("FIRST_DAY", 2, 2, a => a[1].Type.Kind == TypeKind.Timestamp ? SqlType.Timestamp : SqlType.Date, (c, a, f) =>
+        Def("FIRST_DAY", 2, 2, a => a[1].Type.Kind is TypeKind.Timestamp or TypeKind.TimestampTz ? a[1].Type : SqlType.Date, (c, a, f) =>
         {
             var v = a[1].Eval(c);
             return v.IsNull ? v : DateFuncs.FirstLastDay(((ConstNode)a[0]).Value.AsString, false, v);
         }, (i, a) => SqlType.Date);
-        Def("LAST_DAY", 2, 2, a => a[1].Type.Kind == TypeKind.Timestamp ? SqlType.Timestamp : SqlType.Date, (c, a, f) =>
+        Def("LAST_DAY", 2, 2, a => a[1].Type.Kind is TypeKind.Timestamp or TypeKind.TimestampTz ? a[1].Type : SqlType.Date, (c, a, f) =>
         {
             var v = a[1].Eval(c);
             return v.IsNull ? v : DateFuncs.FirstLastDay(((ConstNode)a[0]).Value.AsString, true, v);
@@ -790,6 +791,7 @@ public static class Builtins
                 return name switch
                 {
                     "ENGINE_VERSION" => S("5.0.4"),
+                    "SESSION_TIMEZONE" => S(TimeZones.Name(c.Att.SessionTimeZone)),
                     "DB_NAME" => S(c.Db.Name),
                     "NETWORK_PROTOCOL" => S("TCPv4"),
                     "CLIENT_ADDRESS" => S("127.0.0.1"),

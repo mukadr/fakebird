@@ -31,6 +31,9 @@ public static class DateFuncs
     /// <summary>evlDateAdd: the amount is rounded to an integer (milliseconds keep one decimal).</summary>
     public static Value DateAdd(string part, in Value quantityValue, in Value v)
     {
+        // WITH TIME ZONE: the UTC value moves and the zone stays
+        if (v.Tag == VTag.TimestampTz) return Value.TimestampTz(DateAdd(part, quantityValue, Value.Timestamp(v.L)).L, v.Zone);
+        if (v.Tag == VTag.TimeTz) return Value.TimeTz(DateAdd(part, quantityValue, Value.Time(v.L)).L, v.Zone);
         long day, time;
         switch (v.Tag)
         {
@@ -145,6 +148,8 @@ public static class DateFuncs
     /// <summary>evlDateDiff.</summary>
     public static Value DateDiff(string part, in Value a, in Value b)
     {
+        // with a WITH TIME ZONE operand the values compare in UTC (a TIME or TIMESTAMP is in the session zone)
+        if (a.IsTz || b.IsTz) return DateDiff(part, Utc(a), Utc(b));
         static (long Day, long Time) Split(in Value v) => v.Tag switch
         {
             VTag.Time => (0, v.L),
@@ -205,6 +210,17 @@ public static class DateFuncs
         }
     }
 
+    static Value Utc(in Value v) => v.Tag switch
+    {
+        VTag.Time => Value.Time(TimeZones.TimeToUtc(v.L, TimeZones.Session)),
+        VTag.Timestamp => Value.Timestamp(TimeZones.ToUtc(v.L, TimeZones.Session)),
+        VTag.TimeTz => Value.Time(v.L),
+        VTag.TimestampTz => Value.Timestamp(v.L),
+        _ => v,
+    };
+
+    static readonly HashSet<string> ZoneParts = ["TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TIMEZONE_NAME"];
+
     static readonly HashSet<string> DateParts = ["YEAR", "QUARTER", "MONTH", "DAY", "WEEKDAY", "YEARDAY", "WEEK"];
     static readonly HashSet<string> TimeParts = ["HOUR", "MINUTE", "SECOND", "MILLISECOND"];
 
@@ -212,8 +228,10 @@ public static class DateFuncs
     public static void CheckExtract(string part, SqlType t)
     {
         if (t.Kind == TypeKind.Null) return;
-        var ok = DateParts.Contains(part) ? t.Kind is TypeKind.Date or TypeKind.Timestamp
-            : TimeParts.Contains(part) ? t.Kind is TypeKind.Time or TypeKind.Timestamp : true;
+        var ok = DateParts.Contains(part) ? t.Kind is TypeKind.Date or TypeKind.Timestamp or TypeKind.TimestampTz
+            : TimeParts.Contains(part) ? t.Kind is TypeKind.Time or TypeKind.TimeTz or TypeKind.Timestamp or TypeKind.TimestampTz
+            : ZoneParts.Contains(part) ? t.Kind is TypeKind.Time or TypeKind.TimeTz or TypeKind.Timestamp or TypeKind.TimestampTz
+            : true;
         if (!ok)
             throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-105).Gds(FbMessages.extract_input_mismatch).Build();
     }
@@ -222,9 +240,17 @@ public static class DateFuncs
     public static Value Extract(string part, in Value v)
     {
         if (v.IsNull) return v;
+        if (ZoneParts.Contains(part)) return ExtractZone(part, v);
         long day = 0, time = 0;
         switch (v.Tag)
         {
+            case VTag.TimeTz:
+                if (!TimeParts.Contains(part)) throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.invalid_extractpart_time).Build();
+                time = TimeZones.TimeToLocal(v.L, v.Zone);
+                break;
+            case VTag.TimestampTz:
+                (day, time) = Conv.SplitTimestamp(TimeZones.ToLocal(v.L, v.Zone));
+                break;
             case VTag.Time:
                 if (!TimeParts.Contains(part)) throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.invalid_extractpart_time).Build();
                 time = v.L;
@@ -257,11 +283,51 @@ public static class DateFuncs
         };
     }
 
+    /// <summary>EXTRACT(TIMEZONE_HOUR | TIMEZONE_MINUTE | TIMEZONE_NAME): a value without zone is in the session's.</summary>
+    static Value ExtractZone(string part, in Value v)
+    {
+        long utc;
+        ushort zone;
+        switch (v.Tag)
+        {
+            case VTag.Time:
+            {
+                var t = Conv.Cast(v, SqlType.TimeTz);
+                (utc, zone) = (TimeZones.TimeTzBaseDate * TicksPerDay + t.L, t.Zone);
+                break;
+            }
+            case VTag.TimeTz:
+                (utc, zone) = (TimeZones.TimeTzBaseDate * TicksPerDay + v.L, v.Zone);
+                break;
+            case VTag.Timestamp:
+            {
+                var t = Conv.Cast(v, SqlType.TimestampTz);
+                (utc, zone) = (t.L, t.Zone);
+                break;
+            }
+            case VTag.TimestampTz:
+                (utc, zone) = (v.L, v.Zone);
+                break;
+            case VTag.Date:
+                throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.invalid_extractpart_date).Build();
+            default:
+                throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.invalidarg_extract).Build();
+        }
+        if (part == "TIMEZONE_NAME") return Value.Str(TimeZones.Name(zone));
+        var offset = TimeZones.OffsetAt(zone, utc);
+        var sign = offset < 0 ? -1 : 1;
+        offset = Math.Abs(offset);
+        return Value.Int(part == "TIMEZONE_HOUR" ? sign * (offset / 60) : sign * (offset % 60));
+    }
+
     /// <summary>FIRST_DAY / LAST_DAY (OF YEAR | QUARTER | MONTH | WEEK FROM value).</summary>
     public static Value FirstLastDay(string part, bool last, in Value v)
     {
+        // WITH TIME ZONE: computed on the local date and time, then back to UTC in the value's zone
+        if (v.Tag == VTag.TimestampTz)
+            return Value.TimestampTz(TimeZones.ToUtc(FirstLastDay(part, last, Value.Timestamp(TimeZones.ToLocal(v.L, v.Zone))).L, v.Zone), v.Zone);
         var (day, time) = v.Tag == VTag.Timestamp ? Conv.SplitTimestamp(v.L) : (v.L, 0L);
-        if (v.Tag is not (VTag.Date or VTag.Timestamp)) throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.invalidarg_extract).Build();
+        if (v.Tag is not (VTag.Date or VTag.Timestamp)) throw Sysf(FbMessages.sysf_invalid_date_timestamp, last ? "LAST_DAY" : "FIRST_DAY");
         var d = Conv.DayToDate(day);
         DateOnly r = part switch
         {

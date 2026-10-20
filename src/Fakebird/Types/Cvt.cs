@@ -9,7 +9,7 @@ namespace Fakebird.Types;
 /// </summary>
 public static class Cvt
 {
-    public enum Expect { Date, Time, Timestamp }
+    public enum Expect { Date, Time, Timestamp, TimeTz, TimestampTz }
 
     // ------------------------------------------------------------------ conversion errors
 
@@ -23,6 +23,7 @@ public static class Cvt
         {
             VTag.Bool => "BOOLEAN",
             VTag.Timestamp => LegacyTimestampText(v.L),
+            VTag.TimestampTz => LegacyTimestampText(TimeZones.ToLocal(v.L, v.Zone)) + " " + TimeZones.Name(v.Zone),
             VTag.Bytes => Encoding.Latin1.GetString(v.AsBytes),
             VTag.String => Encoding.Latin1.GetString(Conv.Utf8.GetBytes(v.AsString)),
             _ => Conv.ToStr(v),
@@ -459,7 +460,22 @@ public static class Cvt
     /// <paramref name="allowSpecial"/> enables NOW/TODAY/TOMORROW/YESTERDAY.
     /// </summary>
     public static long StringToDateTime(string s, Expect expect, bool allowSpecial = true)
+        => StringToDateTime(s, expect, out _, allowSpecial);
+
+    /// <summary>
+    /// CVT_string_to_datetime. Values without time zone are in the session zone (a zone given in the text converts
+    /// them); for the WITH TIME ZONE types the result is the UTC time or timestamp of <paramref name="zone"/>.
+    /// </summary>
+    public static long StringToDateTime(string s, Expect expect, out ushort zone, bool allowSpecial = true)
+        => StringToDateTime(s, expect, out zone, out _, allowSpecial);
+
+    /// <summary>CVT_string_to_datetime, also telling whether the text named a time zone.</summary>
+    public static long StringToDateTime(string s, Expect expect, out ushort zone, out bool hasZone, bool allowSpecial = true)
     {
+        var session = TimeZones.Session;
+        zone = session;
+        hasZone = false;
+        var isTime = expect is Expect.Time or Expect.TimeTz;
         CheckBuffer(s, 130);
         const int englishMonth = -1, special = -2;
         int positionYear, positionMonth = 1, positionDay;
@@ -469,7 +485,7 @@ public static class Cvt
         var description = new int[7];
         var p = 0;
         var end = s.Length;
-        var start = expect == Expect.Time ? 3 : 0;
+        var start = isTime ? 3 : 0;
         int i;
         for (i = start; i < 7; i++)
         {
@@ -510,11 +526,14 @@ public static class Cvt
                     description[i] = special;
                     while (++p < end)
                         if (s[p] is not (' ' or '\t' or '\0')) throw ConversionError(Value.Str(s));
+                    // the current UTC timestamp in the session zone ("not really UTC" for the types without zone)
                     var now = Conv.Now().L;
+                    if (expect is not Expect.TimestampTz) now = TimeZones.ToLocal(now, session);
                     var (today, timeNow) = Conv.SplitTimestamp(now);
+                    if (expect == Expect.TimeTz) timeNow = TimeZones.TimeToUtc(timeNow, session);
                     if (word == "NOW")
-                        return expect switch { Expect.Date => today, Expect.Time => timeNow, _ => now };
-                    if (expect == Expect.Time) throw ConversionError(Value.Str(s));
+                        return expect switch { Expect.Date => today, Expect.Time or Expect.TimeTz => timeNow, _ => now };
+                    if (isTime) throw ConversionError(Value.Str(s));
                     var dayN = word switch
                     {
                         "TODAY" => today,
@@ -588,11 +607,14 @@ public static class Cvt
         if (i - start < 1) throw ConversionError(Value.Str(s));
         if (expect == Expect.Date && i > 2) throw ConversionError(Value.Str(s));
 
-        string? zone = null;
         if (expect != Expect.Date)
         {
             while (p < end && s[p] is ' ' or '\t') p++;
-            if (p < end) zone = ParseTimeZone(s[p..]);
+            if (p < end)
+            {
+                zone = TimeZones.Parse(s[p..]);
+                hasZone = true;
+            }
         }
         else
         {
@@ -601,7 +623,7 @@ public static class Cvt
         }
 
         int year, mon, mday;
-        if (expect != Expect.Time)
+        if (!isTime)
         {
             if (description[0] >= 3) { positionYear = 0; positionMonth = 1; positionDay = 2; }
             else if (description[0] == englishMonth) { positionYear = 2; positionMonth = 0; positionDay = 1; }
@@ -640,7 +662,7 @@ public static class Cvt
             throw new StatusBuilder().Gds(expect switch
             {
                 Expect.Date => FbMessages.date_range_exceeded,
-                Expect.Time => FbMessages.time_range_exceeded,
+                Expect.Time or Expect.TimeTz => FbMessages.time_range_exceeded,
                 _ => FbMessages.datetime_range_exceeded,
             }).Build();
         if (mon is < 1 or > 12 || mday < 1 || mday > DateTime.DaysInMonth(year, mon))
@@ -652,91 +674,24 @@ public static class Cvt
 
         var dayNumber = Conv.DateToDay(new DateOnly(year, mon, mday));
         var timeOfDay = ((hour * 60L + min) * 60 + sec) * Value.TicksPerSecond + frac;
-        if (zone != null) (dayNumber, timeOfDay) = FromZone(dayNumber, timeOfDay, zone, expect);
+        var ticks = dayNumber * Value.TicksPerDay + timeOfDay;
+        if (expect is Expect.TimeTz or Expect.TimestampTz || zone != session)
+        {
+            if (expect != Expect.Date) ticks = TimeZones.ToUtc(ticks, zone);
+            if (zone != session)
+            {
+                if (expect == Expect.Time) ticks = TimeZones.TimeTzToTime(Conv.SplitTimestamp(ticks).time, zone);
+                else if (expect == Expect.Timestamp) ticks = TimeZones.ToLocal(ticks, session);
+            }
+        }
         return expect switch
         {
             Expect.Date => dayNumber,
-            Expect.Time => timeOfDay,
-            _ => dayNumber * Value.TicksPerDay + timeOfDay,
+            Expect.Time or Expect.TimeTz => Conv.SplitTimestamp(ticks).time,
+            _ => ticks,
         };
     }
 
     static char Upper7(char c) => c is >= 'a' and <= 'z' ? (char)(c - 32) : c;
     static bool IsLetter7(char c) => c is >= 'A' and <= 'Z';
-
-    /// <summary>TimeZoneUtil::parse: "+hh:mm" offsets or region names; returns the normalized zone.</summary>
-    public static string ParseTimeZone(string str)
-    {
-        var p = 0;
-        var end = str.Length;
-        while (p < end && str[p] is ' ' or '\t') p++;
-        if (p < end && str[p] is '-' or '+')
-        {
-            var sign = str[p++] == '-' ? -1 : 1;
-            while (p < end && str[p] is ' ' or '\t') p++;
-            var tzh = ParseNumber(str, ref p);
-            if (tzh >= 0)
-            {
-                while (p < end && str[p] is ' ' or '\t') p++;
-                if (p < end && str[p] == ':')
-                {
-                    ++p;
-                    while (p < end && str[p] is ' ' or '\t') p++;
-                    var tzm = ParseNumber(str, ref p);
-                    if (tzm >= 0)
-                    {
-                        while (p < end && str[p] is ' ' or '\t') p++;
-                        if (p == end)
-                        {
-                            if (tzh > 14 || tzm > 59 || (tzh == 14 && tzm > 0))
-                                throw new StatusBuilder().Gds(FbMessages.invalid_timezone_offset).Str(str).Build();
-                            return (sign < 0 ? "-" : "+") + tzh.ToString("00", CultureInfo.InvariantCulture) + ":" + tzm.ToString("00", CultureInfo.InvariantCulture);
-                        }
-                    }
-                }
-            }
-            throw new StatusBuilder().Gds(FbMessages.invalid_timezone_offset).Str(str).Build();
-        }
-
-        var regionStart = p;
-        var q = p;
-        while (q < end && (str[q] is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_' or '/'
-                           || (q != regionStart && str[q] is >= '0' and <= '9' or '+' or '-')))
-            q++;
-        var name = str[regionStart..q];
-        while (q < end && str[q] is ' ' or '\t') q++;
-        if (q == end && FindZone(name) != null) return name;
-        throw new StatusBuilder().Gds(FbMessages.invalid_timezone_region).Str(str[regionStart..]).Build();
-    }
-
-    static int ParseNumber(string s, ref int p)
-    {
-        var start = p;
-        var n = 0;
-        while (p < s.Length && s[p] is >= '0' and <= '9') n = n * 10 + s[p++] - '0';
-        return p == start ? -1 : n;
-    }
-
-    static TimeZoneInfo? FindZone(string name)
-    {
-        if (name.Equals("GMT", StringComparison.OrdinalIgnoreCase) || name.Equals("UTC", StringComparison.OrdinalIgnoreCase))
-            return TimeZoneInfo.Utc;
-        return TimeZoneInfo.TryFindSystemTimeZoneById(name, out var tz) ? tz : null;
-    }
-
-    /// <summary>Converts a local date/time given in <paramref name="zone"/> to the session (server) time zone.</summary>
-    static (long Day, long Time) FromZone(long day, long time, string zone, Expect expect)
-    {
-        var local = Conv.DateToDateTime(day).AddTicks(time * 1000);
-        TimeSpan offset;
-        if (zone[0] is '+' or '-')
-            offset = TimeSpan.Parse(zone[1..], CultureInfo.InvariantCulture) * (zone[0] == '-' ? -1 : 1);
-        else
-            offset = FindZone(zone)!.GetUtcOffset(local);
-        var utc = local - offset;
-        var session = utc + TimeZoneInfo.Local.GetUtcOffset(utc);
-        var ts = Conv.DateTimeToTimestamp(session);
-        var (d, t) = Conv.SplitTimestamp(ts);
-        return expect == Expect.Time ? (day, t) : (d, t);
-    }
 }

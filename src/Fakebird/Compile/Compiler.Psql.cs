@@ -87,6 +87,13 @@ public sealed partial class Compiler
                     Ddl.SetGenerator(c.Db, sg);
                     return ExecResult.Empty;
                 }) { StmtType = Wire.Isc.stmt_set_generator };
+            case SetTimeZoneStmt tz:
+                return new DelegatePrepared(c =>
+                {
+                    c.Att.SessionTimeZone = tz.Zone == null ? c.Att.OriginalTimeZone : TimeZones.Parse(tz.Zone);
+                    TimeZones.Session = c.Att.SessionTimeZone;
+                    return ExecResult.Empty;
+                }) { StmtType = Wire.Isc.stmt_ddl };
             case NoOpStmt:
             case SetSqlDialectStmt:
                 return new DelegatePrepared(c => ExecResult.Empty) { StmtType = Wire.Isc.stmt_ddl };

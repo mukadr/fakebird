@@ -454,12 +454,26 @@ public sealed partial class Parser
 
     Expr Postfix(Expr e)
     {
-        while (Is("COLLATE"))
+        while (true)
         {
-            var pos = Advance().Pos;
-            e = new CollateExpr(e, AnyIdent()) { Pos = pos };
+            if (Is("COLLATE"))
+            {
+                var pos = Advance().Pos;
+                e = new CollateExpr(e, AnyIdent()) { Pos = pos };
+            }
+            else if (Is("AT") && (IsAt(1, "LOCAL") || IsAt(1, "TIME") && IsAt(2, "ZONE")))
+            {
+                // AT binds tighter than COLLATE, || and the arithmetic operators
+                var pos = Advance().Pos;
+                if (Accept("LOCAL")) e = new AtExpr(e, null) { Pos = pos };
+                else
+                {
+                    _i += 2;
+                    e = new AtExpr(e, Primary()) { Pos = pos };
+                }
+            }
+            else return e;
         }
-        return e;
     }
 
     /// <summary>Exact literals beyond BIGINT are INT128 (NUM128/LIMIT64); larger ones would be DECFLOAT.</summary>
@@ -605,12 +619,25 @@ public sealed partial class Parser
                 _i++;
                 // literals do not accept NOW/TODAY/TOMORROW/YESTERDAY (allow_special = false)
                 return new LiteralExpr(Value.Date(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Date, allowSpecial: false)), SqlType.Date) { Pos = pos };
+            // a TIME or TIMESTAMP literal that names a time zone is WITH TIME ZONE (MAKE_constant)
             case "TIME" when PeekTok().Kind == Tok.String:
+            {
                 _i++;
-                return new LiteralExpr(Value.Time(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Time, allowSpecial: false)), SqlType.Time) { Pos = pos };
+                var str = StringLiteral();
+                var utc = Cvt.StringToDateTime(str, Cvt.Expect.TimeTz, out var zone, out var hasZone, allowSpecial: false);
+                return hasZone
+                    ? new LiteralExpr(Value.TimeTz(utc, zone), SqlType.TimeTz) { Pos = pos }
+                    : new LiteralExpr(Value.Time(Cvt.StringToDateTime(str, Cvt.Expect.Time, allowSpecial: false)), SqlType.Time) { Pos = pos };
+            }
             case "TIMESTAMP" when PeekTok().Kind == Tok.String:
+            {
                 _i++;
-                return new LiteralExpr(Value.Timestamp(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Timestamp, allowSpecial: false)), SqlType.Timestamp) { Pos = pos };
+                var str = StringLiteral();
+                var utc = Cvt.StringToDateTime(str, Cvt.Expect.TimestampTz, out var zone, out var hasZone, allowSpecial: false);
+                return hasZone
+                    ? new LiteralExpr(Value.TimestampTz(utc, zone), SqlType.TimestampTz) { Pos = pos }
+                    : new LiteralExpr(Value.Timestamp(Cvt.StringToDateTime(str, Cvt.Expect.Timestamp, allowSpecial: false)), SqlType.Timestamp) { Pos = pos };
+            }
             case "CASE": return CaseExpression();
             case "CAST":
             {
@@ -1047,7 +1074,11 @@ public sealed partial class Parser
                     Expect("TIME");
                     Expect("ZONE");
                 }
-                else if (Is("WITH") && IsAt(1, "TIME")) throw Err.Unsupported("TIME ZONE types");
+                else if (Is("WITH") && IsAt(1, "TIME") && IsAt(2, "ZONE"))
+                {
+                    _i += 3;
+                    ts.BaseType += " WITH TIME ZONE";
+                }
                 break;
             case "NUMERIC":
             case "DECIMAL":
