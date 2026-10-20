@@ -10,6 +10,52 @@ public abstract class PStmt
     public abstract Flow Exec(Ctx c);
 }
 
+/// <summary>A PSQL routine invocation as seen by error stack traces ("At procedure 'P' line: 3, col: 5").</summary>
+public sealed class PsqlFrame(string context, PsqlFrame? caller)
+{
+    public readonly string Context = context;
+    public readonly PsqlFrame? Caller = caller;
+    /// <summary>Position of the last statement started in this frame (0 when none has a position).</summary>
+    public int Line, Col;
+
+    /// <summary>Appends Firebird's isc_stack_trace (innermost frame first) to an error leaving the frame, once.</summary>
+    public FbError Trace(FbError e)
+    {
+        if (e.TraceDone) return e;
+        var sb = new System.Text.StringBuilder();
+        for (var f = this; f != null; f = f.Caller)
+        {
+            if (f.Context == "At block" && f.Line == 0) continue;
+            if (sb.Length > 0) sb.Append('\n');
+            sb.Append(f.Context);
+            if (f.Line > 0) sb.Append(" line: ").Append(f.Line).Append(", col: ").Append(f.Col);
+        }
+        var status = new List<StatusArg>(e.Status);
+        if (sb.Length > 0)
+        {
+            status.Add(new StatusArg(Wire.Isc.arg_gds, Err.isc_stack_trace, null));
+            status.Add(new StatusArg(Wire.Isc.arg_string, 0, sb.ToString()));
+        }
+        return new FbError(status, e.SqlState) { UserExceptionName = e.UserExceptionName, TraceDone = true };
+    }
+}
+
+/// <summary>Records the statement's source position in the frame before running it.</summary>
+public sealed class LocatedP(PStmt inner, int line, int col) : PStmt
+{
+    public readonly PStmt Inner = inner;
+
+    public override Flow Exec(Ctx c)
+    {
+        if (c.Frame is { } f)
+        {
+            f.Line = line;
+            f.Col = col;
+        }
+        return Inner.Exec(c);
+    }
+}
+
 /// <summary>Assignment target: a column of a stream (PSQL variable, NEW.field, output parameter).</summary>
 public readonly record struct Target(int Stream, int Index, SqlType Type, bool NotNull, string Name)
 {
@@ -38,10 +84,13 @@ public sealed class CompiledRoutine
     public int CursorCount;
     public SqlType? Returns;
     public bool Selectable;
+    /// <summary>Stack trace context: "At procedure 'P'", "At trigger 'T'", "At function 'F'", "At sub procedure 'S'"...</summary>
+    public string Context = "At block";
 
     public Ctx NewCtx(Ctx caller)
     {
         var c = caller.Child(Streams);
+        c.Frame = new PsqlFrame(Context, caller.Frame);
         c.Rows[VarStream] = new Value[VarCount];
         if (CursorCount > 0) c.Cursors = new object?[CursorCount];
         return c;
@@ -308,7 +357,8 @@ public sealed class RaiseP(ExceptionDef? def, XNode? message, XNode[]? args) : P
         if (def == null)
         {
             if (c.CurrentError == null) throw Err.Random("EXCEPTION without name is allowed only in a WHEN handler");
-            throw c.CurrentError;
+            // a re-raised error gets a second stack trace from the re-raising frame, like Firebird
+            throw new FbError(c.CurrentError.Status, c.CurrentError.SqlState) { UserExceptionName = c.CurrentError.UserExceptionName };
         }
         var msg = def.Message;
         if (message != null)
@@ -425,7 +475,7 @@ public static class Routines
     {
         var c = Enter(caller, cr, args);
         c.Output = new List<Value[]>();
-        cr.Body.Exec(c);
+        Run(c, cr);
         return c.Output;
     }
 
@@ -435,7 +485,7 @@ public static class Routines
     public static Value[] RunExecutable(Ctx caller, CompiledRoutine cr, Value[] args)
     {
         var c = Enter(caller, cr, args);
-        cr.Body.Exec(c);
+        Run(c, cr);
         var vars = c.Rows[cr.VarStream];
         var outRow = new Value[cr.Outputs.Length];
         for (var i = 0; i < outRow.Length; i++) outRow[i] = vars[cr.Outputs[i]];
@@ -459,7 +509,7 @@ public static class Routines
     {
         var c = Enter(caller, cr, args);
         c.ReturnValue = Value.Null;
-        cr.Body.Exec(c);
+        Run(c, cr);
         return c.ReturnValue;
     }
 
@@ -477,7 +527,19 @@ public static class Routines
         c.TriggerAction = ev;
         c.Rows[cr.NewStream] = newRow ?? new Value[cr.NewWidth];
         c.Rows[cr.OldStream] = oldRow ?? new Value[cr.NewWidth];
-        cr.Body.Exec(c);
+        Run(c, cr);
+    }
+
+    static void Run(Ctx c, CompiledRoutine cr)
+    {
+        try
+        {
+            cr.Body.Exec(c);
+        }
+        catch (FbError e) when (!e.TraceDone)
+        {
+            throw c.Frame!.Trace(e);
+        }
     }
 }
 

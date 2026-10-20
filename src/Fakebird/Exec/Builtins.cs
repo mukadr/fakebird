@@ -14,6 +14,8 @@ public sealed class BuiltinDef
     public Func<XNode[], SqlType> ResultType = null!;
     public Func<Ctx, XNode[], FuncNode, Value> Impl = null!;
     public bool Deterministic = true;
+    /// <summary>Result nullability; by default nullable when any argument is (Firebird's initResult).</summary>
+    public Func<XNode[], bool>? Nullable;
 }
 
 public static class Builtins
@@ -24,11 +26,11 @@ public static class Builtins
     public static BuiltinDef? Find(string name) => Defs.TryGetValue(name, out var d) ? d : null;
 
     static void Def(string name, int min, int max, Func<XNode[], SqlType> type, Func<Ctx, XNode[], FuncNode, Value> impl,
-        Func<int, XNode?[], SqlType?>? hint = null, bool deterministic = true)
+        Func<int, XNode?[], SqlType?>? hint = null, bool deterministic = true, Func<XNode[], bool>? nullable = null)
         => Defs[name] = new BuiltinDef
         {
             Name = name, MinArgs = min, MaxArgs = max, ResultType = type, Impl = impl, ParamHint = hint,
-            Deterministic = deterministic,
+            Deterministic = deterministic, Nullable = nullable,
         };
 
     // ---------------------------------------------------------------- helpers
@@ -51,13 +53,22 @@ public static class Builtins
         return v.IsNull ? null : Conv.ToDouble(v);
     }
 
+    /// <summary>VARCHAR as long as the value converted to text, in the value's charset (ASCII for non-text);
+    /// blobs stay blobs and a NULL literal gives a NULL string (Firebird's makeVarying / makeNullString).</summary>
     static SqlType StrResult(XNode a, int? len = null)
     {
         var t = a.Type;
         if (t.Kind == TypeKind.Blob) return t;
-        var l = len ?? (t.IsString ? t.Length : 8191);
-        return SqlType.VarChar(Math.Max(1, l), t.IsString ? t.Charset : Charset.Utf8, t.IsString ? t.Collation : Collation.Binary);
+        if (t.Kind == TypeKind.Null) return SqlType.Null;
+        var cs = t.IsString ? t.Charset : Charset.Ascii;
+        var l = Math.Max(0, Math.Min(len ?? TypeRules.StringLength(t), MaxChars(cs)));
+        return SqlType.VarChar(l, cs, t.IsString ? t.Collation : Collation.Binary);
     }
+
+    /// <summary>Longest string in characters (MAX_STR_SIZE 32765 bytes / bytes per character).</summary>
+    static int MaxChars(Charset cs) => 32765 / (cs == Charset.Utf8 ? 4 : cs == Charset.UnicodeFss ? 3 : 1);
+
+    static long? ConstLong(XNode n) => n is ConstNode { Value.IsNull: false } k && (k.Type.IsExact || k.Type.IsApprox) ? Conv.ToInt64(k.Value) : null;
 
     static SqlType HintString(int i, XNode?[] a) => LongVarchar;
     static SqlType? HintInt(int i, XNode?[] a) => SqlType.Integer;
@@ -306,13 +317,13 @@ public static class Builtins
     static Builtins()
     {
         // ---- strings
-        Def("UPPER", 1, 1, a => a[0].Type.IsTextual ? a[0].Type : StrResult(a[0]), (c, a, f) =>
+        Def("UPPER", 1, 1, a => a[0].Type.IsTextual || a[0].Type.Kind == TypeKind.Null ? a[0].Type : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
             return S(Conv.ToStr(v).ToUpperInvariant());
         }, HintString);
-        Def("LOWER", 1, 1, a => a[0].Type.IsTextual ? a[0].Type : StrResult(a[0]), (c, a, f) =>
+        Def("LOWER", 1, 1, a => a[0].Type.IsTextual || a[0].Type.Kind == TypeKind.Null ? a[0].Type : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
@@ -334,8 +345,9 @@ public static class Builtins
             if (spec is "BOTH" or "TRAILING")
                 while (s.EndsWith(chars, StringComparison.Ordinal)) s = s[..^chars.Length];
             return S(s);
-        }, HintString);
-        Def("SUBSTRING", 2, 3, a => StrResult(a[0]), (c, a, f) =>
+        }, HintString, nullable: a => !a[2].NotNull || a[1] is not ConstNode { Value.IsNull: true } && !a[1].NotNull);
+        Def("SUBSTRING", 2, 3, a => a.Length > 2 && ConstLong(a[2]) is { } n && a[0].Type.Kind != TypeKind.Blob
+            ? StrResult(a[0], (int)Math.Min(Math.Max(0, n), TypeRules.StringLength(a[0].Type))) : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
@@ -421,7 +433,7 @@ public static class Builtins
             if (idx < 0) return Value.Int(0);
             return Value.Int(Conv.CharLength(from[..idx]) + start);
         }, (i, a) => i == 2 ? SqlType.Integer : LongVarchar);
-        Def("REPLACE", 3, 3, a => a[0].Type.Kind == TypeKind.Blob ? a[0].Type : SqlType.VarChar(8191), (c, a, f) =>
+        Def("REPLACE", 3, 3, ReplaceType, (c, a, f) =>
         {
             var s = Str(c, a[0]);
             var find = Str(c, a[1]);
@@ -440,7 +452,9 @@ public static class Builtins
         }, HintString);
         Def("LPAD", 2, 3, a => PadType(a), (c, a, f) => Pad(c, a, true), (i, a) => i == 1 ? SqlType.Integer : LongVarchar);
         Def("RPAD", 2, 3, a => PadType(a), (c, a, f) => Pad(c, a, false), (i, a) => i == 1 ? SqlType.Integer : LongVarchar);
-        Def("OVERLAY", 3, 4, a => SqlType.VarChar(8191), (c, a, f) =>
+        Def("OVERLAY", 3, 4, a => a.Any(x => x.Type.Kind == TypeKind.Null) ? SqlType.Null
+            : a[0].Type.Kind == TypeKind.Blob ? a[0].Type : a[1].Type.Kind == TypeKind.Blob ? a[1].Type
+            : StrResult(a[0], TypeRules.StringLength(a[0].Type) + TypeRules.StringLength(a[1].Type)), (c, a, f) =>
         {
             var s = Str(c, a[0]);
             var p = Str(c, a[1]);
@@ -455,7 +469,7 @@ public static class Builtins
             }
             return S(Substr(s, 1, from.Value - 1) + p + Substr(s, from.Value + len, null));
         }, (i, a) => i >= 2 ? SqlType.Integer : LongVarchar);
-        Def("ASCII_CHAR", 1, 1, a => SqlType.Char(1), (c, a, f) =>
+        Def("ASCII_CHAR", 1, 1, a => a[0].Type.Kind == TypeKind.Null ? SqlType.Null : SqlType.Char(1, Charset.None), (c, a, f) =>
         {
             var n = Long(c, a[0]);
             if (n == null) return Value.Null;
@@ -486,8 +500,14 @@ public static class Builtins
         }, HintString);
 
         // ---- math
-        Def("ABS", 1, 1, a => a[0].Type.IsExact
-            ? SqlType.ExactExpr(a[0].Type.Kind == TypeKind.SmallInt ? TypeKind.Integer : TypeKind.BigInt, a[0].Type.Scale) : a[0].Type.IsNumeric ? a[0].Type : SqlType.Double, (c, a, f) =>
+        Def("ABS", 1, 1, a => a[0].Type.Kind switch
+        {
+            TypeKind.Null => SqlType.Integer,
+            TypeKind.SmallInt => SqlType.ExactExpr(TypeKind.Integer, a[0].Type.Scale),
+            TypeKind.Integer => SqlType.ExactExpr(TypeKind.BigInt, a[0].Type.Scale),
+            TypeKind.BigInt or TypeKind.Float or TypeKind.Double => a[0].Type,
+            _ => SqlType.Double,
+        }, (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
@@ -504,12 +524,13 @@ public static class Builtins
             if (v.IsNull) return v;
             return Value.Int(v.Tag == VTag.Int ? Math.Sign(v.L) : Math.Sign(Conv.ToDouble(v)));
         }, (i, a) => SqlType.Double);
-        Def("CEIL", 1, 1, a => a[0].Type.IsExact ? SqlType.BigInt : SqlType.Double, (c, a, f) => Round(c, a, f, MidpointRounding.ToPositiveInfinity, true), (i, a) => SqlType.Double);
+        Def("CEIL", 1, 1, CeilFloorType, (c, a, f) => Round(c, a, f, MidpointRounding.ToPositiveInfinity, true), (i, a) => SqlType.Double);
         Defs["CEILING"] = Defs["CEIL"];
-        Def("FLOOR", 1, 1, a => a[0].Type.IsExact ? SqlType.BigInt : SqlType.Double, (c, a, f) => Round(c, a, f, MidpointRounding.ToNegativeInfinity, true), (i, a) => SqlType.Double);
-        Def("ROUND", 1, 2, a => a[0].Type.IsNumeric ? a[0].Type : SqlType.Double, (c, a, f) => Round(c, a, f, MidpointRounding.AwayFromZero, false), (i, a) => i == 0 ? SqlType.Double : SqlType.Integer);
-        Def("TRUNC", 1, 2, a => a[0].Type.IsNumeric ? a[0].Type : SqlType.Double, (c, a, f) => Round(c, a, f, MidpointRounding.ToZero, false), (i, a) => i == 0 ? SqlType.Double : SqlType.Integer);
-        Def("MOD", 2, 2, a => a[0].Type.IsExact ? SqlType.Exact(a[0].Type.Kind, 0) : SqlType.BigInt, (c, a, f) =>
+        Def("FLOOR", 1, 1, CeilFloorType, (c, a, f) => Round(c, a, f, MidpointRounding.ToNegativeInfinity, true), (i, a) => SqlType.Double);
+        Def("ROUND", 1, 2, a => RoundType(a, round: true), (c, a, f) => Round(c, a, f, MidpointRounding.AwayFromZero, false), (i, a) => i == 0 ? SqlType.Double : SqlType.Integer);
+        Def("TRUNC", 1, 2, a => RoundType(a, round: false), (c, a, f) => Round(c, a, f, MidpointRounding.ToZero, false), (i, a) => i == 0 ? SqlType.Double : SqlType.Integer);
+        Def("MOD", 2, 2, a => a.Any(x => x.Type.Kind == TypeKind.Null) ? SqlType.Integer
+            : a[0].Type.IsExact ? TypeRules.Exact(a[0].Type.Kind, 0, a[0].Type.SubType) : SqlType.BigInt, (c, a, f) =>
         {
             var x = a[0].Eval(c);
             var y = a[1].Eval(c);
@@ -646,13 +667,13 @@ public static class Builtins
         }, (i, a) => SqlType.VarChar(36, Charset.Ascii));
 
         // ---- context
-        Def("RDB$GET_CONTEXT", 2, 2, a => SqlType.VarChar(255), (c, a, f) =>
+        Def("RDB$GET_CONTEXT", 2, 2, a => SqlType.VarChar(255, Charset.None), (c, a, f) =>
         {
             var ns = Str(c, a[0]);
             var name = Str(c, a[1]);
             if (ns == null || name == null) return Value.Null;
             return GetContext(c, ns, name);
-        }, (i, a) => SqlType.VarChar(80), deterministic: false);
+        }, (i, a) => SqlType.VarChar(80), deterministic: false, nullable: _ => true);
         Def("RDB$SET_CONTEXT", 3, 3, a => SqlType.Integer, (c, a, f) =>
         {
             var ns = Str(c, a[0]);
@@ -670,7 +691,7 @@ public static class Builtins
             if (val.IsNull) dict.Remove(name);
             else dict[name] = Conv.ToStr(val);
             return Value.Int(existed ? 1 : 0);
-        }, (i, a) => i == 2 ? SqlType.VarChar(255) : SqlType.VarChar(80), deterministic: false);
+        }, (i, a) => i == 2 ? SqlType.VarChar(255) : SqlType.VarChar(80), deterministic: false, nullable: _ => false);
         Def("MAXVALUE", 1, 255, a => CommonType(a), (c, a, f) => MinMax(c, a, f, true), (i, a) => a.FirstOrDefault(x => x != null)?.Type);
         Def("MINVALUE", 1, 255, a => CommonType(a), (c, a, f) => MinMax(c, a, f, false), (i, a) => a.FirstOrDefault(x => x != null)?.Type);
     }
@@ -686,7 +707,7 @@ public static class Builtins
             case "SYSTEM":
                 return name switch
                 {
-                    "ENGINE_VERSION" => S("3.0.11"),
+                    "ENGINE_VERSION" => S("5.0.4"),
                     "DB_NAME" => S(c.Db.Name),
                     "NETWORK_PROTOCOL" => S("TCPv4"),
                     "CLIENT_ADDRESS" => S("127.0.0.1"),
@@ -710,8 +731,29 @@ public static class Builtins
 
     static SqlType PadType(XNode[] a)
     {
-        if (a[1] is ConstNode { Value.IsNull: false } k) return SqlType.VarChar((int)Math.Max(1, Math.Min(Conv.ToInt64(k.Value), 8191)));
-        return SqlType.VarChar(8191);
+        if (a.Any(x => x.Type.Kind == TypeKind.Null)) return SqlType.Null;
+        var v = a[0].Type;
+        if (v.Kind == TypeKind.Blob) return v;
+        if (a.Length > 2 && a[2].Type.Kind == TypeKind.Blob) return a[2].Type;
+        var cs = v.IsString ? v.Charset : Charset.Ascii;
+        var col = v.IsString ? v.Collation : Collation.Binary;
+        var len = ConstLong(a[1]) is { } n ? (int)Math.Max(0, Math.Min(n, MaxChars(cs))) : MaxChars(cs);
+        return SqlType.VarChar(len, cs, col);
+    }
+
+    /// <summary>makeReplace: room for every occurrence of the searched string being replaced.</summary>
+    static SqlType ReplaceType(XNode[] a)
+    {
+        if (a.Any(x => x.Type.Kind == TypeKind.Null)) return SqlType.Null;
+        var blob = a.FirstOrDefault(x => x.Type.Kind == TypeKind.Blob);
+        if (blob != null) return blob.Type;
+        var text = a.FirstOrDefault(x => x.Type.IsString)?.Type;
+        var cs = text?.Charset ?? Charset.Ascii;
+        int L(XNode x) => TypeRules.StringLength(x.Type);
+        var searched = L(a[0]);
+        var find = L(a[1]);
+        var len = find == 0 ? searched : Math.Max(searched, searched + searched / find * (L(a[2]) - find));
+        return SqlType.VarChar(Math.Min(len, MaxChars(cs)), cs, text?.Collation ?? Collation.Binary);
     }
 
     static Value Pad(Ctx c, XNode[] a, bool left)
@@ -779,7 +821,26 @@ public static class Builtins
     }
 
     static SqlType BinType(XNode[] a)
-        => a.All(x => x.Type.Kind is TypeKind.SmallInt or TypeKind.Integer) ? SqlType.Integer : SqlType.BigInt;
+        => a.All(x => x.Type.Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.Null) ? SqlType.Integer : SqlType.BigInt;
+
+    static SqlType CeilFloorType(XNode[] a) => a[0].Type.Kind switch
+    {
+        TypeKind.Null or TypeKind.SmallInt => SqlType.Integer,
+        TypeKind.Integer or TypeKind.BigInt => SqlType.BigInt,
+        _ => SqlType.Double,
+    };
+
+    /// <summary>makeRound / makeTrunc: exact (and for ROUND, approximate) values keep their type; one argument drops the scale.</summary>
+    static SqlType RoundType(XNode[] a, bool round)
+    {
+        var t = a[0].Type;
+        if (a.Any(x => x.Type.Kind == TypeKind.Null)) return SqlType.Integer;
+        if (t.IsExact) return a.Length == 1 ? TypeRules.Exact(t.Kind, 0, t.SubType) : t;
+        if (t.IsApprox) return round ? t : SqlType.Double;
+        if (round)
+            throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argmustbe_exact_or_fp).Str("ROUND").Build();
+        return SqlType.Double;
+    }
 
     static Value Bin(Ctx c, XNode[] a, Func<long, long, long> op)
     {
@@ -805,68 +866,9 @@ public static class Builtins
         return Coercion.ToType(best, f.Type);
     }
 
-    /// <summary>Common result type for CASE/COALESCE/UNION branches (Firebird "data type of results").</summary>
-    public static SqlType CommonType(IEnumerable<XNode> nodes) => CommonType(nodes.Select(n => n.Type));
+    /// <summary>Common result type for CASE/COALESCE/UNION branches (Firebird's makeFromList).</summary>
+    public static SqlType CommonType(IEnumerable<XNode> nodes, string name = "") => TypeRules.FromList(nodes, name).Type;
 
-    public static SqlType CommonType(IEnumerable<SqlType> types)
-    {
-        SqlType? result = null;
-        foreach (var t in types)
-        {
-            if (t.Kind == TypeKind.Null) continue;
-            if (result == null)
-            {
-                result = t;
-                continue;
-            }
-            result = Merge(result, t);
-        }
-        return result ?? SqlType.Null;
-    }
-
-    static SqlType Merge(SqlType a, SqlType b)
-    {
-        if (a.Equals(b)) return a;
-        if (a.Kind == TypeKind.Blob || b.Kind == TypeKind.Blob)
-        {
-            if (a.Kind == TypeKind.Blob && b.Kind == TypeKind.Blob) return a.SubType == 1 || b.SubType == 1 ? SqlType.BlobText : SqlType.BlobBinary;
-            var blob = a.Kind == TypeKind.Blob ? a : b;
-            return blob;
-        }
-        if (a.IsString || b.IsString)
-        {
-            int Len(SqlType t) => t.IsString ? t.Length : t.Kind switch
-            {
-                TypeKind.SmallInt => 6, TypeKind.Integer => 11, TypeKind.BigInt => 20,
-                TypeKind.Float or TypeKind.Double => 23, TypeKind.Date => 10, TypeKind.Time => 13,
-                TypeKind.Timestamp => 24, TypeKind.Boolean => 5, _ => 32,
-            } + (t.Scale > 0 ? 1 : 0);
-            var cs = a.IsString ? a.Charset : b.Charset;
-            if (a.IsString && b.IsString && a.Charset != b.Charset) cs = a.Charset == Charset.Octets ? b.Charset : a.Charset;
-            var col = a.IsString && a.Collation != Collation.Binary ? a.Collation : b.IsString ? b.Collation : Collation.Binary;
-            var len = Math.Max(Len(a), Len(b));
-            if (a.Kind == TypeKind.Char && b.Kind == TypeKind.Char) return SqlType.Char(len, cs, col);
-            return SqlType.VarChar(len, cs, col);
-        }
-        if (a.IsApprox || b.IsApprox)
-        {
-            if (a.IsNumeric && b.IsNumeric) return SqlType.Double;
-        }
-        if (a.IsExact && b.IsExact)
-        {
-            var scale = Math.Max(a.Scale, b.Scale);
-            var kind = (TypeKind)Math.Max((int)a.Kind, (int)b.Kind);
-            if (scale == 0) return SqlType.Exact(kind, 0);
-            // NUMERIC vs DECIMAL follows the operand with the larger scale (the first one on ties)
-            return (b.Scale > a.Scale ? b : a).SubType == 1 ? SqlType.Exact(TypeKind.BigInt, scale) : SqlType.ExactExpr(TypeKind.BigInt, scale);
-        }
-        if (a.IsDateTime && b.IsDateTime)
-        {
-            if (a.Kind == TypeKind.Timestamp || b.Kind == TypeKind.Timestamp) return SqlType.Timestamp;
-            if (a.Kind == b.Kind) return a;
-            throw Err.Random("Data type of the results is incompatible");
-        }
-        if (a.Kind == TypeKind.Boolean && b.Kind == TypeKind.Boolean) return a;
-        throw Err.Dsql(-104, "Datatypes are not comparable in expression");
-    }
+    public static SqlType CommonType(IEnumerable<SqlType> types, string name = "")
+        => TypeRules.FromList(types.Select(t => ((SqlType?)t, false)).ToList(), name).Type;
 }

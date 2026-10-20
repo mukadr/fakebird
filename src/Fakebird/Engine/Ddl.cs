@@ -10,6 +10,72 @@ public static class Ddl
 {
     public static void Execute(Database db, Stmt stmt, Ctx c)
     {
+        try
+        {
+            Run(db, stmt, c);
+        }
+        catch (FbError e) when (FailedCode(stmt) is var (code, name) && code != 0)
+        {
+            throw Wrap(e, code, name);
+        }
+    }
+
+    /// <summary>Firebird reports DDL errors as "unsuccessful metadata update / CREATE TABLE T failed / cause".</summary>
+    static FbError Wrap(FbError e, int failedCode, string name)
+    {
+        var inner = e.Status.ToList();
+        if (inner.Count > 0 && inner[0].Number == Err.isc_no_meta_update) inner.RemoveAt(0);
+        if (inner.Count > 0 && FbMessages.ByCode.TryGetValue(inner[0].Number, out var m) && m.Symbol.EndsWith("_failed", StringComparison.Ordinal))
+            return e; // already wrapped (nested DDL)
+        var status = new List<StatusArg>
+        {
+            new(Wire.Isc.arg_gds, Err.isc_no_meta_update, null),
+            new(Wire.Isc.arg_gds, failedCode, null),
+            new(Wire.Isc.arg_string, 0, name),
+        };
+        status.AddRange(inner);
+        return new FbError(status, SqlCodes.SqlStateOf(status, e.SqlState)) { UserExceptionName = e.UserExceptionName };
+    }
+
+    static (int Code, string Name) FailedCode(Stmt stmt)
+    {
+        var (verb, obj, name) = stmt switch
+        {
+            CreateTableStmt s => (Verb(s.Mode), "table", s.Name),
+            AlterTableStmt s => ("alter", "table", s.Name),
+            CreateIndexStmt s => ("create", "index", s.Name),
+            AlterIndexStmt s => ("alter", "index", s.Name),
+            CreateViewStmt s => (Verb(s.Mode), "view", s.Name),
+            CreateSequenceStmt s => (Verb(s.Mode), "sequence", s.Name),
+            CreateExceptionStmt s => (Verb(s.Mode), "except", s.Name),
+            CreateDomainStmt s => ("create", "domain", s.Name),
+            AlterDomainStmt s => ("alter", "domain", s.Name),
+            CreateProcedureStmt s => (Verb(s.Mode), "proc", s.Name),
+            CreateFunctionStmt s => (Verb(s.Mode), "func", s.Name),
+            CreateTriggerStmt s => (Verb(s.Mode), "trigger", s.Name),
+            DropStmt s => ("drop", s.Kind switch
+            {
+                ObjectKind.Table => "table", ObjectKind.View => "view", ObjectKind.Procedure => "proc",
+                ObjectKind.Function => "func", ObjectKind.Trigger => "trigger", ObjectKind.Exception => "except",
+                ObjectKind.Sequence => "sequence", ObjectKind.Index => "index", ObjectKind.Domain => "domain",
+                _ => "",
+            }, s.Name),
+            _ => ("", "", ""),
+        };
+        var symbol = $"dsql_{verb}_{obj}_failed";
+        return FbMessages.ByCode.Any(kv => kv.Value.Symbol == symbol) ? (SqlCodes.GdsCodeByName(symbol), name) : (0, "");
+    }
+
+    static string Verb(CreateMode m) => m switch
+    {
+        CreateMode.Alter => "alter",
+        CreateMode.CreateOrAlter => "create_alter",
+        CreateMode.Recreate => "recreate",
+        _ => "create",
+    };
+
+    static void Run(Database db, Stmt stmt, Ctx c)
+    {
         switch (stmt)
         {
             case CreateTableStmt ct: CreateTable(db, ct, c); break;
@@ -30,9 +96,13 @@ public static class Ddl
         db.SchemaChanged();
     }
 
-    static FbError Exists(string kind, string name)
-        => new StatusBuilder().Gds(Err.isc_no_meta_update).Gds(Err.isc_random).Str($"{kind} {name} already exists")
-            .Build(kind is "Table" or "View" ? "42S01" : "42000");
+    static FbError Exists(string kind, string name) => kind switch
+    {
+        "Table" => new StatusBuilder().Gds(FbMessages.dyn_dup_table).Str(name).Build(),
+        "Index" => new StatusBuilder().Gds(FbMessages.dyn_dup_index).Str(name).Build(),
+        _ => new StatusBuilder().Gds(Err.isc_no_meta_update).Gds(Err.isc_random).Str($"{kind} {name} already exists")
+            .Build(kind is "View" ? "42S01" : "42000"),
+    };
     static FbError Missing(string kind, string name) => Err.MetaUpdate($"{kind} {name} not found");
 
     static void CheckName(Database db, string name)
@@ -69,11 +139,7 @@ public static class Ddl
             col.NotNull = domain.NotNull;
         }
         if (def.Collate != null && col.Type.IsTextual) col.Type = col.Type.WithCollation(Compiler.CollationOf(def.Collate));
-        if (def.NotNull)
-        {
-            col.NotNull = true;
-            col.NotNullConstraint = def.NotNullName;
-        }
+        if (def.NotNull) col.NotNull = true;
         if (def.Default != null)
         {
             col.Default = def.Default;
@@ -85,8 +151,8 @@ public static class Ddl
         if (def.Identity)
         {
             if (!col.Type.IsExact || col.Type.Scale > 0) throw Err.MetaUpdate("Identity column " + def.Name + " must be of exact number type with zero scale");
-            var seqName = db.NewName("RDB$");
-            while (db.Sequences.ContainsKey(seqName)) seqName = db.NewName("RDB$");
+            var seqName = db.NewGeneratorName();
+            while (db.Sequences.ContainsKey(seqName)) seqName = db.NewGeneratorName();
             db.Sequences[seqName] = new Sequence
             {
                 Name = seqName, Value = def.IdentityStart, InitialValue = def.IdentityStart,
@@ -109,7 +175,9 @@ public static class Ddl
         foreach (var cd in st.Columns)
         {
             if (t.FindColumn(cd.Name) >= 0) throw Err.MetaUpdate($"Column {cd.Name} already exists in table {st.Name}");
-            t.Columns.Add(MakeColumn(db, t, cd));
+            var col = MakeColumn(db, t, cd);
+            NameColumnConstraints(db, col, cd);
+            t.Columns.Add(col);
             t.RebuildColumnIndex();
         }
         db.Tables[t.Name] = t;
@@ -148,6 +216,8 @@ public static class Ddl
         }
     }
 
+    static string ConstraintName(Database db, ConstraintDef def) => def.GeneratedName ?? ConstraintName(db, def.Name);
+
     static string ConstraintName(Database db, string? name)
     {
         if (name != null)
@@ -156,8 +226,21 @@ public static class Ddl
             return name;
         }
         string n;
-        do n = db.NewName("INTEG_"); while (db.Constraints.ContainsKey(n));
+        do n = db.NewConstraintName(); while (db.Constraints.ContainsKey(n) || db.Tables.Values.Any(t => t.Columns.Any(c => c.NotNullConstraint == n)));
         return n;
+    }
+
+    /// <summary>
+    /// Names a column's constraints like Firebird's defineField: an explicit NOT NULL or a column-level PRIMARY KEY
+    /// (not on identity columns) creates a NOT NULL constraint first, then the column constraints follow in order.
+    /// </summary>
+    static void NameColumnConstraints(Database db, Column col, ColumnDef def)
+    {
+        if ((def.NotNull || def.Constraints.Any(k => k.Kind == ConstraintKind.PrimaryKey)) && !def.Identity)
+            col.NotNullConstraint = ConstraintName(db, def.NotNullName);
+        foreach (var con in def.Constraints)
+            if (con.Kind != ConstraintKind.NotNull)
+                con.GeneratedName = ConstraintName(db, con.Name);
     }
 
     static string IndexName(Database db, string? requested, string prefix)
@@ -168,7 +251,7 @@ public static class Ddl
             return requested;
         }
         string n;
-        do n = db.NewName(prefix); while (db.Indexes.ContainsKey(n));
+        do n = db.NewIndexName(prefix); while (db.Indexes.ContainsKey(n));
         return n;
     }
 
@@ -203,7 +286,7 @@ public static class Ddl
                 var isPk = def.Kind == ConstraintKind.PrimaryKey;
                 if (isPk && t.PrimaryKey != null) throw Err.MetaUpdate($"Attempt to define a second PRIMARY KEY for the same table {t.Name}");
                 var cols = Cols(t, def.Columns);
-                var name = ConstraintName(db, def.Name);
+                var name = ConstraintName(db, def);
                 if (isPk)
                     foreach (var ci in cols)
                     {
@@ -246,7 +329,7 @@ public static class Ddl
                     if (target == null) throw Err.MetaUpdate($"could not find UNIQUE or PRIMARY KEY constraint in table {parent.Name} with specified columns");
                 }
                 if (refCols.Length != cols.Length) throw Err.MetaUpdate("Foreign key column count does not match");
-                var name = ConstraintName(db, def.Name);
+                var name = ConstraintName(db, def);
                 var ixName = IndexName(db, def.IndexName, "RDB$FOREIGN");
                 MakeIndex(db, t, ixName, cols, false, def.IndexDescending, name);
                 var fk = new Constraint
@@ -277,7 +360,7 @@ public static class Ddl
             }
             case ConstraintKind.Check:
             {
-                var name = ConstraintName(db, def.Name);
+                var name = ConstraintName(db, def);
                 var con = new Constraint { Name = name, Type = ConstraintType.Check, Table = t.Name, Check = def.Check, CheckSource = def.CheckSource };
                 // validate expression compiles
                 var comp = Comp(db);
@@ -450,6 +533,7 @@ public static class Ddl
                 {
                     if (t.FindColumn(add.Column.Name) >= 0) throw Err.MetaUpdate($"Column {add.Column.Name} already exists in table {t.Name}");
                     var col = MakeColumn(db, t, add.Column);
+                    NameColumnConstraints(db, col, add.Column);
                     var newCols = t.Columns.ToList();
                     newCols.Add(col);
                     var map = Enumerable.Range(0, t.Columns.Count).Append(-1).ToArray();
@@ -621,7 +705,8 @@ public static class Ddl
 
     static void CreateIndex(Database db, CreateIndexStmt st, Ctx c)
     {
-        var t = db.Tables.TryGetValue(st.Table, out var x) ? x : throw Missing("Table", st.Table);
+        // Firebird looks the columns up first: a missing table reports "Unknown columns in index"
+        var t = db.Tables.TryGetValue(st.Table, out var x) ? x : throw new StatusBuilder().Gds(FbMessages.dyn_120).Str(st.Name).Build();
         if (db.Indexes.ContainsKey(st.Name)) throw Exists("Index", st.Name);
         if (st.ComputedBy != null)
         {

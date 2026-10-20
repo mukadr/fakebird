@@ -34,8 +34,8 @@ public sealed partial class Compiler
             case "COALESCE":
             {
                 if (f.Args.Count < 2) throw Err.Dsql(-104, "COALESCE requires at least 2 arguments");
-                var args = BindCommon(f.Args, s, expected, out var type);
-                return Fold(new CoalesceNode(args) { Type = type, NotNull = args.Any(a => a.NotNull) });
+                var args = BindCommon(f.Args, s, expected, "COALESCE", out var type, out var nullable);
+                return Fold(new CoalesceNode(args) { Type = type, NotNull = !nullable });
             }
             case "NULLIF":
             {
@@ -49,14 +49,14 @@ public sealed partial class Compiler
                     var y = args[1].Eval(c);
                     if (!y.IsNull && Conv.Compare(x, y, col) == 0) return Value.Null;
                     return x;
-                }, [a, b], a.Type);
+                }, [a, b], a.Type.Kind == TypeKind.Null ? b.Type : a.Type);
             }
             case "IIF":
             {
                 if (f.Args.Count != 3) throw Err.Dsql(-104, "IIF requires 3 arguments");
                 var cond = BindBool(f.Args[0], s);
-                var results = BindCommon(f.Args.Skip(1).ToList(), s, expected, out var type);
-                return new CaseNode([(cond, results[0])], results[1]) { Type = type, Name = "CASE" };
+                var results = BindCommon(f.Args.Skip(1).ToList(), s, expected, "IIF", out var type, out var nullable);
+                return new CaseNode([(cond, results[0])], results[1]) { Type = type, Name = "CASE", NotNull = !nullable };
             }
             case "DECODE":
             {
@@ -67,10 +67,10 @@ public sealed partial class Compiler
                 for (; i + 1 < f.Args.Count; i += 2) pairs.Add((Bind(f.Args[i], s, ParamTypeFor(op.Type)), f.Args[i + 1]));
                 var resultExprs = pairs.Select(p => p.Item2).ToList();
                 if (i < f.Args.Count) resultExprs.Add(f.Args[i]);
-                var results = BindCommon(resultExprs, s, expected, out var type);
+                var results = BindCommon(resultExprs, s, expected, "DECODE", out var type, out var nullable);
                 var whens = pairs.Select((p, k) => (p.Item1, results[k])).ToArray();
                 XNode? els = i < f.Args.Count ? results[^1] : null;
-                return new SimpleCaseNode(op, whens, els, op.Type.Collation, "DECODE") { Type = type };
+                return new SimpleCaseNode(op, whens, els, op.Type.Collation, "DECODE") { Type = type }; // Firebird's DecodeNode is always nullable
             }
             case "GEN_ID":
             {
@@ -98,7 +98,10 @@ public sealed partial class Compiler
                 if (args[i] == null)
                     args[i] = Bind(f.Args[i], s, def.ParamHint?.Invoke(i, args) ?? throw Err.DataTypeUnknown());
             var bound = args.Select(a => a!).ToArray();
-            var node = new FuncNode(f.Name, def.Impl, bound, def.ResultType(bound), def.Deterministic);
+            var node = new FuncNode(f.Name, def.Impl, bound, def.ResultType(bound), def.Deterministic)
+            {
+                NotNull = !(def.Nullable?.Invoke(bound) ?? bound.Any(b => !b.NotNull)),
+            };
             return Fold(node);
         }
         if (Routine?.SubRoutines != null && Routine.SubRoutines.TryGetValue(f.Name, out var sub) && sub.IsFunction)
@@ -108,13 +111,13 @@ public sealed partial class Compiler
         throw Err.Dsql(-804, "Function unknown: " + f.Name);
     }
 
-    XNode[] BindCommon(List<Expr> exprs, Scope s, SqlType? expected, out SqlType type)
+    XNode[] BindCommon(List<Expr> exprs, Scope s, SqlType? expected, string name, out SqlType type, out bool nullable)
     {
         var bound = new XNode?[exprs.Count];
         for (var i = 0; i < exprs.Count; i++)
             if (exprs[i] is not ParamExpr) bound[i] = Bind(exprs[i], s);
-        var known = bound.Where(b => b != null).Select(b => b!).ToList();
-        type = known.Count > 0 ? Builtins.CommonType(known) : expected ?? throw Err.DataTypeUnknown();
+        (type, nullable) = TypeRules.FromList(bound, name);
+        if (bound.All(b => b == null)) type = expected ?? throw Err.DataTypeUnknown();
         if (type.Kind == TypeKind.Null && exprs.Any(e => e is ParamExpr)) type = expected ?? throw Err.DataTypeUnknown();
         for (var i = 0; i < exprs.Count; i++)
             bound[i] ??= Bind(exprs[i], s, type);
@@ -363,16 +366,23 @@ public sealed partial class Compiler
         var cols = new OutCol[l.Columns.Length];
         for (var i = 0; i < cols.Length; i++)
         {
-            var t = Builtins.CommonType([l.Columns[i].Type, r.Columns[i].Type]);
+            var t = Builtins.CommonType([l.Columns[i].Type, r.Columns[i].Type], "UNION");
+            var lc = l.Columns[i];
+            // the first branch describes the column; when it must be cast to the union's type, only an alias or a
+            // column name survives (as the name), like Firebird's pass1 union processing
+            var cast = !SameDescriptor(lc.Type, t);
             cols[i] = new OutCol
             {
-                Name = l.Columns[i].Derived ? "" : l.Columns[i].Name, Field = l.Columns[i].Derived ? "" : l.Columns[i].Field,
-                Relation = "", Type = t,
+                Name = cast && lc.Derived ? "" : lc.Name, Field = cast ? "" : lc.Field, Relation = cast ? "" : lc.Relation, Type = t,
                 Nullable = l.Columns[i].Nullable || r.Columns[i].Nullable,
             };
         }
         return new UnionQuery { Left = l, Right = r, All = so.Kind == SetOpKind.UnionAll, Columns = cols };
     }
+
+    static bool SameDescriptor(SqlType a, SqlType b)
+        => a.Kind == b.Kind && a.Length == b.Length && a.Scale == b.Scale && a.Charset == b.Charset
+            && (a.IsExact ? a.SubType == b.SubType : a.Kind != TypeKind.Blob || a.SubType == b.SubType);
 
     void PushCtes(SelectQuery q, Scope? outer)
     {
@@ -429,7 +439,7 @@ public sealed partial class Compiler
             var anchor = CompileQueryExpr(so.Left, cte.Outer);
             rq.Anchor = anchor;
             var cols = ColsFor(def.Columns, anchor.Columns, def.Name);
-            rq.Columns = anchor.Columns.Select((c, i) => new OutCol { Name = cols[i].Name, Field = cols[i].Name, Type = c.Type, Nullable = true }).ToArray();
+            rq.Columns = anchor.Columns.Select((c, i) => new OutCol { Name = cols[i].Name, Field = c.Field, Relation = c.Relation, Type = c.Type, Nullable = c.Nullable }).ToArray();
             cte.InProgress = rq;
             cte.Cols = cols;
             try
@@ -458,17 +468,22 @@ public sealed partial class Compiler
         return (rel, colInfos);
     }
 
-    static List<ColInfo> ColsFor(List<string>? names, OutCol[] cols, string relation)
+    /// <summary>
+    /// Columns of a derived table or CTE: they describe like the inner select list (its relation, sqlname and
+    /// nullability), while view columns (<paramref name="view"/>) describe as the view's own, always nullable.
+    /// </summary>
+    static List<ColInfo> ColsFor(List<string>? names, OutCol[] cols, string relation, bool view = false)
     {
         if (names != null && names.Count != cols.Length)
             throw Err.Dsql(-104, "Column list count mismatch for " + relation);
         var list = new List<ColInfo>();
         for (var i = 0; i < cols.Length; i++)
-            list.Add(new ColInfo
-            {
-                Name = names?[i] ?? cols[i].Name, Type = cols[i].Type, NotNull = !cols[i].Nullable,
-                Relation = relation, Field = names?[i] ?? cols[i].Name,
-            });
+        {
+            var name = names?[i] ?? cols[i].Name;
+            list.Add(view
+                ? new ColInfo { Name = name, Type = cols[i].Type, NotNull = false, Relation = relation, Field = name }
+                : new ColInfo { Name = name, Type = cols[i].Type, NotNull = !cols[i].Nullable, Relation = cols[i].Relation, Field = cols[i].Field });
+        }
         return list;
     }
 
@@ -578,7 +593,13 @@ public sealed partial class Compiler
             var ws = NewStream(specs.Length);
             s.Windows = new Dictionary<WindowExpr, XNode>(ReferenceEqualityComparer.Instance);
             for (var i = 0; i < wins.Count; i++)
-                s.Windows[wins[i]] = new ColNode(ws, i, specs[i].Type) { Name = wins[i].Func.Name };
+                s.Windows[wins[i]] = new ColNode(ws, i, specs[i].Type)
+                {
+                    Name = wins[i].Func.Name,
+                    // ranking functions describe as NOT NULL; value functions and aggregates (but COUNT) as nullable
+                    NotNull = specs[i].Kind is WinKind.RowNumber or WinKind.Rank or WinKind.DenseRank or WinKind.PercentRank
+                        or WinKind.CumeDist or WinKind.NTile || specs[i].Agg?.Kind is AggKind.Count or AggKind.CountStar,
+                };
             rel = new WindowRel(rel, specs, ws, s.Streams.ToArray());
             s.Streams.Add(ws);
         }
@@ -660,8 +681,8 @@ public sealed partial class Compiler
 
     static OutCol OutColOf(XNode n, string? alias) => new()
     {
-        Name = alias ?? (n.Field is { Length: > 0 } ? n.Field : n.Name),
-        Field = n.Field ?? (alias == null ? n.Name : ""),
+        Name = alias ?? (n.Name is { Length: > 0 } ? n.Name : n.Field ?? ""),
+        Field = n.Field ?? n.Name, // the describe's sqlname: the column or the expression's name, even when aliased
         Relation = n.Relation ?? "",
         // a bare NULL is described as CHAR(1) like Firebird (clients cannot handle SQL_NULL columns)
         Type = n.Type.Kind == TypeKind.Null ? SqlType.Char(1, Charset.None) : n.Type,
@@ -865,7 +886,7 @@ public sealed partial class Compiler
                 QueryNode q;
                 try { q = CompileSelect(view.Query, null); }
                 finally { _ctes.AddRange(savedCtes); }
-                var cols = ColsFor(view.ColumnNames, q.Columns, view.Name);
+                var cols = ColsFor(view.ColumnNames, q.Columns, view.Name, view: true);
                 for (var i = 0; i < cols.Count; i++)
                 {
                     cols[i].Relation = view.Name;
@@ -894,7 +915,7 @@ public sealed partial class Compiler
         }
         if (Routine?.SubRoutines != null && Routine.SubRoutines.TryGetValue(n.Name, out var sub) && !sub.IsFunction)
             return BuildSubProcRef(sub, n, s);
-        throw Err.TableUnknown(n.Name);
+        throw Err.TableUnknown(n.Name, n.Line, n.Col);
     }
 
     internal XNode[] BindProcArgs(List<RoutineParam> inputs, List<Expr> args, Scope s, string name)

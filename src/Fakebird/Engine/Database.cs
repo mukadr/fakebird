@@ -24,7 +24,8 @@ public sealed partial class Database
     internal long CommitSeq;
     internal readonly List<Transaction> ActiveTransactions = new();
     internal int NextAttachmentId = 1;
-    internal int NameCounter;
+    /// <summary>System name generators (Firebird's RDB$CONSTRAINT_NAME, RDB$INDEX_NAME, RDB$GENERATOR_NAME).</summary>
+    internal int ConstraintNameCounter, IndexNameCounter, GeneratorNameCounter;
     internal int ExceptionCounter;
     internal int ExecDepth;
     internal readonly Dictionary<string, object> PlanCache = new(StringComparer.Ordinal);
@@ -44,7 +45,9 @@ public sealed partial class Database
         Runtimes.Clear();
     }
 
-    internal string NewName(string prefix) => prefix + (++NameCounter);
+    internal string NewConstraintName() => "INTEG_" + (++ConstraintNameCounter);
+    internal string NewIndexName(string prefix) => prefix + (++IndexNameCounter);
+    internal string NewGeneratorName() => "RDB$" + (++GeneratorNameCounter);
 
     internal Table GetTable(string name)
         => Tables.TryGetValue(name, out var t) ? t : throw Err.TableUnknown(name);
@@ -133,7 +136,9 @@ public sealed partial class Database
         foreach (var (k, e) in Exceptions) d.Exceptions[k] = e;
         foreach (var (k, c) in Constraints) d.Constraints[k] = c.Clone();
         foreach (var (k, ix) in Indexes) d.Indexes[k] = ix.CloneDef();
-        d.NameCounter = NameCounter;
+        d.ConstraintNameCounter = ConstraintNameCounter;
+        d.IndexNameCounter = IndexNameCounter;
+        d.GeneratorNameCounter = GeneratorNameCounter;
         d.ExceptionCounter = ExceptionCounter;
     }
 
@@ -272,8 +277,13 @@ public sealed class Transaction
         {
             var other = slot.Owner;
             WaitFor(other);
-            // the concurrent transaction changed the record and committed: Firebird reports an update conflict
-            if (other.WasCommitted) throw Err.UpdateConflict(other.Id);
+            // the concurrent transaction changed the record and committed: a snapshot transaction gets an update
+            // conflict, a READ COMMITTED one (READ CONSISTENCY, Firebird 4+) restarts the top-level statement
+            if (other.WasCommitted)
+            {
+                if (!Snapshot) throw new StatementRestart(other.Id);
+                throw Err.UpdateConflict(other.Id);
+            }
         }
         if (Snapshot && slot.Committed != null && slot.Committed.Seq > StartSeq)
             throw Err.UpdateConflict(0);
@@ -306,6 +316,8 @@ public sealed class Transaction
     }
 
     internal Transaction? WaitingFor;
+    /// <summary>Restarts of the current top-level statement (Firebird gives up after 10).</summary>
+    internal int Restarts;
     public bool WasCommitted { get; private set; }
     public int LockTimeout;
 

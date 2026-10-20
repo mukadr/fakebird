@@ -9,6 +9,8 @@ namespace Fakebird.Sql;
 public abstract class Expr
 {
     public int Pos;
+    /// <summary>Source position (1-based) for errors that report "At line L, column C"; 0 when unknown.</summary>
+    public int Line, Col;
 }
 
 public sealed class LiteralExpr(Value value, SqlType type) : Expr
@@ -301,6 +303,7 @@ public sealed class CteDef
 public abstract class TableRef
 {
     public int Pos;
+    public int Line, Col;
 }
 
 /// <summary>Table, view, CTE or selectable procedure (when Args != null).</summary>
@@ -338,6 +341,8 @@ public sealed class JoinRef : TableRef
 public abstract class Stmt
 {
     public int Pos;
+    /// <summary>Source position of a PSQL statement (reported in error stack traces).</summary>
+    public int Line, Col;
 }
 
 public sealed class SelectStmt : Stmt
@@ -495,6 +500,8 @@ public sealed class ConstraintDef
     public string? CheckSource;
     public string? IndexName;
     public bool IndexDescending;
+    /// <summary>System name (INTEG_n) assigned in Firebird's order before the constraint is created.</summary>
+    public string? GeneratedName;
 }
 
 public sealed class CreateTableStmt : Stmt

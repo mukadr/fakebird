@@ -115,8 +115,7 @@ internal sealed class Connection
             if (a.Type is Isc.arg_string or Isc.arg_interpreted) _xdr.WriteString(a.Text ?? "", _enc);
             else _xdr.WriteInt32(a.Number);
         }
-        _xdr.WriteInt32(Isc.arg_sql_state);
-        _xdr.WriteString(e.WireSqlState, _enc);
+        // Firebird does not send isc_arg_sql_state to remote clients: they map the primary code to a SQLSTATE
         _xdr.WriteInt32(Isc.arg_end);
     }
 

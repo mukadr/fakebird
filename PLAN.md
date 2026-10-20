@@ -252,6 +252,19 @@ Phases 1–6 implemented; phase 7 partially (index maintenance fix, measurements
   `dotnet run --project bench/Fakebird.Bench -- script a.sql b.sql` runs scripts in-process past
   errors and groups the failures (fast way to find gaps in a new schema).
 
+## Status (2026-10-20): Firebird 5 as the oracle
+- Fakebird now targets Firebird 5 (as seen with `DataTypeCompatibility = 3.0`). The differential corpus
+  moved to `tests/Fakebird.Tests/Corpus/*.sql` with golden outputs recorded from a real FB5
+  (`*.fb5c3.out`), so every `dotnet test` checks it without docker. The comparison covers the whole
+  status vector, messages, describe info (size/precision/scale/nullability/base table and column).
+- Fixed from it: status vectors without isc_arg_sql_state (the client maps SQLSTATE), PSQL stack traces,
+  "At line L, column C", DDL error wrapping ("CREATE TABLE T failed"), INTEG_n numbering (NOT NULL
+  constraints), FB5 describe rules (arithmetic, makeFromList, built-ins, nullability, sqlname of
+  aliased expressions, derived table/CTE/union pass-through), READ CONSISTENCY statement restart.
+- Next: one corpus file per area (casts, arithmetic, strings, datetime, DML, constraints, PSQL,
+  transactions, ...), then Firebird 4/5 features (INT128/DECFLOAT, TIME ZONE, window frames, LATERAL,
+  SKIP LOCKED, multi-row RETURNING, ...) with a native-mode golden (`*.fb5.out`).
+
 Remaining / known gaps: packages, database-level triggers, WHERE CURRENT OF, DML through views,
 RANGE window frames with offsets, sharing compiled plans
 across snapshot clones.

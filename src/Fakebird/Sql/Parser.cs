@@ -37,6 +37,25 @@ public sealed partial class Parser
     // ------------------------------------------------------------------ token helpers
 
     Token Cur => _t[_i];
+
+    /// <summary>Sets a node's source position from the token that starts at <paramref name="pos"/>.</summary>
+    T At<T>(T node, int pos) where T : class
+    {
+        var lo = 0;
+        var hi = _t.Count - 1;
+        while (lo < hi)
+        {
+            var mid = (lo + hi) / 2;
+            if (_t[mid].Pos < pos) lo = mid + 1; else hi = mid;
+        }
+        var tok = _t[lo];
+        switch (node)
+        {
+            case Expr e: (e.Pos, e.Line, e.Col) = (pos, tok.Line, tok.Col); break;
+            case TableRef r: (r.Pos, r.Line, r.Col) = (pos, tok.Line, tok.Col); break;
+        }
+        return node;
+    }
     Token PeekTok(int n = 1) => _t[Math.Min(_i + n, _t.Count - 1)];
     Token Advance() => _t[_i++];
 
@@ -439,9 +458,8 @@ public sealed partial class Parser
             {
                 var v = Conv.ParseNumber(text);
                 if (v.Tag == VTag.Double) return new LiteralExpr(v, SqlType.Double) { Pos = t.Pos };
-                var digits = text.TrimStart('-').Replace(".", "").TrimStart('0').Length;
-                var kind = Math.Abs(v.L) <= int.MaxValue ? TypeKind.Integer : TypeKind.BigInt;
-                return new LiteralExpr(v, SqlType.ExactExpr(kind, v.Scale)) { Pos = t.Pos };
+                // Firebird makes every literal with a decimal point a scaled BIGINT (SCALEDINT)
+                return new LiteralExpr(v, SqlType.ExactExpr(TypeKind.BigInt, v.Scale)) { Pos = t.Pos };
             }
             default:
                 return new LiteralExpr(Value.Dbl(double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture)), SqlType.Double) { Pos = t.Pos };
@@ -485,7 +503,7 @@ public sealed partial class Parser
                 {
                     // :NEW.FIELD
                     var field = AnyIdent();
-                    return new ColumnRefExpr(name, field) { Pos = pos };
+                    return At(new ColumnRefExpr(name, field), pos);
                 }
                 return new VariableExpr(name) { Pos = pos };
             }
@@ -721,14 +739,14 @@ public sealed partial class Parser
             var second = AnyIdent();
             if (IsOp("("))
                 return FunctionCall(second, name, pos); // package.function
-            return new ColumnRefExpr(name, second) { Pos = pos };
+            return At(new ColumnRefExpr(name, second), pos);
         }
         if (Reserved.Contains(name) && _t[_i - 1].Kind == Tok.Ident && name is not ("VALUE" or "RDB$DB_KEY"))
         {
             _i--;
             throw Unexpected();
         }
-        return new ColumnRefExpr(null, name) { Pos = pos };
+        return At(new ColumnRefExpr(null, name), pos);
     }
 
     Expr FunctionCall(string name, string? package, int pos)
@@ -746,7 +764,7 @@ public sealed partial class Parser
         else Accept("ALL");
         if (name == "GEN_ID")
         {
-            f.Args.Add(new ColumnRefExpr(null, AnyIdent()) { Pos = pos });
+            f.Args.Add(At(new ColumnRefExpr(null, AnyIdent()), pos));
             ExpectOp(",");
             f.Args.Add(Expression());
             ExpectOp(")");

@@ -233,7 +233,7 @@ public sealed partial class Parser
             ExpectOp(")");
             return inner;
         }
-        var t = new NamedTableRef { Name = Ident(), Pos = pos };
+        var t = At(new NamedTableRef { Name = Ident() }, pos);
         if (IsOp("("))
         {
             _i++;
@@ -264,11 +264,11 @@ public sealed partial class Parser
         {
             _i++;
             var name = AnyIdent();
-            if (AcceptOp(".")) return new ColumnRefExpr(name, AnyIdent()) { Pos = pos };
+            if (AcceptOp(".")) return At(new ColumnRefExpr(name, AnyIdent()), pos);
             return new VariableExpr(name) { Pos = pos };
         }
         var n = AnyIdent();
-        if (AcceptOp(".")) return new ColumnRefExpr(n, AnyIdent()) { Pos = pos };
+        if (AcceptOp(".")) return At(new ColumnRefExpr(n, AnyIdent()), pos);
         return new VariableExpr(n) { Pos = pos };
     }
 }

@@ -228,11 +228,10 @@ internal static class SystemTables
                     ConstraintType.Check => "CHECK", _ => "NOT NULL",
                 }, 11), N(c.Table), N("NO", 3), N("NO", 3), N(c.IndexName),
             }).ToList();
-            var n = 0;
             foreach (var t in d.Tables.Values)
                 foreach (var col in t.Columns)
-                    if (col.NotNull)
-                        rows.Add([N(col.NotNullConstraint ?? "INTEG_NN" + (++n)), N("NOT NULL", 11), N(t.Name), N("NO", 3), N("NO", 3), Value.Null]);
+                    if (col.NotNull && col.NotNullConstraint != null)
+                        rows.Add([N(col.NotNullConstraint), N("NOT NULL", 11), N(t.Name), N("NO", 3), N("NO", 3), Value.Null]);
             return rows;
         });
 

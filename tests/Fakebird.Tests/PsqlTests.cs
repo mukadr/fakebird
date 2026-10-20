@@ -250,6 +250,6 @@ public class PsqlTests(ServerFixture fx)
             """));
         Exec(cn, "select rdb$set_context('USER_SESSION', 'tenant', '42') from rdb$database");
         Assert.Equal("42", Scalar(cn, "select rdb$get_context('USER_SESSION', 'tenant') from rdb$database"));
-        Assert.Equal("3.0.11", Scalar(cn, "select rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database"));
+        Assert.Equal("5.0.4", Scalar(cn, "select rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database"));
     }
 }

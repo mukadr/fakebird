@@ -360,8 +360,8 @@ public class SqlFeatureTests(ServerFixture fx)
                 using var cmd = new FbCommand("update emp set name = 'Other' where id = 1", cn2, tx2);
                 cmd.ExecuteNonQuery();
             });
-            Assert.Equal(335544336, ex.ErrorCode); // NOWAIT conflict: deadlock / update conflict, like Firebird 3
-            // WAIT: blocks until tx1 ends; tx1 commits -> update conflict
+            Assert.Equal(335544336, ex.ErrorCode); // NOWAIT conflict: deadlock / update conflict, like Firebird
+            // WAIT: blocks until tx1 ends; tx1 commits -> READ CONSISTENCY restarts the update, which succeeds
             var waiter = Task.Run(() =>
             {
                 using var tx2 = cn2.BeginTransaction(wait);
@@ -371,8 +371,7 @@ public class SqlFeatureTests(ServerFixture fx)
             Thread.Sleep(200);
             Assert.False(waiter.IsCompleted);
             tx1.Commit();
-            var conflict = Assert.Throws<AggregateException>(() => waiter.Wait(5000));
-            Assert.Equal(335544336, ((FbException)conflict.InnerException!).ErrorCode);
+            Assert.True(waiter.Wait(5000));
         }
         using (var cmd = new FbCommand("select name from emp where id = 1", cn2)) Assert.Equal("Changed", cmd.ExecuteScalar());
         // WAIT + rollback of the blocking transaction -> the waiter proceeds

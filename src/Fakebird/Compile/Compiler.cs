@@ -240,7 +240,7 @@ public sealed partial class Compiler
                     {
                         var x = Bind(u.Operand, s, expected);
                         if (x is ConstNode k && !k.Value.IsNull) return new ConstNode(Arith.Neg(k.Value), k.Type);
-                        return new NegNode(x) { Type = x.Type, Name = "" };
+                        return new NegNode(x) { Type = x.Type, Name = "", NotNull = x.NotNull };
                     }
                     case UnaryOp.Plus: return Bind(u.Operand, s, expected);
                     default: return new NotNode(BindBool(u.Operand, s));
@@ -538,9 +538,9 @@ public sealed partial class Compiler
             BinaryOp.Mul => ArithOp.Mul,
             _ => ArithOp.Div,
         };
-        var type = ArithType(op, l.Type, r.Type);
+        var (type, nullable) = TypeRules.Arith(op, l.Type, !l.NotNull, r.Type, !r.NotNull);
         var name = op switch { ArithOp.Add => "ADD", ArithOp.Sub => "SUBTRACT", ArithOp.Mul => "MULTIPLY", _ => "DIVIDE" };
-        return Fold(new ArithNode(op, l, r) { Type = type, Name = name });
+        return Fold(new ArithNode(op, l, r) { Type = type, Name = name, NotNull = !nullable });
     }
 
     static SqlType ArithParamType(SqlType other, BinaryOp op, SqlType? expected)
@@ -618,7 +618,10 @@ public sealed partial class Compiler
         var bound = new Dictionary<Expr, XNode>(ReferenceEqualityComparer.Instance);
         foreach (var r in results)
             if (r is not ParamExpr) bound[r] = Bind(r, s);
-        var type = bound.Count > 0 ? Builtins.CommonType(bound.Values) : expected ?? throw Err.DataTypeUnknown();
+        var branches = results.Select(r => bound.GetValueOrDefault(r)).ToList();
+        if (ce.Else == null) branches.Add(new ConstNode(Value.Null, SqlType.Null)); // a CASE without ELSE can return NULL
+        var (type, nullable) = TypeRules.FromList(branches, "CASE");
+        if (bound.Count == 0) type = expected ?? throw Err.DataTypeUnknown();
         if (type.Kind == TypeKind.Null && results.Any(r => r is ParamExpr)) type = expected ?? throw Err.DataTypeUnknown();
         foreach (var r in results)
             if (r is ParamExpr) bound[r] = Bind(r, s, type);
@@ -627,10 +630,10 @@ public sealed partial class Compiler
         {
             var op = Bind(ce.Operand, s);
             var whens = ce.Whens.Select(w => (Bind(w.When, s, ParamTypeFor(op.Type)), bound[w.Then])).ToArray();
-            return new SimpleCaseNode(op, whens, els, MergeCollation(op.Type, op.Type), "CASE") { Type = type };
+            return new SimpleCaseNode(op, whens, els, MergeCollation(op.Type, op.Type), "CASE") { Type = type }; // a DecodeNode: always nullable
         }
         var sw = ce.Whens.Select(w => (BindBool(w.When, s), bound[w.Then])).ToArray();
-        return new CaseNode(sw, els) { Type = type };
+        return new CaseNode(sw, els) { Type = type, NotNull = !nullable };
     }
 
     XNode BindContextVar(ContextVarExpr cv)
@@ -705,7 +708,7 @@ public sealed partial class Compiler
                     if (!item.Matches(r.Qualifier)) continue;
                     var idx = item.Find(r.Name);
                     if (idx < 0 && r.Name == "RDB$DB_KEY" && item.Table is { IsSystem: false }) return new DbKeyNode(item.Stream);
-                    if (idx < 0) throw Err.ColumnUnknown(r.Qualifier + "." + r.Name);
+                    if (idx < 0) throw Err.ColumnUnknown(r.Qualifier + "." + r.Name, r.Line, r.Col);
                     return MakeCol(s, sc, item, idx);
                 }
             }
@@ -732,7 +735,7 @@ public sealed partial class Compiler
         {
             if (r.Qualifier == null && Routine.VarIndex.ContainsKey(r.Name)) return BindVariable(r.Name, r.Pos);
         }
-        throw Err.ColumnUnknown(r.ToString());
+        throw Err.ColumnUnknown(r.ToString(), r.Line, r.Col);
     }
 
     static string Describe(SourceItem i) => (i.Table != null ? "table " : "") + (i.Alias ?? i.Name);
@@ -921,52 +924,37 @@ public sealed partial class Compiler
 
 public static class SqlCodes
 {
+    /// <summary>SQLCODE like gds__sqlcode: the isc_sqlerr argument, else the primary code's SQLCODE, else -999.</summary>
     public static int SqlCodeOf(FbError e)
     {
-        foreach (var a in e.Status)
-        {
-            if (a.Type != Wire.Isc.arg_gds) continue;
-            switch (a.Number)
-            {
-                case Err.isc_unique_key_violation: return -803;
-                case Err.isc_foreign_key: return -530;
-                case Err.isc_check_constraint: return -297;
-                case Err.isc_not_valid: return -625;
-                case Err.isc_except: return -836;
-                case Err.isc_convert_error: return -413;
-                case Err.isc_arith_except: return -802;
-                case Err.isc_deadlock:
-                case Err.isc_update_conflict: return -913;
-                case Err.isc_sing_select_err: return -811;
-                case Err.isc_dsql_error: return -104;
-            }
-        }
-        return -901;
+        var st = e.Status;
+        for (var i = 0; i < st.Count; i++)
+            if (st[i].Type == Wire.Isc.arg_gds && st[i].Number == Err.isc_sqlerr && i + 1 < st.Count)
+                return st[i + 1].Number;
+        return FbMessages.ByCode.TryGetValue(e.GdsCode, out var m) && m.SqlCode != -999 ? m.SqlCode : -999;
     }
 
-    static readonly Dictionary<string, int> GdsNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["arith_except"] = Err.isc_arith_except,
-        ["convert_error"] = Err.isc_convert_error,
-        ["deadlock"] = Err.isc_deadlock,
-        ["not_valid"] = Err.isc_not_valid,
-        ["update_conflict"] = Err.isc_update_conflict,
-        ["foreign_key"] = Err.isc_foreign_key,
-        ["except"] = Err.isc_except,
-        ["check_constraint"] = Err.isc_check_constraint,
-        ["sing_select_err"] = Err.isc_sing_select_err,
-        ["unique_key_violation"] = Err.isc_unique_key_violation,
-        ["no_dup"] = 335544349,
-        ["lock_conflict"] = 335544345,
-        ["string_truncation"] = Err.isc_string_truncation,
-        ["exception_integer_divide_by_zero"] = Err.isc_divide_by_zero,
-        ["exception_integer_overflow"] = Err.isc_integer_overflow,
-        ["numeric_out_of_range"] = Err.isc_numeric_out_of_range,
-        ["random"] = Err.isc_random,
-    };
+    static readonly Dictionary<string, int> GdsNames = FbMessages.ByCode
+        .GroupBy(kv => kv.Value.Symbol, StringComparer.OrdinalIgnoreCase)
+        .ToDictionary(g => g.Key, g => g.First().Key, StringComparer.OrdinalIgnoreCase);
 
     public static int GdsCodeByName(string name)
-        => GdsNames.TryGetValue(name, out var c) ? c : throw Err.Unsupported("GDSCODE " + name);
+        => GdsNames.TryGetValue(name, out var c) ? c : throw Err.Dsql(-104, "Invalid GDSCODE name " + name);
+
+    /// <summary>SQLSTATE like fb_sqlstate: the first code (skipping isc_random/isc_sqlerr) with a specific state.</summary>
+    public static string SqlStateOf(IReadOnlyList<StatusArg> status, string? fallback = null)
+    {
+        string? state = null;
+        foreach (var a in status)
+        {
+            if (a.Type != Wire.Isc.arg_gds || a.Number is 0 or Err.isc_random or Err.isc_sqlerr) continue;
+            if (!FbMessages.ByCode.TryGetValue(a.Number, out var m) || m.SqlState is "00000" or "") continue;
+            state = m.SqlState;
+            if (state is not ("22000" or "42000" or "HY000")) return state;
+        }
+        // Fakebird-specific errors (isc_random only) keep the state their factory chose
+        return state ?? fallback ?? "HY000";
+    }
 }
 
 internal static class Num

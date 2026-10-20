@@ -1,0 +1,578 @@
+--- select * from t order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+S:VARCHAR (20,,,True,T,S,False,False)
+C:CHAR (5,,,True,T,C,False,False)
+N:NUMERIC (4,9,2,True,T,N,False,False)
+D:DOUBLE PRECISION (8,,,True,T,D,False,False)
+DT:DATE (4,,,True,T,DT,False,False)
+TS:TIMESTAMP (8,,,True,T,TS,False,False)
+B:BOOLEAN (1,,,True,T,B,False,False)
+BIG:BIGINT (8,,,True,T,BIG,False,False)
+SM:SMALLINT (2,,,True,T,SM,False,False)
+1 | abc | xy    | 12.34 | 1.5 | 2024-02-29 00:00:00.0000 | 2024-02-29 13:14:15.1234 | True | 9000000000 | 7 | 
+2 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+3 | ABC  | xy    | -0.5 | -2.25 | 1999-12-31 00:00:00.0000 | 2000-01-01 00:00:00.0000 | False | -1 | -7 | 
+affected 0
+--- select id, s || '-' || c, char_length(c), octet_length(s), upper(s), lower(c), trim(c) from t order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+CONCATENATION:VARCHAR (26,,,True,,CONCATENATION,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+UPPER:VARCHAR (20,,,True,,UPPER,False,False)
+LOWER:CHAR (5,,,True,,LOWER,False,False)
+TRIM:VARCHAR (5,,,True,,TRIM,False,False)
+1 | abc-xy    | 5 | 3 | ABC | xy    | xy | 
+2 | NULL | NULL | NULL | NULL | NULL | NULL | 
+3 | ABC -xy    | 5 | 4 | ABC  | xy    | xy | 
+affected 0
+--- select n * 2, n / 3, n + d, d / 3, id / 2, id * 1.5, 7 / 2, 7.0 / 2, -7 / 2, mod(-7, 2) from t where id = 1
+MULTIPLY:NUMERIC (8,8,2,True,,MULTIPLY,False,False)
+DIVIDE:DECIMAL (8,8,2,True,,DIVIDE,False,False)
+ADD:DOUBLE PRECISION (8,,,True,,ADD,False,False)
+DIVIDE:DOUBLE PRECISION (8,,,True,,DIVIDE,False,False)
+DIVIDE:BIGINT (8,,,False,,DIVIDE,False,False)
+MULTIPLY:DECIMAL (8,8,1,False,,MULTIPLY,False,False)
+DIVIDE:BIGINT (8,,,False,,DIVIDE,False,False)
+DIVIDE:DECIMAL (8,8,1,False,,DIVIDE,False,False)
+DIVIDE:BIGINT (8,,,False,,DIVIDE,False,False)
+MOD:INTEGER (4,,,False,,MOD,False,False)
+24.68 | 4.11 | 13.84 | 0.5 | 0 | 1.5 | 3 | 3.5 | -3 | -1 | 
+affected 0
+--- select avg(id), avg(n), sum(n), sum(d), count(*), count(s), min(c), max(ts), list(s) from t
+AVG:BIGINT (8,,,True,,AVG,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:CHAR (5,,,True,,MIN,False,False)
+MAX:TIMESTAMP (8,,,True,,MAX,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+2 | 5.92 | 11.84 | -0.75 | 3 | 2 | xy    | 2024-02-29 13:14:15.1234 | abc,ABC  | 
+affected 0
+--- select id from t order by s
+ID:INTEGER (4,,,False,T,ID,True,False)
+2 | 
+3 | 
+1 | 
+affected 0
+--- select id from t order by s desc
+ID:INTEGER (4,,,False,T,ID,True,False)
+1 | 
+3 | 
+2 | 
+affected 0
+--- select id from t order by s nulls last
+ID:INTEGER (4,,,False,T,ID,True,False)
+3 | 
+1 | 
+2 | 
+affected 0
+--- select dt + 1, dt - 1, ts + 0.5, ts - dt, dt - date '2000-01-01', cast(ts as time), extract(weekday from dt), extract(yearday from dt) from t where id = 1
+ADD:DATE (4,,,True,,ADD,False,False)
+SUBTRACT:DATE (4,,,True,,SUBTRACT,False,False)
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+SUBTRACT:INTEGER (4,,,True,,SUBTRACT,False,False)
+CAST:TIME (4,,,True,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+ERROR 335544606 335544937 '' 42000
+expression evaluation not supported
+Invalid data type in DATE/TIME/TIMESTAMP addition or subtraction in add_datettime()
+--- select dateadd(month, 1, dt), dateadd(-1 year to dt), datediff(month, dt, date '2025-01-01'), datediff(hour, ts, timestamp '2024-03-01 00:00:00') from t where id = 1
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+2024-03-29 00:00:00.0000 | 2023-02-28 00:00:00.0000 | 11 | 11 | 
+affected 0
+--- select cast(n as varchar(20)), cast(d as varchar(30)), cast(dt as varchar(20)), cast(ts as varchar(30)), cast(b as varchar(10)), cast(big as varchar(20)) from t where id = 1
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+CAST:VARCHAR (30,,,True,,CAST,False,False)
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+CAST:VARCHAR (30,,,True,,CAST,False,False)
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+12.34 | 1.500000000000000 | 2024-02-29 | 2024-02-29 13:14:15.1234 | TRUE | 9000000000 | 
+affected 0
+--- select cast('12.345' as numeric(9,2)), cast('  42 ' as integer), cast(2.5 as integer), cast(-2.5 as integer), cast(1e3 as varchar(30)) from rdb$database
+CAST:NUMERIC (4,4,2,False,,CAST,False,False)
+CAST:INTEGER (4,,,False,,CAST,False,False)
+CAST:INTEGER (4,,,False,,CAST,False,False)
+CAST:INTEGER (4,,,False,,CAST,False,False)
+CAST:VARCHAR (30,,,False,,CAST,False,False)
+12.35 | 42 | 3 | -3 | 1000.000000000000 | 
+affected 0
+--- select '1' + 1, 1 || 2, 'a' = 'a  ', 'a' like 'a ', c = 'xy' from t where id = 1
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select coalesce(s, 'none'), nullif(id, 1), iif(b, 'y', 'n'), decode(id, 1, 'one', 2, 'two', 'other') from t order by id
+COALESCE:VARCHAR (20,,,True,,COALESCE,False,False)
+CASE:INTEGER (4,,,True,,CASE,False,False)
+CASE:CHAR (1,,,False,,CASE,False,False)
+DECODE:CHAR (5,,,True,,DECODE,False,False)
+abc | NULL | y | one   | 
+none | 2 | n | two   | 
+ABC  | 3 | n | other | 
+affected 0
+--- select substring(s from 2), substring(s from 2 for 1), position('b' in s), left(s, 2), right(s, 2), lpad(s, 6, '*'), rpad(s, 6), replace(s, 'b', 'BB'), reverse(s) from t where id = 1
+SUBSTRING:VARCHAR (20,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LEFT:VARCHAR (20,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (20,,,True,,RIGHT,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+REPLACE:VARCHAR (40,,,True,,REPLACE,False,False)
+REVERSE:VARCHAR (20,,,True,,REVERSE,False,False)
+bc | b | 2 | ab | bc | ***abc | abc    | aBBc | cba | 
+affected 0
+--- select round(n, 1), round(n, -1), trunc(n), ceil(n), floor(n), abs(n), sign(n), sqrt(16), power(2, 3), exp(0), ln(1) from t where id = 3
+ROUND:NUMERIC (4,4,2,True,,ROUND,False,False)
+ROUND:NUMERIC (4,4,2,True,,ROUND,False,False)
+TRUNC:NUMERIC (4,4,0,True,,TRUNC,False,False)
+CEIL:BIGINT (8,,,True,,CEIL,False,False)
+FLOOR:BIGINT (8,,,True,,FLOOR,False,False)
+ABS:DECIMAL (8,8,2,True,,ABS,False,False)
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+SQRT:DOUBLE PRECISION (8,,,False,,SQRT,False,False)
+POWER:DOUBLE PRECISION (8,,,False,,POWER,False,False)
+EXP:DOUBLE PRECISION (8,,,False,,EXP,False,False)
+LN:DOUBLE PRECISION (8,,,False,,LN,False,False)
+-0.5 | 0 | 0 | 0 | -1 | 0.5 | -1 | 4 | 8 | 1 | 0 | 
+affected 0
+--- select next value for seq1, gen_id(seq1, 10), gen_id(seq1, 0) from rdb$database
+NEXT_VALUE:BIGINT (8,,,False,,NEXT_VALUE,False,False)
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+11 | 10 | 0 | 
+affected 0
+--- select id, v from ident order by id
+ID:INTEGER (4,,,False,IDENT,ID,True,False)
+V:VARCHAR (10,,,True,IDENT,V,False,False)
+1 | a | 
+2 | b | 
+affected 0
+--- insert into ident (v) values ('c') returning id
+ID:INTEGER (4,,,True,IDENT,ID,True,False)
+3 | 
+affected 1
+--- insert into t (id) values (1)
+ERROR 335544665 'INTEG_2' 'T' 335545072 '("ID" = 1)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T"
+Problematic key value is ("ID" = 1)
+--- insert into child (id, t_id) values (2, 99)
+ERROR 335544466 'INTEG_5' 'CHILD' 335544838 335545072 '("T_ID" = 99)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_5" on table "CHILD"
+Foreign key reference target does not exist
+Problematic key value is ("T_ID" = 99)
+--- delete from t where id = 1
+ERROR 335544466 'INTEG_5' 'CHILD' 335544839 335545072 '("ID" = 1)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_5" on table "CHILD"
+Foreign key references are present for the record
+Problematic key value is ("ID" = 1)
+--- insert into t (id, s) values (10, '123456789012345678901')
+ERROR 335544321 335544914 335545033 #20 #21 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 20, actual 21
+--- update t set n = 99999.99 * 10 where id = 1
+affected 1
+--- select cast('abc' as integer) from rdb$database
+CAST:INTEGER (4,,,False,,CAST,False,False)
+ERROR 335544334 'abc' '' 22018
+conversion error from string "abc"
+--- select 1 / 0 from rdb$database
+DIVIDE:BIGINT (8,,,False,,DIVIDE,False,False)
+ERROR 335544321 335544778 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.
+--- select (select id from t) from rdb$database
+ID:INTEGER (4,,,True,T,ID,True,False)
+ERROR 335544652 '' 21000
+multiple rows in singleton select
+--- execute block as begin exception ex1; end
+ERROR 335544517 #1 335544382 'EX1' 335544382 'custom message' 335544842 'At block line: 1, col: 24' '' HY000
+EX1
+custom message
+--- execute block as begin exception ex1 'other ' || 'text'; end
+ERROR 335544517 #1 335544382 'EX1' 335544382 'other text' 335544842 'At block line: 1, col: 24' '' HY000
+EX1
+other text
+--- select count(*), sum(1), max(1) from t where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+0 | NULL | NULL | 
+affected 0
+--- select id, row_number() over (order by id desc), rank() over (partition by b order by n) from t order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+ROW_NUMBER:BIGINT (8,,,False,,ROW_NUMBER,False,False)
+RANK:BIGINT (8,,,False,,RANK,False,False)
+1 | 3 | 1 | 
+2 | 2 | 1 | 
+3 | 1 | 1 | 
+affected 0
+--- select current_user, current_role, char_length(cast(localtimestamp as varchar(30))) from rdb$database
+USER:VARCHAR (63,,,False,,USER,False,False)
+ROLE:VARCHAR (63,,,False,,ROLE,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+SYSDBA | NONE | 24 | 
+affected 0
+--- select * from child
+ID:INTEGER (4,,,False,CHILD,ID,True,False)
+T_ID:INTEGER (4,,,True,CHILD,T_ID,False,False)
+V:VARCHAR (10,,,True,CHILD,V,False,False)
+1 | 1 | dflt | 
+affected 0
+--- select t.id, child.v from t left join child on child.t_id = t.id order by t.id
+ID:INTEGER (4,,,False,T,ID,False,False)
+V:VARCHAR (10,,,True,CHILD,V,False,False)
+1 | dflt | 
+2 | NULL | 
+3 | NULL | 
+affected 0
+--- select distinct b from t order by 1
+B:BOOLEAN (1,,,True,T,B,False,False)
+NULL | 
+False | 
+True | 
+affected 0
+--- select first 1 skip 1 id from t order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+2 | 
+affected 0
+--- select id from t where id in (1, null) or id not in (2, 3)
+ID:INTEGER (4,,,False,T,ID,True,False)
+1 | 
+affected 0
+--- select 1 from rdb$database where null = null
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+affected 0
+--- select cast(null as integer), null from rdb$database
+CAST:INTEGER (4,,,True,,CAST,False,False)
+CONSTANT:CHAR (1,,,True,,CONSTANT,False,False)
+NULL | NULL | 
+affected 0
+--- select cast(ts as date), cast(dt as timestamp) from t where id = 1
+CAST:DATE (4,,,True,,CAST,False,False)
+CAST:TIMESTAMP (8,,,True,,CAST,False,False)
+2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 
+affected 0
+--- select uuid_to_char(char_to_uuid('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11')) from rdb$database
+UUID_TO_CHAR:CHAR (36,,,False,,UUID_TO_CHAR,False,False)
+A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11 | 
+affected 0
+--- select 2147483647 + 1, 9223372036854775807 from rdb$database
+ADD:BIGINT (8,,,False,,ADD,False,False)
+CONSTANT:BIGINT (8,,,False,,CONSTANT,False,False)
+2147483648 | 9223372036854775807 | 
+affected 0
+--- select sm * sm, sm + 1, big + 1 from t where id = 1
+MULTIPLY:BIGINT (8,,,True,,MULTIPLY,False,False)
+ADD:BIGINT (8,,,True,,ADD,False,False)
+ADD:BIGINT (8,,,True,,ADD,False,False)
+49 | 8 | 9000000001 | 
+affected 0
+--- select ts - dt from t where id = 1
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+ERROR 335544606 335544937 '' 42000
+expression evaluation not supported
+Invalid data type in DATE/TIME/TIMESTAMP addition or subtraction in add_datettime()
+--- select dt - date '2000-01-01', time '10:00:00' - time '09:00:00' from t where id = 1
+SUBTRACT:INTEGER (4,,,True,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+8825 | 3600 | 
+affected 0
+--- select '1' + 1 from rdb$database
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select '1' * 2 from rdb$database
+ERROR 335544569 335544606 336397250 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be multiplied in dialect 3
+--- select date '2024-01-01' + '1' from rdb$database
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select null + 1, 1 + null, null * 1.5, null || 'a' from rdb$database
+ADD:BIGINT (8,,,True,,ADD,False,False)
+ADD:BIGINT (8,,,True,,ADD,False,False)
+MULTIPLY:DECIMAL (8,8,2,True,,MULTIPLY,False,False)
+CONCATENATION:VARCHAR (1,,,True,,CONCATENATION,False,False)
+NULL | NULL | NULL | NULL | 
+affected 0
+--- select gen_id(seq1, 1), gen_id(seq1, 10) from rdb$database
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+GEN_ID:BIGINT (8,,,True,,GEN_ID,False,False)
+22 | 21 | 
+affected 0
+--- select n - 1, n + 1, -n, n * n, n * 1.5, 1.5, 1.50 * 2, n / n, -id, -1, +n from t where id = 1
+SUBTRACT:NUMERIC (8,8,2,True,,SUBTRACT,False,False)
+ADD:NUMERIC (8,8,2,True,,ADD,False,False)
+:NUMERIC (4,4,2,True,,,False,False)
+MULTIPLY:NUMERIC (8,8,4,True,,MULTIPLY,False,False)
+MULTIPLY:NUMERIC (8,8,3,True,,MULTIPLY,False,False)
+CONSTANT:DECIMAL (8,8,1,False,,CONSTANT,False,False)
+MULTIPLY:DECIMAL (8,8,2,False,,MULTIPLY,False,False)
+DIVIDE:DECIMAL (8,8,4,True,,DIVIDE,False,False)
+:INTEGER (4,,,False,,,False,False)
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+N:NUMERIC (4,9,2,True,T,N,False,False)
+999998.9 | 1000000.9 | -999999.9 | 999999800000.01 | 1499999.85 | 1.5 | 3 | 1 | -1 | -1 | 999999.9 | 
+affected 0
+--- select abs(id), abs(d), abs(sm), abs(big), abs(n) from t where id = 1
+ABS:BIGINT (8,,,False,,ABS,False,False)
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+ABS:INTEGER (4,,,True,,ABS,False,False)
+ABS:BIGINT (8,,,True,,ABS,False,False)
+ABS:DECIMAL (8,8,2,True,,ABS,False,False)
+1 | 1.5 | 7 | 9000000000 | 999999.9 | 
+affected 0
+--- select cast(1 as decimal(9,2)), cast(1 as numeric(18,4)), cast(n as decimal(9,2)) from t where id = 1
+CAST:DECIMAL (4,4,2,False,,CAST,False,False)
+CAST:NUMERIC (8,8,4,False,,CAST,False,False)
+CAST:DECIMAL (4,4,2,True,,CAST,False,False)
+1 | 1 | 999999.9 | 
+affected 0
+--- select sum(n * 2), avg(n * 1), min(n + 0), sum(1.5) from t
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+MIN:NUMERIC (8,8,2,True,,MIN,False,False)
+SUM:DECIMAL (8,8,1,True,,SUM,False,False)
+1999998.8 | 499999.7 | -0.5 | 4.5 | 
+affected 0
+--- select coalesce(n, 0), coalesce(n, 1.5), coalesce(id, 2.5) from t where id = 1
+COALESCE:NUMERIC (4,4,2,True,,COALESCE,False,False)
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+COALESCE:DECIMAL (8,8,1,False,,COALESCE,False,False)
+999999.9 | 999999.9 | 1 | 
+affected 0
+--- select iif(1 = 1, 1, 2), nullif('a', 'b'), case id when 1 then 'x' end from t where id = 1
+CASE:INTEGER (4,,,False,,CASE,False,False)
+CASE:CHAR (1,,,True,,CASE,False,False)
+CASE:CHAR (1,,,True,,CASE,False,False)
+1 | a | x | 
+affected 0
+--- select 1, 'a', null, 1.5, 1e1, true, date '2024-01-01' from rdb$database
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (1,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (1,,,True,,CONSTANT,False,False)
+CONSTANT:DECIMAL (8,8,1,False,,CONSTANT,False,False)
+CONSTANT:DOUBLE PRECISION (8,,,False,,CONSTANT,False,False)
+CONSTANT:BOOLEAN (1,,,False,,CONSTANT,False,False)
+CONSTANT:DATE (4,,,False,,CONSTANT,False,False)
+1 | a | NULL | 1.5 | 10 | True | 2024-01-01 00:00:00.0000 | 
+affected 0
+--- select extract(second from ts), extract(millisecond from ts), datediff(millisecond, ts, ts + 1) from t where id = 1
+EXTRACT:DECIMAL (4,4,4,True,,EXTRACT,False,False)
+EXTRACT:DECIMAL (4,4,1,True,,EXTRACT,False,False)
+DATEDIFF:DECIMAL (8,8,1,True,,DATEDIFF,False,False)
+15.1234 | 123.4 | 86400000 | 
+affected 0
+--- select list(id), list(id, ';'), list(distinct c) from t
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+1,2,3 | 1;2;3 | xy                   | 
+affected 0
+--- select upper(_utf8 'é'), lower('ÀÉ'), 'a' collate unicode_ci = 'A' from rdb$database
+UPPER:CHAR (1,,,False,,UPPER,False,False)
+LOWER:CHAR (2,,,False,,LOWER,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+É | àé | True | 
+affected 0
+--- select cast('x' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+ERROR 335544334 'x' '' 22018
+conversion error from string "x"
+--- select cast(9999999999 as integer) from rdb$database
+CAST:INTEGER (4,,,False,,CAST,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select cast('abcdef' as varchar(3)) from rdb$database
+CAST:VARCHAR (3,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #3 #6 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 6
+--- select (select max(id) from t), exists(select 1 from child), singular(select 1 from child), 1 in (select id from t) from rdb$database
+MAX:INTEGER (4,,,True,,MAX,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+3 | True | True | True | 
+affected 0
+--- with recursive r(n) as (select 1 from rdb$database union all select n + 1 from r where n < 3) select * from r
+N:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+2 | 
+3 | 
+affected 0
+--- with recursive r(x) as (select 'a' from rdb$database union all select x || 'a' from r where char_length(x) < 3) select * from r
+X:CHAR (1,,,False,,CONSTANT,False,False)
+ERROR 335544321 335544914 335545033 #1 #2 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 1, actual 2
+--- select 1 from rdb$database union all select 1.5 from rdb$database
+:DECIMAL (8,8,1,False,,,False,False)
+1 | 
+1.5 | 
+affected 0
+--- select 'a' from rdb$database union all select 'abc' from rdb$database
+:CHAR (3,,,False,,,False,False)
+a   | 
+abc | 
+affected 0
+--- select id, sum(id) over (), avg(n) over (order by id), lag(id) over (order by id), first_value(s) over (order by id) from t order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+LAG:INTEGER (4,,,True,,LAG,False,False)
+FIRST_VALUE:VARCHAR (20,,,True,,FIRST_VALUE,False,False)
+1 | 6 | 999999.9 | NULL | abc | 
+2 | 6 | 999999.9 | 1 | abc | 
+3 | 6 | 499999.7 | 2 | abc | 
+affected 0
+--- select 5 / 2.0, 5.0 / 3, 1.000 * 1.000, cast(1 as numeric(18,18)) from rdb$database
+DIVIDE:DECIMAL (8,8,1,False,,DIVIDE,False,False)
+DIVIDE:DECIMAL (8,8,1,False,,DIVIDE,False,False)
+MULTIPLY:DECIMAL (8,8,6,False,,MULTIPLY,False,False)
+CAST:NUMERIC (8,8,18,False,,CAST,False,False)
+2.5 | 1.6 | 1 | 1 | 
+affected 0
+--- select cast(1.5 as smallint), cast(2.5 as smallint), cast(-1.5 as bigint), cast(1.49999 as integer) from rdb$database
+CAST:SMALLINT (2,,,False,,CAST,False,False)
+CAST:SMALLINT (2,,,False,,CAST,False,False)
+CAST:BIGINT (8,,,False,,CAST,False,False)
+CAST:INTEGER (4,,,False,,CAST,False,False)
+2 | 3 | -2 | 1 | 
+affected 0
+--- select rdb$get_context('NOPE', 'nope') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+ERROR 335544844 'NOPE' 'RDB$GET_CONTEXT' '' HY000
+Invalid namespace name 'NOPE' passed to RDB$GET_CONTEXT
+--- select * from nonexistent
+ERROR 335544569 335544436 #-204 335544580 335544382 'NONEXISTENT' 336397208 #1 #15 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Table unknown
+NONEXISTENT
+At line 1, column 15
+--- select nonexistent from t
+ERROR 335544569 335544436 #-206 335544578 335544382 'NONEXISTENT' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+NONEXISTENT
+At line 1, column 8
+--- create table t (x integer)
+ERROR 335544351 336397286 'T' 336068740 'T' '' 42000
+unsuccessful metadata update
+CREATE TABLE T failed
+Table T already exists
+--- create index ix on nonexistent (x)
+ERROR 335544351 336397316 'IX' 336068728 'IX' '' 42000
+unsuccessful metadata update
+CREATE INDEX IX failed
+Unknown columns in index IX
+--- update or insert into t (id, s) values (1, 'upd') matching (id) returning id, s, old.s
+ID:INTEGER (4,,,True,T,ID,True,False)
+S:VARCHAR (20,,,True,T,S,False,False)
+CONSTANT:VARCHAR (20,,,True,,CONSTANT,False,False)
+1 | upd | abc | 
+affected 1
+--- merge into t using (select 60 as id, 'm' as s from rdb$database) src on t.id = src.id when matched then update set s = src.s when not matched then insert (id, s) values (src.id, src.s)
+affected 1
+--- update t set s = 'x' where id = 2 returning id, old.s, new.s
+ID:INTEGER (4,,,True,T,ID,True,False)
+S:VARCHAR (20,,,True,T,S,False,False)
+S:VARCHAR (20,,,True,T,S,False,False)
+2 | NULL | x | 
+affected 1
+--- insert into ident default values returning id, v
+ID:INTEGER (4,,,True,IDENT,ID,True,False)
+V:VARCHAR (10,,,True,IDENT,V,False,False)
+4 | NULL | 
+affected 1
+--- execute block returns (x varchar(50)) as begin begin x = 1 / 0; when any do x = 'any ' || sqlcode || ' ' || gdscode || ' ' || sqlstate; end suspend; end
+X:VARCHAR (50,,,True,,X,False,False)
+any -802 335544321 22012 | 
+affected 0
+--- execute block returns (x varchar(80)) as begin begin execute statement 'create table t (a integer)'; when sqlstate '42S01' do x = 'exists'; end suspend; end
+X:VARCHAR (80,,,True,,X,False,False)
+exists | 
+affected 0
+--- execute block returns (x varchar(80)) as begin begin x = cast('abcdef' as varchar(3)); when sqlstate '22001' do x = 'trunc'; end suspend; end
+X:VARCHAR (80,,,True,,X,False,False)
+trunc | 
+affected 0
+--- execute block returns (x varchar(80)) as begin begin x = 1/0; when sqlstate '22012' do x = 'div'; end suspend; end
+X:VARCHAR (80,,,True,,X,False,False)
+div | 
+affected 0
+--- execute block as declare x smallint; begin x = 40000; end
+ERROR 335544321 335544916 335544842 'At block line: 1, col: 44' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- execute block returns (x char(3)) as begin x = 'abcd'; suspend; end
+X:CHAR (3,,,True,,X,False,False)
+ERROR 335544321 335544914 335545033 #3 #4 335544842 'At block line: 1, col: 44' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 4
+--- select id from t order by id offset 1 rows fetch next 1 rows only
+ID:INTEGER (4,,,False,T,ID,True,False)
+2 | 
+affected 0
+--- select date '2024-02-29' + time '13:14:15', time '01:00:00' + date '2024-01-01' from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+2024-02-29 13:14:15.0000 | 2024-01-01 01:00:00.0000 | 
+affected 0
+--- select dt + cast(ts as time) from t where id = 1
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+2024-02-29 13:14:15.1234 | 
+affected 0
+--- select 'V' tipo, b, coalesce(s, 'x') m, count(*) q from t group by 1, 2, 3 order by 2, 3
+TIPO:CHAR (1,,,False,,CONSTANT,False,False)
+B:BOOLEAN (1,,,True,T,B,False,False)
+M:VARCHAR (20,,,True,,COALESCE,False,False)
+Q:BIGINT (8,,,False,,COUNT,False,False)
+V | NULL | m | 1 | 
+V | NULL | x | 1 | 
+V | False | ABC  | 1 | 
+V | True | upd | 1 | 
+affected 0
+--- select sum(iif(s is null, id, 0)), count(iif(c is null, 1, null)) from t
+SUM:BIGINT (8,,,True,,SUM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+0 | 2 | 
+affected 0
+--- insert into child (child.id, child.t_id) values (7, 1) returning id, v
+ID:INTEGER (4,,,True,CHILD,ID,True,False)
+V:VARCHAR (10,,,True,CHILD,V,False,False)
+7 | dflt | 
+affected 1
+--- execute block returns (r varchar(20)) as begin execute statement ('select s from t where id = :x and :x > 0') (x := 1) into :r; suspend; end
+R:VARCHAR (20,,,True,,R,False,False)
+upd | 
+affected 0
+--- execute block returns (r varchar(20)) as begin execute statement 'select s from t where id = ' || 1 into :r; suspend; end
+R:VARCHAR (20,,,True,,R,False,False)
+upd | 
+affected 0
+--- select count(*), min(octet_length(rdb$db_key)) from t
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+4 | 8 | 
+affected 0

@@ -167,7 +167,7 @@ public sealed class SqlType : IEquatable<SqlType>
     {
         TypeKind.Char or TypeKind.VarChar => WireCharsetId,
         TypeKind.Blob => SubType,
-        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt => Scale > 0 ? SubType : 0,
+        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt => SubType,
         _ => 0,
     };
 

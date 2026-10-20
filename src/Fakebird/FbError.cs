@@ -14,16 +14,11 @@ public sealed class FbError : Exception
     public IReadOnlyList<StatusArg> Status { get; }
     /// <summary>The most specific SQLSTATE of the vector (what PSQL WHEN SQLSTATE and the SQLSTATE variable see).</summary>
     public string SqlState { get; }
-    /// <summary>SQLSTATE reported to the client: Firebird derives it from the primary (first) code.</summary>
-    public string WireSqlState => GdsCode switch
-    {
-        335544321 or 335544779 => "22000",
-        335544569 or 335544351 => "42000",
-        _ => SqlState,
-    };
     public int GdsCode => Status.Count > 0 ? Status[0].Number : 0;
     /// <summary>Name of the user exception (CREATE EXCEPTION) when raised by PSQL.</summary>
     public string? UserExceptionName { get; set; }
+    /// <summary>The PSQL stack trace has been appended (Firebird adds it once, where the error is raised).</summary>
+    public bool TraceDone { get; init; }
 
     public FbError(IReadOnlyList<StatusArg> status, string sqlState)
         : base(Render(status))
@@ -40,40 +35,6 @@ public sealed class FbError : Exception
         return false;
     }
 
-    static readonly Dictionary<int, string> Messages = new()
-    {
-        [335544321] = "arithmetic exception, numeric overflow, or string truncation",
-        [335544334] = "conversion error from string \"{0}\"",
-        [335544336] = "deadlock",
-        [335544347] = "validation error for column {0}, value \"{1}\"",
-        [335544351] = "unsuccessful metadata update",
-        [335544382] = "{0}",
-        [335544436] = "SQL error code = {0}",
-        [335544451] = "update conflicts with concurrent update",
-        [335544466] = "violation of FOREIGN KEY constraint \"{0}\" on table \"{1}\"",
-        [335544517] = "exception {0}",
-        [335544558] = "Operation violates CHECK constraint {0} on view or table {1}",
-        [335544569] = "Dynamic SQL Error",
-        [335544573] = "Data type unknown",
-        [335544578] = "Column unknown",
-        [335544580] = "Table unknown",
-        [335544606] = "expression evaluation not supported",
-        [335544634] = "Token unknown - line {0}, column {1}",
-        [335544652] = "multiple rows in singleton select",
-        [335544665] = "violation of PRIMARY or UNIQUE KEY constraint \"{0}\" on table \"{1}\"",
-        [335544778] = "Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.",
-        [335544779] = "Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.",
-        [335544838] = "Foreign key reference target does not exist",
-        [335544839] = "Foreign key references are present for the record",
-        [335544843] = "Context variable '{0}' is not found in namespace '{1}'",
-        [335544844] = "Invalid namespace name {0} passed to {1}",
-        [335544878] = "concurrent transaction number is {0}",
-        [335544914] = "string right truncation",
-        [335544916] = "numeric value is out of range",
-        [335545033] = "expected length {0}, actual {1}",
-        [335545072] = "Problematic key value is {0}",
-    };
-
     static string Render(IReadOnlyList<StatusArg> status)
     {
         var sb = new StringBuilder();
@@ -87,18 +48,31 @@ public sealed class FbError : Exception
                 if (status[j].Type == Wire.Isc.arg_string) args.Add(status[j].Text!);
                 else if (status[j].Type == Wire.Isc.arg_number) args.Add(status[j].Number);
             }
-            var text = Messages.TryGetValue(a.Number, out var fmt) ? SafeFormat(fmt, args) : $"error {a.Number}";
+            var text = FbMessages.ByCode.TryGetValue(a.Number, out var info) ? Substitute(info.Text, args) : $"error {a.Number}";
             if (sb.Length > 0) sb.Append(Environment.NewLine);
             sb.Append(text);
         }
         return sb.ToString();
     }
 
-    static string SafeFormat(string fmt, List<object> args)
+    /// <summary>Fills Firebird's @1..@9 placeholders.</summary>
+    static string Substitute(string text, List<object> args)
     {
-        try { return string.Format(fmt, args.ToArray()); }
-        catch (FormatException) { return fmt; }
+        var sb = new StringBuilder();
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '@' && i + 1 < text.Length && char.IsDigit(text[i + 1]))
+            {
+                var n = text[i + 1] - '1';
+                sb.Append(n >= 0 && n < args.Count ? args[n] : "");
+                i++;
+                continue;
+            }
+            sb.Append(text[i]);
+        }
+        return sb.ToString();
     }
+
 }
 
 /// <summary>Builder of Firebird status vectors.</summary>
@@ -108,7 +82,11 @@ internal sealed class StatusBuilder
     public StatusBuilder Gds(int code) { _args.Add(new(Wire.Isc.arg_gds, code, null)); return this; }
     public StatusBuilder Str(string s) { _args.Add(new(Wire.Isc.arg_string, 0, s)); return this; }
     public StatusBuilder Num(int n) { _args.Add(new(Wire.Isc.arg_number, n, null)); return this; }
-    public FbError Build(string sqlState) => new(_args, sqlState);
+    /// <summary>isc_dsql_line_col_error ("At line L, column C") when the position is known.</summary>
+    public StatusBuilder LineCol(int line, int col) => line > 0 ? Gds(Err.isc_dsql_line_col_error).Num(line).Num(col) : this;
+    /// <summary>Builds the error; its SQLSTATE comes from the codes like Firebird's (the argument is the fallback
+    /// for vectors made only of isc_random, i.e. Fakebird's own errors).</summary>
+    public FbError Build(string? sqlState = null) => new(_args, Compile.SqlCodes.SqlStateOf(_args, sqlState));
 }
 
 /// <summary>Factory for the errors the engine raises.</summary>
@@ -137,6 +115,8 @@ internal static class Err
     public const int isc_fk_target_missing = 335544838;
     public const int isc_fk_references_present = 335544839;
     public const int isc_ctx_namespace_invalid = 335544844;
+    public const int isc_stack_trace = 335544842;
+    public const int isc_dsql_line_col_error = 336397208;
     public const int isc_expression_eval_err = 335544606;
     public const int isc_ctx_var_not_found = 335544843;
     public const int isc_concurrent_transaction = 335544878;
@@ -159,13 +139,13 @@ internal static class Err
     public static FbError SyntaxMsg(string message)
         => new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(-104).Gds(isc_random).Str(message).Build("42000");
 
-    public static FbError TableUnknown(string name)
+    public static FbError TableUnknown(string name, int line = 0, int col = 0)
         => new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(-204)
-            .Gds(isc_dsql_relation_err).Gds(isc_random).Str(name).Build("42S02");
+            .Gds(isc_dsql_relation_err).Gds(isc_random).Str(name).LineCol(line, col).Build("42S02");
 
-    public static FbError ColumnUnknown(string name)
+    public static FbError ColumnUnknown(string name, int line = 0, int col = 0)
         => new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(-206)
-            .Gds(isc_dsql_field_err).Gds(isc_random).Str(name).Build("42S22");
+            .Gds(isc_dsql_field_err).Gds(isc_random).Str(name).LineCol(line, col).Build("42S22");
 
     public static FbError ObjectUnknown(string kind, string name)
         => new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(-204)
@@ -233,6 +213,10 @@ internal static class Err
 
     public static FbError CtxNamespace(string ns, string func)
         => new StatusBuilder().Gds(isc_ctx_namespace_invalid).Str(ns).Str(func).Build("HY000");
+
+    /// <summary>The engine's (not DSQL's) rejection of a date/time combination, e.g. TIMESTAMP - DATE.</summary>
+    public static FbError DateTimeOp()
+        => new StatusBuilder().Gds(isc_expression_eval_err).Gds(FbMessages.invalid_type_datetime_op).Build();
 
     public static FbError ExpressionEval(string message)
         => new StatusBuilder().Gds(isc_expression_eval_err).Gds(isc_random).Str(message).Build("42000");

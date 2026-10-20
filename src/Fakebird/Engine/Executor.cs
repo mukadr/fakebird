@@ -36,6 +36,27 @@ public static class Executor
     /// <summary>Executes a statement; on failure, undoes its partial effects and rethrows.</summary>
     public static ExecResult Run(Prepared p, Transaction tx, Value[] parameters, Ctx? parent = null)
     {
+        if (parent != null) return RunOnce(p, tx, parameters, parent);
+        // READ CONSISTENCY: a top-level statement that met a row changed by a transaction that committed meanwhile
+        // is undone and run again with a fresh view of the data
+        for (tx.Restarts = 0; ; tx.Restarts++)
+        {
+            var mark = tx.Mark;
+            try
+            {
+                return RunOnce(p, tx, parameters, null);
+            }
+            catch (StatementRestart r)
+            {
+                tx.DeferredRefChecks = null;
+                if (tx.Active) tx.RollbackTo(mark);
+                if (tx.Restarts >= 10) throw Err.UpdateConflict(r.OtherTransaction);
+            }
+        }
+    }
+
+    static ExecResult RunOnce(Prepared p, Transaction tx, Value[] parameters, Ctx? parent)
+    {
         Init();
         var db = tx.Db;
         if (!tx.Active) throw Err.Random("transaction is not active");

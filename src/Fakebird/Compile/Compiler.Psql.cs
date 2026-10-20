@@ -136,6 +136,7 @@ public sealed partial class Compiler
         comp.Routine!.OutputVars = outs;
         var body = comp.CompileRoutineBody(p.Body);
         var cr = comp.FinishRoutine(p.Name, body);
+        cr.Context = $"At procedure '{p.Name}'";
         cr.Inputs = ins;
         cr.Outputs = outs;
         return cr;
@@ -150,6 +151,7 @@ public sealed partial class Compiler
         var ins = f.Inputs.Select(i => comp.Routine!.Declare(i.Name, i.Type, i.NotNull)).ToArray();
         var body = comp.CompileRoutineBody(f.Body);
         var cr = comp.FinishRoutine(f.Name, body);
+        cr.Context = $"At function '{f.Name}'";
         cr.Inputs = ins;
         cr.Returns = f.Returns;
         return cr;
@@ -169,6 +171,7 @@ public sealed partial class Compiler
         comp._triggerEvents = t.Events;
         var body = comp.CompileRoutineBody(t.Body);
         var cr = comp.FinishRoutine(t.Name, body);
+        cr.Context = $"At trigger '{t.Name}'";
         cr.NewStream = newStream;
         cr.OldStream = oldStream;
         cr.NewWidth = table.Columns.Count;
@@ -207,13 +210,17 @@ public sealed partial class Compiler
             c.Rows[varStream] = vars;
             if (cursorCount > 0) c.Cursors = new object?[cursorCount];
             foreach (var (vi, val) in inputs) vars[vi] = Conv.Cast(val.Eval(c), r.Vars[vi].Type);
-            if (selectable)
+            c.Frame = new PsqlFrame("At block", null);
+            try
             {
-                c.Output = new List<Value[]>();
+                if (selectable) c.Output = new List<Value[]>();
                 body.Exec(c);
-                return new ExecResult { Rows = c.Output, Selected = c.Output.Count };
             }
-            body.Exec(c);
+            catch (FbError e) when (!e.TraceDone)
+            {
+                throw c.Frame.Trace(e);
+            }
+            if (selectable) return new ExecResult { Rows = c.Output!, Selected = c.Output!.Count };
             if (outs.Length == 0) return new ExecResult { Rows = [] };
             return new ExecResult { Rows = [outs.Select(o => vars[o]).ToArray()] };
         })
@@ -276,7 +283,7 @@ public sealed partial class Compiler
                 ? e => e.UserExceptionName == cnd.Name
                 : throw Err.ObjectUnknown("Exception", cnd.Name!),
             "SQLCODE" => e => SqlCodes.SqlCodeOf(e) == cnd.Code,
-            "GDSCODE" => SqlCodes.GdsCodeByName(cnd.Name!) is var code ? e => e.HasCode(code) : null!,
+            "GDSCODE" => SqlCodes.GdsCodeByName(cnd.Name!) is var code ? e => e.GdsCode == code : null!,
             "SQLSTATE" => e => e.SqlState == cnd.Name,
             _ => throw Err.Unsupported("WHEN " + cnd.Kind),
         }).ToArray();
@@ -318,6 +325,12 @@ public sealed partial class Compiler
     Target[] Targets(List<Expr> list) => list.Select(ResolveTarget).ToArray();
 
     PStmt CompilePsql(Stmt st)
+    {
+        var p = CompilePsqlCore(st);
+        return st.Line > 0 ? new LocatedP(p, st.Line, st.Col) : p;
+    }
+
+    PStmt CompilePsqlCore(Stmt st)
     {
         var r = Routine!;
         var root = RootScope!;
@@ -472,7 +485,7 @@ public sealed partial class Compiler
         r.CompiledSubRoutines ??= new(StringComparer.Ordinal);
         if (r.CompiledSubRoutines.TryGetValue(sub.Name, out var existing)) return (CompiledRoutine)existing;
         if (sub.Body == null) throw Err.Dsql(-104, "Sub-routine " + sub.Name + " has no body");
-        var cr = new CompiledRoutine { Name = sub.Name };
+        var cr = new CompiledRoutine { Name = sub.Name, Context = $"At sub {(sub.IsFunction ? "function" : "procedure")} '{sub.Name}'" };
         r.CompiledSubRoutines[sub.Name] = cr;
         var comp = new Compiler(Db, 0);
         comp.BeginRoutine();

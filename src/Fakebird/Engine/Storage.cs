@@ -249,3 +249,9 @@ public sealed class Table
         return t;
     }
 }
+
+/// <summary>Signals that the current top-level statement must be restarted (READ CONSISTENCY update conflict).</summary>
+internal sealed class StatementRestart(long otherTransaction) : Exception("statement restart")
+{
+    public long OtherTransaction { get; } = otherTransaction;
+}

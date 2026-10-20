@@ -41,12 +41,12 @@ internal sealed class DbEntry
 }
 
 /// <summary>
-/// In-memory fake Firebird 3 server. Speaks the Firebird wire protocol on localhost so the unchanged
+/// In-memory fake Firebird 5 server. Speaks the Firebird wire protocol on localhost so the unchanged
 /// FirebirdSql.Data.FirebirdClient (and Dapper / EF Core on top of it) can connect to it.
 /// </summary>
 public sealed class FakebirdServer : IDisposable, IAsyncDisposable
 {
-    internal const string ServerVersion = "LI-V3.0.11.33703 Fakebird";
+    internal const string ServerVersion = "LI-V5.0.4.1812 Fakebird 5.0";
 
     readonly FakebirdOptions _options;
     readonly TcpListener _listener;

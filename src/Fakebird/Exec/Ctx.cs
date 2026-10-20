@@ -27,6 +27,8 @@ public sealed class Ctx
     public List<Value[]>? Output;
     public object?[]? Cursors;
     public int Depth;
+    /// <summary>Innermost PSQL routine invocation (for error stack traces).</summary>
+    public PsqlFrame? Frame;
     public Dictionary<object, object>? Cache;
     Value _now;
     bool _hasNow;
@@ -61,7 +63,7 @@ public sealed class Ctx
     /// <summary>Creates a child context (procedure/trigger/function call) sharing transaction and timestamp.</summary>
     public Ctx Child(int streams)
     {
-        var c = new Ctx(Tx, streams) { Depth = Depth + 1 };
+        var c = new Ctx(Tx, streams) { Depth = Depth + 1, Frame = Frame };
         if (_hasNow) c.SetNow(_now);
         if (c.Depth > 1000) throw Err.Random("Too many concurrent executions of the same request (recursion depth exceeded)");
         return c;

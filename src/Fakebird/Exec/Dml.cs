@@ -107,8 +107,7 @@ public static class Dml
         catch (FbError e) when (e.HasCode(Err.isc_string_truncation))
         {
             throw new StatusBuilder().Gds(Err.isc_arith_except).Gds(Err.isc_string_truncation)
-                .Gds(Err.isc_trunc_limits).Num(col.Type.Length).Num(Conv.CharLength(Conv.ToStr(v)))
-                .Gds(Err.isc_random).Str($"\"{t.Name}\".\"{col.Name}\"").Build("22001");
+                .Gds(Err.isc_trunc_limits).Num(col.Type.Length).Num(Conv.CharLength(Conv.ToStr(v))).Build("22001");
         }
     }
 

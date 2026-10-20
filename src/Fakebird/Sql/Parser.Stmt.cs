@@ -155,8 +155,8 @@ public sealed partial class Parser
             var pos = Cur.Pos;
             var name = AnyIdent();
             ColumnRefExpr target;
-            if (AcceptOp(".")) target = new ColumnRefExpr(name, AnyIdent()) { Pos = pos };
-            else target = new ColumnRefExpr(null, name) { Pos = pos };
+            if (AcceptOp(".")) target = At(new ColumnRefExpr(name, AnyIdent()), pos);
+            else target = At(new ColumnRefExpr(null, name), pos);
             ExpectOp("=");
             l.Add(new Assignment { Target = target, Value = ValueOrDefault() });
         } while (AcceptOp(","));
@@ -1100,6 +1100,14 @@ public sealed partial class Parser
 
     Stmt PsqlStatement()
     {
+        var start = Cur;
+        var st = PsqlStatementCore();
+        if (st.Line == 0) (st.Line, st.Col) = (start.Line, start.Col);
+        return st;
+    }
+
+    Stmt PsqlStatementCore()
+    {
         var pos = Cur.Pos;
         // label:
         if (Cur.Kind is Tok.Ident or Tok.QuotedIdent && PeekTok().Kind == Tok.Colon && !Reserved.Contains(Cur.Text))
@@ -1295,7 +1303,7 @@ public sealed partial class Parser
         }
         var name = AnyIdent();
         Expr target;
-        if (AcceptOp(".")) target = new ColumnRefExpr(name, AnyIdent()) { Pos = pos };
+        if (AcceptOp(".")) target = At(new ColumnRefExpr(name, AnyIdent()), pos);
         else target = new VariableExpr(name) { Pos = pos };
         ExpectOp("=");
         var value = Expression();

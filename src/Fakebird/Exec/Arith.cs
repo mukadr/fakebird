@@ -114,11 +114,11 @@ public static class Arith
             case VTag.Date when b.Tag == VTag.Date:
                 return Value.Int(a.L - b.L);
             case VTag.Date when b.Tag == VTag.Timestamp:
-                throw Err.ExpressionEval("Invalid date/timestamp subtraction");
+                throw Err.DateTimeOp();
             case VTag.Timestamp when b.Tag == VTag.Timestamp:
                 return TimestampDiff(a.L, b.L);
             case VTag.Timestamp when b.Tag == VTag.Date:
-                throw Err.ExpressionEval("Invalid date/timestamp subtraction");
+                throw Err.DateTimeOp();
             case VTag.Time when b.Tag == VTag.Time:
                 return Value.Int(a.L - b.L, 4);
             case VTag.Date: return Value.Date(a.L - DaysOf(b));

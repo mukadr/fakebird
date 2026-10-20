@@ -60,6 +60,8 @@ public sealed partial class Compiler
             nodes.Add(node);
             cols.Add(OutColOf(node, item.Alias));
         }
+        // Firebird describes every RETURNING value as nullable
+        foreach (var col in cols) col.Nullable = true;
         return (nodes.ToArray(), cols.ToArray());
     }
 
@@ -320,7 +322,7 @@ public sealed partial class Compiler
         if (ret != null && st.Returning!.Items.Count == ret.Value.Cols.Length)
             for (var i = 0; i < ret.Value.Cols.Length; i++)
                 if (st.Returning.Items[i] is { Alias: null, Expr: ColumnRefExpr { Qualifier: "OLD" } })
-                    (ret.Value.Cols[i].Name, ret.Value.Cols[i].Field, ret.Value.Cols[i].Relation) = ("CONSTANT", "", "");
+                    (ret.Value.Cols[i].Name, ret.Value.Cols[i].Field, ret.Value.Cols[i].Relation) = ("CONSTANT", "CONSTANT", "");
         var width = t.Columns.Count;
         return new DelegatePrepared(c =>
         {

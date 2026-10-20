@@ -3,11 +3,11 @@ using Xunit.Abstractions;
 
 namespace Fakebird.Tests;
 
-/// <summary>SELECT ... WITH LOCK locks the returned rows like a dummy update (checked against Firebird 3).</summary>
+/// <summary>SELECT ... WITH LOCK locks the returned rows like a dummy update (checked against Firebird 5).</summary>
 [Collection("server")]
 public class WithLockTests(ServerFixture fx, ITestOutputHelper output)
 {
-    static readonly string? RealCs = Environment.GetEnvironmentVariable("FAKEBIRD_REAL_CS");
+    static readonly string? RealCs = Environment.GetEnvironmentVariable("FAKEBIRD_FB5C3_CS");
 
     static FbTransactionOptions Options(bool wait) => new()
     {
@@ -107,6 +107,6 @@ public class WithLockTests(ServerFixture fx, ITestOutputHelper output)
                 FbConnection.DropDatabase(realCs);
             }
         }
-        Assert.Equal("locked 1 | nowait update: 335544336 | other row: 1 | nowait update vs update: 335544336 | waited | wait update: 335544336", mine);
+        Assert.Equal("locked 1 | nowait update: 335544336 | other row: 1 | nowait update vs update: 335544336 | waited | wait update: 1", mine);
     }
 }
