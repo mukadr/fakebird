@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Fakebird.Types;
 
-public enum VTag : byte { Null, Bool, Int, Double, String, Bytes, Date, Time, Timestamp }
+public enum VTag : byte { Null, Bool, Int, Double, String, Bytes, Date, Time, Timestamp, Int128 }
 
 /// <summary>
 /// Runtime SQL value. Unboxed for numbers/dates: exact numerics are a scaled long (L, Scale), doubles are
@@ -41,6 +41,24 @@ public readonly struct Value
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Value Int(long v, int scale = 0) => new(VTag.Int, v, null, (byte)scale);
     public static Value Bool(bool b) => b ? True : False;
+
+    /// <summary>
+    /// A value of INT128 type: the low 64 bits in L and, only when it does not fit in a long, the high 64 bits
+    /// boxed in O. The tag remembers the type so conversions report INT128's errors.
+    /// </summary>
+    public static Value Wide(Int128 v, int scale = 0)
+    {
+        var low = (long)(ulong)(UInt128)v;
+        return v >= long.MinValue && v <= long.MaxValue
+            ? new Value(VTag.Int128, low, null, (byte)scale)
+            : new Value(VTag.Int128, low, (long)(v >> 64), (byte)scale);
+    }
+
+    /// <summary>The exact value of an Int or Int128 value.</summary>
+    public Int128 AsInt128 => Tag == VTag.Int128 && O is long hi ? (Int128)(((UInt128)(ulong)hi << 64) | (ulong)L) : L;
+
+    /// <summary>An Int128 value that fits in a long (L holds it).</summary>
+    public bool FitsLong => O == null;
     public static Value Dbl(double d) => new(VTag.Double, BitConverter.DoubleToInt64Bits(d), null, 0);
     /// <summary>A FLOAT value (single precision, carried as a double; Scale 1 marks it for text conversion).</summary>
     public static Value Flt(float f) => new(VTag.Double, BitConverter.DoubleToInt64Bits(f), null, 1);
@@ -84,6 +102,7 @@ public readonly struct Value
         VTag.Null => null,
         VTag.Bool => AsBool,
         VTag.Int => Scale == 0 ? L : (object)Conv.ToDecimal(this),
+        VTag.Int128 => Scale == 0 && FitsLong ? L : Scale == 0 ? AsInt128 : (object)Conv.ToDecimal(this),
         VTag.Double => AsDouble,
         VTag.String => AsString,
         VTag.Bytes => AsBytes,

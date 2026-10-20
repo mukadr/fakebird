@@ -56,20 +56,28 @@ public sealed class AggState
             case AggKind.Avg:
                 _count++;
                 if (v.Tag == VTag.String) v = Conv.ParseNumber(v.AsString);
-                if (v.Tag == VTag.Int && !_isDouble)
+                if (v.Tag is VTag.Int or VTag.Int128 && !_isDouble)
                 {
-                    if (!_any)
+                    var x = v.AsInt128;
+                    try
                     {
-                        _scale = v.Scale;
-                        _isum = v.L;
+                        if (!_any)
+                        {
+                            _scale = v.Scale;
+                            _isum = x;
+                        }
+                        else if (v.Scale == _scale) _isum = checked(_isum + x);
+                        else
+                        {
+                            var s = Math.Max(_scale, v.Scale);
+                            _isum = checked(_isum * Value.Pow10[s - _scale] + x * Value.Pow10[s - v.Scale]);
+                            _scale = s;
+                        }
                     }
-                    else if (v.Scale == _scale) _isum += v.L;
-                    else
-                    {
-                        var s = Math.Max(_scale, v.Scale);
-                        _isum = _isum * Value.Pow10[s - _scale] + (Int128)v.L * Value.Pow10[s - v.Scale];
-                        _scale = s;
-                    }
+                    catch (OverflowException) { throw Err.IntegerOverflow128(); }
+                    // a BIGINT sum overflows like int64 arithmetic
+                    if (_spec.Kind == AggKind.Sum && _spec.Type.Kind != TypeKind.Int128 && (_isum > long.MaxValue || _isum < long.MinValue))
+                        throw Err.IntegerOverflow();
                 }
                 else
                 {
@@ -125,11 +133,12 @@ public sealed class AggState
             case AggKind.Sum:
                 if (!_any) return Value.Null;
                 if (_isDouble) return Value.Dbl(_dsum);
-                if (_isum > long.MaxValue || _isum < long.MinValue) throw Err.NumericOverflow();
+                if (_spec.Type.Kind == TypeKind.Int128) return Coercion.ToType(Value.Wide(_isum, _scale), _spec.Type);
                 return Coercion.ToType(Value.Int((long)_isum, _scale), _spec.Type);
             case AggKind.Avg:
                 if (!_any) return Value.Null;
                 if (_isDouble) return Value.Dbl(_dsum / _count);
+                if (_spec.Type.Kind == TypeKind.Int128) return Coercion.ToType(Value.Wide(_isum / _count, _scale), _spec.Type);
                 return Coercion.ToType(Value.Int((long)(_isum / _count), _scale), _spec.Type);
             case AggKind.Min:
             case AggKind.Max:

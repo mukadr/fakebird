@@ -623,10 +623,10 @@ internal sealed class Connection
                             switch (w)
                             {
                                 case Isc.info_sql_sqlda_seq: b.Int(w, k + 1); break;
-                                case Isc.info_sql_type: b.Int(w, type.WireSqlType | (nullable ? 1 : 0)); break;
-                                case Isc.info_sql_sub_type: b.Int(w, type.WireSubType); break;
-                                case Isc.info_sql_scale: b.Int(w, -type.Scale); break;
-                                case Isc.info_sql_length: b.Int(w, type.ByteLength); break;
+                                case Isc.info_sql_type: b.Int(w, type.Bound.WireSqlType | (nullable ? 1 : 0)); break;
+                                case Isc.info_sql_sub_type: b.Int(w, type.Bound.WireSubType); break;
+                                case Isc.info_sql_scale: b.Int(w, -type.Bound.Scale); break;
+                                case Isc.info_sql_length: b.Int(w, type.Bound.ByteLength); break;
                                 case Isc.info_sql_null_ind: b.Int(w, nullable ? 1 : 0); break;
                                 case Isc.info_sql_field: b.Str(w, field); break;
                                 case Isc.info_sql_relation: b.Str(w, relation); break;
@@ -755,6 +755,11 @@ internal sealed class Connection
             var row = error == null && result?.Rows is { Count: > 0 } ? result.Rows[0] : null;
             if (row != null && s!.Prepared!.Outputs.Length > 0)
             {
+                try { row = CoerceRow(s.Prepared.Outputs, row); }
+                catch (FbError e) { error = e; row = null; }
+            }
+            if (row != null && s!.Prepared!.Outputs.Length > 0)
+            {
                 _xdr.WriteInt32(1);
                 WriteRow(s.Prepared.Outputs, row, s.Tx);
             }
@@ -827,14 +832,33 @@ internal sealed class Connection
         var sent = 0;
         while (sent < count && s.Pos < s.Rows.Count)
         {
+            Value[] row;
+            try
+            {
+                row = CoerceRow(outputs, s.Rows[s.Pos]);
+            }
+            catch (FbError e)
+            {
+                // rows already sent are delivered; the error comes with this fetch or the next one
+                s.Pos = s.Rows.Count;
+                if (sent == 0)
+                {
+                    s.Open = false;
+                    Error(e);
+                    return;
+                }
+                s.FetchError = e;
+                break;
+            }
+            s.Pos++;
             _xdr.WriteInt32(Op.FetchResponse);
             _xdr.WriteInt32(0);
             _xdr.WriteInt32(1);
-            WriteRow(outputs, s.Rows[s.Pos++], s.Tx);
+            WriteRow(outputs, row, s.Tx);
             sent++;
         }
         _xdr.WriteInt32(Op.FetchResponse);
-        if (s.Pos >= s.Rows.Count)
+        if (s.Pos >= s.Rows.Count && s.FetchError == null)
         {
             _xdr.WriteInt32(100);
             _xdr.WriteInt32(0);
@@ -1017,14 +1041,40 @@ internal sealed class Connection
         return vals;
     }
 
+    /// <summary>
+    /// Converts a row to the described output types before anything is written, so a failing value (e.g. an
+    /// INT128 result that does not fit the BIGINT of DataTypeCompatibility 3.0) becomes the fetch's error.
+    /// </summary>
+    static Value[] CoerceRow(OutCol[] cols, Value[] row)
+    {
+        var r = new Value[cols.Length];
+        for (var i = 0; i < cols.Length; i++)
+        {
+            var v = row[i];
+            if (!v.IsNull)
+            {
+                var t = cols[i].Type;
+                v = Coercion.ToType(v, t);
+                if (t.Kind == TypeKind.Int128)
+                {
+                    if (v.Tag == VTag.Int128 && !v.FitsLong)
+                        throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-303)
+                            .Gds(Err.isc_arith_except).Gds(Err.isc_integer_overflow).Build();
+                    v = Value.Int(v.L, v.Scale);
+                }
+            }
+            r[i] = v;
+        }
+        return r;
+    }
+
     void WriteRow(OutCol[] cols, Value[] row, Transaction? tx)
     {
         for (var i = 0; i < cols.Length; i++)
         {
-            var t = cols[i].Type;
+            var t = cols[i].Type.Bound;
             var v = row[i];
             var isNull = v.IsNull;
-            if (!isNull) v = Coercion.ToType(v, t);
             switch (t.Kind)
             {
                 case TypeKind.Char:

@@ -5,6 +5,178 @@ namespace Fakebird.Exec;
 /// <summary>Dialect 3 arithmetic on runtime values.</summary>
 public static class Arith
 {
+    const long MaxInt64Limit = long.MaxValue / 10;
+    const long MinInt64Limit = long.MinValue / 10;
+
+    /// <summary>
+    /// Evaluates an operator whose result type was decided at compile time, like Firebird's ArithmeticNode:
+    /// BIGINT (int64 arithmetic at the result's scale), INT128, DOUBLE; date/time operands use their own rules.
+    /// </summary>
+    public static Value Eval(ArithOp op, SqlType type, in Value a, in Value b)
+    {
+        if (a.IsNull || b.IsNull) return Value.Null;
+        switch (type.Kind)
+        {
+            case TypeKind.BigInt when a.Tag is not (VTag.Date or VTag.Time or VTag.Timestamp) && b.Tag is not (VTag.Date or VTag.Time or VTag.Timestamp):
+                return op switch
+                {
+                    ArithOp.Add => AddI64(a, b, type.Scale, false),
+                    ArithOp.Sub => AddI64(a, b, type.Scale, true),
+                    ArithOp.Mul => MulI64(a, b, type.Scale),
+                    _ => DivI64(a, b, type.Scale),
+                };
+            case TypeKind.Int128:
+                return op switch
+                {
+                    ArithOp.Add => AddI128(a, b, type.Scale, false),
+                    ArithOp.Sub => AddI128(a, b, type.Scale, true),
+                    ArithOp.Mul => MulI128(a, b, type.Scale),
+                    _ => DivI128(a, b, type.Scale),
+                };
+            case TypeKind.Double:
+            {
+                var d1 = Conv.ToDouble(Num(a));
+                var d2 = Conv.ToDouble(Num(b));
+                double r;
+                switch (op)
+                {
+                    case ArithOp.Add: r = d1 + d2; break;
+                    case ArithOp.Sub: r = d1 - d2; break;
+                    case ArithOp.Mul: r = d1 * d2; break;
+                    default:
+                        if (d2 == 0) throw Err.FloatDivideByZero();
+                        r = d1 / d2;
+                        break;
+                }
+                if (double.IsInfinity(r)) throw Err.FloatOverflow();
+                return Value.Dbl(r);
+            }
+        }
+        return op switch
+        {
+            ArithOp.Add => Add(a, b),
+            ArithOp.Sub => Sub(a, b),
+            ArithOp.Mul => Mul(a, b),
+            _ => Div(a, b),
+        };
+    }
+
+    /// <summary>MOV_get_int64: the operand as a long at the given scale.</summary>
+    static long I64(in Value v, int scale) => v.Tag == VTag.Int && v.Scale == scale ? v.L : Conv.CastExact(Num(v), scale, TypeKind.BigInt).L;
+
+    static Value AddI64(in Value a, in Value b, int scale, bool sub)
+    {
+        var i1 = I64(a, scale);
+        var i2 = I64(b, scale);
+        var r = sub ? i1 - i2 : i1 + i2;
+        var overflow = sub ? ((i1 ^ i2) & (i1 ^ r)) < 0 : ((i1 ^ r) & (i2 ^ r)) < 0;
+        if (overflow) throw Err.IntegerOverflow();
+        return Value.Int(r, scale);
+    }
+
+    static Value MulI64(in Value a, in Value b, int scale)
+    {
+        // each factor at its own scale; the result scale is their sum
+        var x = Num(a);
+        var y = Num(b);
+        var s2 = y.Tag == VTag.Int ? y.Scale : scale - (x.Tag == VTag.Int ? x.Scale : 0);
+        var i1 = I64(x, scale - s2);
+        var i2 = I64(y, s2);
+        var u1 = i1 >= 0 ? (ulong)i1 : (ulong)-(Int128)i1;
+        var u2 = i2 >= 0 ? (ulong)i2 : (ulong)-(Int128)i2;
+        var limit = (i1 ^ i2) >= 0 ? (ulong)long.MaxValue : (ulong)long.MaxValue + 1;
+        if (u1 != 0 && limit / u1 < u2) throw Err.IntegerOverflow();
+        return Value.Int(i1 * i2, scale);
+    }
+
+    static Value DivI64(in Value a, in Value b, int scale)
+    {
+        var x = Num(a);
+        var y = Num(b);
+        var s2 = y.Tag == VTag.Int ? y.Scale : 0;
+        var i2 = I64(y, s2);
+        if (i2 == 0) throw Err.DivideByZero();
+        var i1 = I64(x, scale - s2);
+        // scale the dividend by 10^(2*s2) as far as it fits, then take zeros off the divisor
+        var addl = 2 * s2;
+        if (i1 >= 0)
+            while (addl > 0 && i1 <= MaxInt64Limit) { i1 *= 10; addl--; }
+        else
+            while (addl > 0 && i1 >= MinInt64Limit) { i1 *= 10; addl--; }
+        while (addl > 0 && i2 % 10 == 0) { i2 /= 10; addl--; }
+        if (i1 == long.MinValue && i2 == -1) throw Err.IntegerOverflow();
+        var q = i1 / i2;
+        if (q >= 0)
+            while (addl > 0 && q <= MaxInt64Limit) { q *= 10; addl--; }
+        else
+            while (addl > 0 && q >= MinInt64Limit) { q *= 10; addl--; }
+        if (addl > 0) throw Err.NumericOverflow();
+        return Value.Int(q, scale);
+    }
+
+    /// <summary>MOV_get_int128: the operand as an Int128 at the given scale.</summary>
+    static Int128 I128(in Value v, int scale)
+    {
+        var x = Num(v);
+        if (x.Tag is VTag.Int or VTag.Int128) return Cvt.Int128SetScale(x.AsInt128, x.Scale, scale);
+        return Conv.Cast(x, new SqlType(TypeKind.Int128, scale: scale)).AsInt128;
+    }
+
+    static Value AddI128(in Value a, in Value b, int scale, bool sub)
+    {
+        var d1 = I128(a, scale);
+        var d2 = I128(b, scale);
+        Int128 r;
+        try { r = sub ? checked(d1 - d2) : checked(d1 + d2); }
+        catch (OverflowException) { throw Err.IntegerOverflow128(); }
+        return Value.Wide(r, scale);
+    }
+
+    static Value MulI128(in Value a, in Value b, int scale)
+    {
+        var x = Num(a);
+        var y = Num(b);
+        var s2 = y.Tag is VTag.Int or VTag.Int128 ? y.Scale : 0;
+        var d1 = I128(x, scale - s2);
+        var d2 = I128(y, s2);
+        Int128 r;
+        try { r = checked(d1 * d2); }
+        catch (OverflowException) { throw Err.IntegerOverflow128(); }
+        return Value.Wide(r, scale);
+    }
+
+    static Value DivI128(in Value a, in Value b, int scale)
+    {
+        var x = Num(a);
+        var y = Num(b);
+        var s2 = y.Tag is VTag.Int or VTag.Int128 ? y.Scale : 0;
+        var op2 = I128(y, s2);
+        var op1 = I128(x, scale - s2);
+        var dividend = op1;
+        // Int128::div(op2, -2 * s2)
+        if (op1 == Int128.MinValue && op2 == -1) throw Err.IntegerOverflow();
+        if (op2 == 0) throw Err.DivideByZero();
+        var maxBy10 = Int128.MaxValue / 10;
+        var minBy10 = Int128.MinValue / 10;
+        var need = 2 * s2;
+        var sign1 = op1.CompareTo(Int128.Zero);
+        while (need > 0 && (sign1 >= 0 ? op1 <= maxBy10 : op1 >= minBy10))
+        {
+            op1 *= 10;
+            need--;
+        }
+        // (Firebird looks at the dividend's last digit here, not the divisor's)
+        while (need > 0)
+        {
+            if (dividend % 10 != 0) break;
+            op2 /= 10;
+            need--;
+        }
+        op1 /= op2;
+        // the digits that could not be added before dividing are added now (overflow: numeric out of range)
+        return Value.Wide(Cvt.Int128SetScale(op1, 0, need), scale);
+    }
+
     static Value Num(in Value v) => v.Tag == VTag.String ? Conv.ParseNumber(v.AsString) : v;
 
     static long Checked(Int128 v)
@@ -88,8 +260,13 @@ public static class Arith
         var x = Num(a);
         if (x.Tag == VTag.Int)
         {
-            if (x.L == long.MinValue) throw Err.NumericOverflow();
+            if (x.L == long.MinValue) throw Err.IntegerOverflow();
             return Value.Int(-x.L, x.Scale);
+        }
+        if (x.Tag == VTag.Int128)
+        {
+            if (x.AsInt128 == Int128.MinValue) throw Err.IntegerOverflow128();
+            return Value.Wide(-x.AsInt128, x.Scale);
         }
         CheckNumeric(x);
         return Value.Dbl(-x.AsDouble);

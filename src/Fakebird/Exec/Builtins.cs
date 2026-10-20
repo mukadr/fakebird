@@ -76,8 +76,21 @@ public static class Builtins
     static Value S(string s) => Value.Str(s);
     static Value D(double d)
     {
-        if (double.IsNaN(d) || double.IsInfinity(d)) throw Err.Random("Floating-point overflow / invalid operation");
+        if (double.IsInfinity(d)) throw Err.FloatOverflow();
+        if (double.IsNaN(d)) throw Err.Random("Floating-point invalid operation");
         return Value.Dbl(d);
+    }
+
+    /// <summary>expression evaluation not supported / Argument for F must be ... (isc_sysf_*).</summary>
+    static FbError Sysf(int code, string function)
+        => new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(code).Str(function).Build();
+
+    static Value Checked(Ctx c, XNode[] a, string name, Func<double, bool> valid, int code, Func<double, double> f)
+    {
+        var x = Dbl(c, a[0]);
+        if (x == null) return Value.Null;
+        if (!valid(x.Value)) throw Sysf(code, name);
+        return D(f(x.Value));
     }
 
     static Value Unary(Ctx c, XNode[] a, Func<double, double> f)
@@ -547,15 +560,15 @@ public static class Builtins
             var x = Dbl(c, a[0]);
             var y = Dbl(c, a[1]);
             if (x == null || y == null) return Value.Null;
-            if (x == 0 && y < 0) throw Err.Random("Zero to the negative power is not allowed");
-            if (x < 0 && Math.Floor(y.Value) != y) throw Err.Random("Negative argument to non-integer power");
+            if (x == 0 && y < 0) throw Sysf(FbMessages.sysf_invalid_zeropowneg, "POWER");
+            if (x < 0 && (!a[1].Type.IsExact || Math.Floor(y.Value) != y)) throw Sysf(FbMessages.sysf_invalid_negpowfp, "POWER");
             return D(Math.Pow(x.Value, y.Value));
         }, (i, a) => SqlType.Double);
         Def("SQRT", 1, 1, DoubleT, (c, a, f) =>
         {
             var x = Dbl(c, a[0]);
             if (x == null) return Value.Null;
-            if (x < 0) throw Err.Random("Negative argument to SQRT");
+            if (x < 0) throw Sysf(FbMessages.sysf_argmustbe_nonneg, "SQRT");
             return D(Math.Sqrt(x.Value));
         }, (i, a) => SqlType.Double);
         Def("EXP", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Exp), (i, a) => SqlType.Double);
@@ -563,14 +576,14 @@ public static class Builtins
         {
             var x = Dbl(c, a[0]);
             if (x == null) return Value.Null;
-            if (x <= 0) throw Err.Random("Argument for LN must be positive");
+            if (x <= 0) throw Sysf(FbMessages.sysf_argmustbe_positive, "LN");
             return D(Math.Log(x.Value));
         }, (i, a) => SqlType.Double);
         Def("LOG10", 1, 1, DoubleT, (c, a, f) =>
         {
             var x = Dbl(c, a[0]);
             if (x == null) return Value.Null;
-            if (x <= 0) throw Err.Random("Argument for LOG10 must be positive");
+            if (x <= 0) throw Sysf(FbMessages.sysf_argmustbe_positive, "LOG10");
             return D(Math.Log10(x.Value));
         }, (i, a) => SqlType.Double);
         Def("LOG", 2, 2, DoubleT, (c, a, f) =>
@@ -578,7 +591,8 @@ public static class Builtins
             var b = Dbl(c, a[0]);
             var x = Dbl(c, a[1]);
             if (b == null || x == null) return Value.Null;
-            if (b <= 0 || x <= 0) throw Err.Random("Arguments for LOG must be positive");
+            if (b <= 0) throw Sysf(FbMessages.sysf_basemustbe_positive, "LOG");
+            if (x <= 0) throw Sysf(FbMessages.sysf_argmustbe_positive, "LOG");
             return D(Math.Log(x.Value) / Math.Log(b.Value));
         }, (i, a) => SqlType.Double);
         Def("PI", 0, 0, DoubleT, (c, a, f) => Value.Dbl(Math.PI));
@@ -586,16 +600,19 @@ public static class Builtins
         Def("SIN", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Sin), (i, a) => SqlType.Double);
         Def("COS", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Cos), (i, a) => SqlType.Double);
         Def("TAN", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Tan), (i, a) => SqlType.Double);
-        Def("COT", 1, 1, DoubleT, (c, a, f) => Unary(c, a, x => 1 / Math.Tan(x)), (i, a) => SqlType.Double);
-        Def("ASIN", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Asin), (i, a) => SqlType.Double);
-        Def("ACOS", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Acos), (i, a) => SqlType.Double);
+        Def("COT", 1, 1, DoubleT, (c, a, f) => Checked(c, a, "COT", x => x != 0, FbMessages.sysf_argmustbe_nonzero, x => 1 / Math.Tan(x)), (i, a) => SqlType.Double);
+        Def("ASIN", 1, 1, DoubleT, (c, a, f) => Checked(c, a, "ASIN", x => x is >= -1 and <= 1, FbMessages.sysf_argmustbe_range_inc1_1, Math.Asin), (i, a) => SqlType.Double);
+        Def("ACOS", 1, 1, DoubleT, (c, a, f) => Checked(c, a, "ACOS", x => x is >= -1 and <= 1, FbMessages.sysf_argmustbe_range_inc1_1, Math.Acos), (i, a) => SqlType.Double);
         Def("ATAN", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Atan), (i, a) => SqlType.Double);
         Def("SINH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Sinh), (i, a) => SqlType.Double);
         Def("COSH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Cosh), (i, a) => SqlType.Double);
         Def("TANH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Tanh), (i, a) => SqlType.Double);
-        Def("ASINH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Asinh), (i, a) => SqlType.Double);
-        Def("ACOSH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Acosh), (i, a) => SqlType.Double);
-        Def("ATANH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, Math.Atanh), (i, a) => SqlType.Double);
+        // Firebird's own formulas for the inverse hyperbolic functions
+        Def("ASINH", 1, 1, DoubleT, (c, a, f) => Unary(c, a, v => Math.Log(v + Math.Sqrt(v * v + 1))), (i, a) => SqlType.Double);
+        Def("ACOSH", 1, 1, DoubleT, (c, a, f) => Checked(c, a, "ACOSH", x => x >= 1, FbMessages.sysf_argmustbe_gteq_one,
+            v => Math.Log(v + Math.Sqrt(v - 1) * Math.Sqrt(v + 1))), (i, a) => SqlType.Double);
+        Def("ATANH", 1, 1, DoubleT, (c, a, f) => Checked(c, a, "ATANH", x => x is > -1 and < 1, FbMessages.sysf_argmustbe_range_exc1_1,
+            v => Math.Log((1 + v) / (1 - v)) / 2), (i, a) => SqlType.Double);
         Def("ATAN2", 2, 2, DoubleT, (c, a, f) =>
         {
             var y = Dbl(c, a[0]);
@@ -605,21 +622,21 @@ public static class Builtins
         }, (i, a) => SqlType.Double);
 
         // ---- bit operations
-        Def("BIN_AND", 1, 255, BinType, (c, a, f) => Bin(c, a, (x, y) => x & y), (i, a) => SqlType.BigInt);
-        Def("BIN_OR", 1, 255, BinType, (c, a, f) => Bin(c, a, (x, y) => x | y), (i, a) => SqlType.BigInt);
-        Def("BIN_XOR", 1, 255, BinType, (c, a, f) => Bin(c, a, (x, y) => x ^ y), (i, a) => SqlType.BigInt);
-        Def("BIN_NOT", 1, 1, BinType, (c, a, f) =>
+        Def("BIN_AND", 1, 255, a => BinType(a, "BIN_AND"), (c, a, f) => Bin(c, a, (x, y) => x & y), (i, a) => SqlType.BigInt);
+        Def("BIN_OR", 1, 255, a => BinType(a, "BIN_OR"), (c, a, f) => Bin(c, a, (x, y) => x | y), (i, a) => SqlType.BigInt);
+        Def("BIN_XOR", 1, 255, a => BinType(a, "BIN_XOR"), (c, a, f) => Bin(c, a, (x, y) => x ^ y), (i, a) => SqlType.BigInt);
+        Def("BIN_NOT", 1, 1, a => BinType(a, "BIN_NOT"), (c, a, f) =>
         {
             var x = Long(c, a[0]);
             return x == null ? Value.Null : Value.Int(~x.Value);
         }, (i, a) => SqlType.BigInt);
-        Def("BIN_SHL", 2, 2, a => SqlType.BigInt, (c, a, f) =>
+        Def("BIN_SHL", 2, 2, a => BinType(a, "BIN_SHL") is var _ && a[0].Type.Kind == TypeKind.Int128 ? SqlType.Int128 : SqlType.BigInt, (c, a, f) =>
         {
             var x = Long(c, a[0]);
             var y = Long(c, a[1]);
             return x == null || y == null ? Value.Null : Value.Int(x.Value << (int)y.Value);
         }, (i, a) => SqlType.BigInt);
-        Def("BIN_SHR", 2, 2, a => SqlType.BigInt, (c, a, f) =>
+        Def("BIN_SHR", 2, 2, a => BinType(a, "BIN_SHR") is var _ && a[0].Type.Kind == TypeKind.Int128 ? SqlType.Int128 : SqlType.BigInt, (c, a, f) =>
         {
             var x = Long(c, a[0]);
             var y = Long(c, a[1]);
@@ -802,8 +819,11 @@ public static class Builtins
                     if (r < 0) q--;
                     break;
             }
-            if (toInteger) return Value.Int(q);
-            return Value.Int(q * p, v.Scale);
+            Int128 res128 = toInteger ? q : (Int128)q * p;
+            // the result keeps the argument's type: a value that no longer fits is out of range
+            var max = f.Type.Kind switch { TypeKind.SmallInt => short.MaxValue, TypeKind.Integer => int.MaxValue, _ => long.MaxValue };
+            if (res128 > max || res128 < -max - 1) throw Err.NumericOverflow();
+            return Value.Int((long)res128, toInteger ? 0 : v.Scale);
         }
         var x = Conv.ToDouble(v);
         double res;
@@ -820,8 +840,15 @@ public static class Builtins
         return D(res);
     }
 
-    static SqlType BinType(XNode[] a)
-        => a.All(x => x.Type.Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.Null) ? SqlType.Integer : SqlType.BigInt;
+    /// <summary>makeBin: integral arguments only; INTEGER unless an argument is wider.</summary>
+    static SqlType BinType(XNode[] a, string name)
+    {
+        foreach (var x in a)
+            if (x.Type.Kind != TypeKind.Null && (!x.Type.IsExact || x.Type.Scale != 0))
+                throw Sysf(FbMessages.sysf_argmustbe_exact, name);
+        if (a.Any(x => x.Type.Kind == TypeKind.Int128)) return SqlType.Int128;
+        return a.All(x => x.Type.Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.Null) ? SqlType.Integer : SqlType.BigInt;
+    }
 
     static SqlType CeilFloorType(XNode[] a) => a[0].Type.Kind switch
     {

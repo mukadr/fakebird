@@ -403,6 +403,54 @@ public static class Cvt
         return v;
     }
 
+    // ------------------------------------------------------------------ INT128
+
+    static readonly Int128 Int128LimitBy10 = Int128.MaxValue / 10;
+
+    /// <summary>Int128::setScale from scale <paramref name="from"/> to <paramref name="to"/> (positive scales):
+    /// dropped digits round half away from zero, adding digits checks the 128-bit range.</summary>
+    public static Int128 Int128SetScale(Int128 v, int from, int to)
+    {
+        var diff = from - to;
+        if (diff > 0)
+        {
+            Int128 rem = 0;
+            while (diff-- > 0)
+            {
+                if (diff == 0) rem = v % 10;
+                v /= 10;
+            }
+            if (rem > 4) v++;
+            else if (rem < -4) v--;
+        }
+        else
+        {
+            while (diff++ < 0)
+            {
+                if (v > Int128LimitBy10 || v < -Int128LimitBy10) throw Err.NumericOverflow();
+                v *= 10;
+            }
+        }
+        return v;
+    }
+
+    /// <summary>Text to INT128 at the given scale (CVT_decompose with a 128-bit accumulator).</summary>
+    public static Int128 StringToInt128(string s, int scale)
+    {
+        CheckBuffer(s, 130);
+        var exp = Decompose(s, Int128.MaxValue, Int128.MinValue, 16, out var value);
+        return Int128SetScale(value, -exp, scale);
+    }
+
+    /// <summary>Double to INT128 (Int128 from a double, rounded half away).</summary>
+    public static Int128 DoubleToInt128(double d, int scale)
+    {
+        if (scale > 0) d *= PowerOfTen(scale);
+        d = Math.Round(d, MidpointRounding.AwayFromZero);
+        if (double.IsNaN(d) || d >= 1.7014118346046923e38 || d <= -1.7014118346046923e38) throw Err.NumericOverflow();
+        return (Int128)d;
+    }
+
     // ------------------------------------------------------------------ text to date/time
 
     /// <summary>

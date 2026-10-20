@@ -269,6 +269,11 @@ public static partial class CorpusRunner
         {
             sb.Append(DescribeError(e));
         }
+        catch (Exception e) when (e is not InvalidOperationException { Message: "unsupported parameter" })
+        {
+            // the client could not handle what the server sent (e.g. a value out of its described type's range)
+            sb.Append("CLIENT EXCEPTION ").Append(e.GetType().Name).Append(": ").Append(e.Message);
+        }
         return sb.ToString().Replace("\r", "");
     }
 

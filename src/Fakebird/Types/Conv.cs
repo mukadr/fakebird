@@ -46,6 +46,7 @@ public static class Conv
     public static decimal ToDecimal(in Value v) => v.Tag switch
     {
         VTag.Int => ScaledToDecimal(v.L, v.Scale),
+        VTag.Int128 => v.FitsLong ? ScaledToDecimal(v.L, v.Scale) : (decimal)v.AsInt128 / (decimal)Math.Pow(10, v.Scale),
         VTag.Double => (decimal)v.AsDouble,
         _ => ToDecimal(CastToExactAuto(v)),
     };
@@ -61,6 +62,8 @@ public static class Conv
     public static double ToDouble(in Value v) => v.Tag switch
     {
         VTag.Int => v.Scale == 0 ? v.L : v.L / Value.Pow10Double[v.Scale],
+        // Int128::toDouble, then the scale like CVT_get_double
+        VTag.Int128 => v.Scale == 0 ? (double)v.AsInt128 : (double)v.AsInt128 / Cvt.PowerOfTen(v.Scale),
         VTag.Double => v.AsDouble,
         VTag.String => Cvt.StringToDouble(v.AsString),
         _ => throw Cvt.ConversionError(v),
@@ -155,6 +158,18 @@ public static class Conv
             case VTag.Double:
                 r = Cvt.DoubleToExact(v.AsDouble, scale, kind, v.IsFloat);
                 break;
+            case VTag.Int128:
+            {
+                // Int128::toInteger / toInt64: rescale (half away), then overflow is an integer overflow;
+                // a SMALLINT is range checked afterwards like any long (numeric out of range)
+                var x = Cvt.Int128SetScale(v.AsInt128, v.Scale, scale);
+                if (kind == TypeKind.Int128) return Value.Wide(x, scale);
+                var limit = kind == TypeKind.BigInt ? long.MaxValue : int.MaxValue;
+                var lower = kind == TypeKind.BigInt ? long.MinValue : int.MinValue;
+                if (x > limit || x < lower) throw Err.IntegerOverflow128();
+                r = (long)x;
+                break;
+            }
             case VTag.String:
                 r = Cvt.StringToExact(v.AsString, scale, kind);
                 break;
@@ -172,6 +187,7 @@ public static class Conv
         VTag.Null => "",
         VTag.String => v.AsString,
         VTag.Int => FormatExact(v.L, v.Scale),
+        VTag.Int128 => FormatExact(v.AsInt128, v.Scale),
         VTag.Double => Cvt.FloatToText(v.AsDouble, v.IsFloat),
         VTag.Bool => v.AsBool ? "TRUE" : "FALSE",
         VTag.Date => FormatDate(v.L),
@@ -180,6 +196,15 @@ public static class Conv
         VTag.Bytes => Utf8.GetString(v.AsBytes),
         _ => "",
     };
+
+    public static string FormatExact(Int128 l, int scale)
+    {
+        if (scale == 0) return l.ToString(CultureInfo.InvariantCulture);
+        var neg = l < 0;
+        var s = (neg ? -l : l).ToString(CultureInfo.InvariantCulture).PadLeft(scale + 1, '0');
+        var res = s[..^scale] + "." + s[^scale..];
+        return neg ? "-" + res : res;
+    }
 
     public static string FormatExact(long l, int scale)
     {
@@ -222,6 +247,12 @@ public static class Conv
         if (v.IsNull) return v;
         switch (t.Kind)
         {
+            case TypeKind.Int128:
+                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.Tag is VTag.Int or VTag.Int128) return Value.Wide(Cvt.Int128SetScale(v.AsInt128, v.Scale, t.Scale), t.Scale);
+                if (v.Tag == VTag.Double) return Value.Wide(Cvt.DoubleToInt128(v.AsDouble, t.Scale), t.Scale);
+                if (v.Tag == VTag.String) return Value.Wide(Cvt.StringToInt128(v.AsString, t.Scale), t.Scale);
+                throw Cvt.ConversionError(v);
             case TypeKind.SmallInt:
             case TypeKind.Integer:
             case TypeKind.BigInt:
@@ -300,7 +331,7 @@ public static class Conv
     {
         var bytes = t.Length * (t.Charset == Charset.Octets ? 1 : t.BytesPerChar);
         if (v.Tag == VTag.Double) return Cvt.FloatToText(v.AsDouble, v.IsFloat, bytes);
-        var s = FormatExact(v.L, v.Scale);
+        var s = v.Tag == VTag.Int128 ? FormatExact(v.AsInt128, v.Scale) : FormatExact(v.L, v.Scale);
         if (s.Length > bytes) throw Cvt.ConversionError(v);
         return s;
     }
@@ -309,7 +340,7 @@ public static class Conv
     {
         if (t.Charset == Charset.Octets)
         {
-            var bytes = v.Tag == VTag.Bytes ? v.AsBytes : Utf8.GetBytes(v.Tag is VTag.Int or VTag.Double ? NumberText(v, t) : ToStr(v));
+            var bytes = v.Tag == VTag.Bytes ? v.AsBytes : Utf8.GetBytes(v.Tag is VTag.Int or VTag.Int128 or VTag.Double ? NumberText(v, t) : ToStr(v));
             if (bytes.Length > t.Length)
             {
                 // excess must be all zero/space padding
@@ -325,7 +356,7 @@ public static class Conv
             }
             return Value.Bytes(bytes);
         }
-        var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Double ? NumberText(v, t) : ToStr(v);
+        var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Int128 or VTag.Double ? NumberText(v, t) : ToStr(v);
         var len = CharLength(s);
         if (len > t.Length)
         {
@@ -364,6 +395,8 @@ public static class Conv
                 case VTag.Int:
                     if (a.Scale == b.Scale) return a.L.CompareTo(b.L);
                     return CompareScaled(a.L, a.Scale, b.L, b.Scale);
+                case VTag.Int128:
+                    return CompareScaled(a.AsInt128, a.Scale, b.AsInt128, b.Scale);
                 case VTag.String: return CompareStrings(a.AsString, b.AsString, collation);
                 case VTag.Double: return a.AsDouble.CompareTo(b.AsDouble);
                 case VTag.Date:
@@ -377,24 +410,28 @@ public static class Conv
         return CompareMixed(a, b, collation);
     }
 
-    static int CompareScaled(long a, int sa, long b, int sb)
+    static int CompareScaled(Int128 a, int sa, Int128 b, int sb)
     {
-        Int128 x = a, y = b;
-        if (sa < sb) x *= Value.Pow10[sb - sa];
-        else y *= Value.Pow10[sa - sb];
+        // compare exactly even when rescaling would overflow 128 bits
+        var x = (System.Numerics.BigInteger)a;
+        var y = (System.Numerics.BigInteger)b;
+        if (sa < sb) x *= System.Numerics.BigInteger.Pow(10, sb - sa);
+        else if (sb < sa) y *= System.Numerics.BigInteger.Pow(10, sa - sb);
         return x.CompareTo(y);
     }
 
     static int CompareMixed(in Value a, in Value b, Collation collation)
     {
+        if (a.Tag is VTag.Int or VTag.Int128 && b.Tag is VTag.Int or VTag.Int128)
+            return CompareScaled(a.AsInt128, a.Scale, b.AsInt128, b.Scale);
         switch (a.Tag)
         {
-            case VTag.Int when b.Tag == VTag.Double:
-            case VTag.Double when b.Tag == VTag.Int:
+            case VTag.Int or VTag.Int128 when b.Tag == VTag.Double:
+            case VTag.Double when b.Tag is VTag.Int or VTag.Int128:
                 return ToDouble(a).CompareTo(ToDouble(b));
-            case VTag.Int or VTag.Double when b.Tag == VTag.String:
+            case VTag.Int or VTag.Int128 or VTag.Double when b.Tag == VTag.String:
                 return Compare(a, ParseNumber(b.AsString), collation);
-            case VTag.String when b.Tag is VTag.Int or VTag.Double:
+            case VTag.String when b.Tag is VTag.Int or VTag.Int128 or VTag.Double:
                 return Compare(ParseNumber(a.AsString), b, collation);
             case VTag.Date when b.Tag == VTag.Timestamp:
                 return (a.L * Value.TicksPerDay).CompareTo(b.L);
@@ -455,11 +492,19 @@ public static class Conv
         {
             case VTag.Null: return 0;
             case VTag.Int:
+            case VTag.Int128 when v.FitsLong:
             {
                 long l = v.L;
                 int s = v.Scale;
                 while (s > 0 && l % 10 == 0) { l /= 10; s--; }
                 return s == 0 ? l.GetHashCode() : HashCode.Combine(l, s);
+            }
+            case VTag.Int128:
+            {
+                var l = v.AsInt128;
+                int s = v.Scale;
+                while (s > 0 && l % 10 == 0) { l /= 10; s--; }
+                return HashCode.Combine(l, s);
             }
             case VTag.Double:
             {

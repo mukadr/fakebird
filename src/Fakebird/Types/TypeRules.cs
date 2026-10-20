@@ -24,16 +24,16 @@ public static class TypeRules
         TypeKind.Blob => 17,
         TypeKind.BigInt => 19,
         TypeKind.Boolean => 21,
+        TypeKind.Int128 => 24,
         _ => 0,
     };
 
-    static int ExactLength(TypeKind k) => k switch { TypeKind.SmallInt => 2, TypeKind.Integer => 4, _ => 8 };
 
     /// <summary>Exact numeric descriptor (subtype 0 none, 1 NUMERIC, 2 DECIMAL).</summary>
     public static SqlType Exact(TypeKind kind, int scale, int subType)
     {
-        if (scale == 0 && subType == 0) return SqlType.Exact(kind, 0);
-        var prec = kind switch { TypeKind.SmallInt => 4, TypeKind.Integer => 9, _ => 18 };
+        if (scale == 0 && subType == 0) return kind == TypeKind.Int128 ? SqlType.Int128 : SqlType.Exact(kind, 0);
+        var prec = kind switch { TypeKind.SmallInt => 4, TypeKind.Integer => 9, TypeKind.BigInt => 18, _ => 38 };
         return new SqlType(kind, scale: scale, precision: prec, subType: subType);
     }
 
@@ -46,6 +46,7 @@ public static class TypeRules
         TypeKind.SmallInt => 6 + (t.Scale > 0 ? 1 : 0),
         TypeKind.Integer => 11 + (t.Scale > 0 ? 1 : 0),
         TypeKind.BigInt => 21 + (t.Scale > 0 ? 1 : 0),
+        TypeKind.Int128 => 47 + (t.Scale > 0 ? 1 : 0),
         TypeKind.Float => 15,
         TypeKind.Double => 24,
         TypeKind.Date => 10,
@@ -84,7 +85,8 @@ public static class TypeRules
                 if (a.IsString || b.IsString)
                     throw DsqlError(Err.isc_expression_eval_err, FbMessages.dsql_nostring_addsub_dial3);
                 if (a.IsExact && b.IsExact)
-                    return (Exact(TypeKind.BigInt, Math.Max(a.Scale, b.Scale), Math.Max(NumSub(a), NumSub(b))), nullable);
+                    return (Exact(a.Kind == TypeKind.Int128 || b.Kind == TypeKind.Int128 ? TypeKind.Int128 : TypeKind.BigInt,
+                        Math.Max(a.Scale, b.Scale), Math.Max(NumSub(a), NumSub(b))), nullable);
                 if (a.IsNumeric && b.IsNumeric) return (SqlType.Double, nullable);
                 // mixed numeric / non-numeric: the date/time operand decides
                 if (a.IsDateTime && b.IsDateTime)
@@ -126,8 +128,11 @@ public static class TypeRules
                 if (a.IsExact && b.IsExact)
                 {
                     var scale = a.Scale + b.Scale;
-                    // multiplication keeps NUMERIC/DECIMAL, division does not
-                    return (Exact(TypeKind.BigInt, scale, mul ? Math.Max(NumSub(a), NumSub(b)) : 0), nullable);
+                    // DSC_multiply_result: SMALLINT/INTEGER pairs give BIGINT, anything with a BIGINT gives INT128.
+                    // BIGINT division drops NUMERIC/DECIMAL, multiplication and INT128 keep it.
+                    var wide = a.Kind is TypeKind.BigInt or TypeKind.Int128 || b.Kind is TypeKind.BigInt or TypeKind.Int128;
+                    var sub = mul || wide ? Math.Max(NumSub(a), NumSub(b)) : 0;
+                    return (Exact(wide ? TypeKind.Int128 : TypeKind.BigInt, scale, sub), nullable);
                 }
                 if (a.IsNumeric && b.IsNumeric) return (SqlType.Double, nullable);
                 throw DsqlError(Err.isc_expression_eval_err, mul ? FbMessages.dsql_invalid_type_multip_dial3 : FbMessages.dsql_invalid_type_div_dial3);

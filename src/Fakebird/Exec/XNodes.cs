@@ -13,6 +13,13 @@ public abstract class XNode
     public string? Relation;
     public string? Field;
     public bool NotNull;
+    /// <summary>
+    /// The type the engine evaluates with, when it differs from the described <see cref="Type"/>: DSQL describes
+    /// scaled literals as BIGINT but sends those that fit in 32 bits as blr_long, so arithmetic on them is
+    /// planned again by the engine (JRD) with INTEGER operands.
+    /// </summary>
+    public SqlType? EngineType;
+    public SqlType EvalType => EngineType ?? Type;
 
     public abstract Value Eval(Ctx c);
 
@@ -91,14 +98,7 @@ public sealed class ArithNode(ArithOp op, XNode l, XNode r) : XNode
         var a = L.Eval(c);
         if (a.IsNull) return a;
         var b = R.Eval(c);
-        return Op switch
-        {
-            ArithOp.Add => Arith.Add(a, b),
-            ArithOp.Sub => Arith.Sub(a, b),
-            ArithOp.Mul => Arith.Mul(a, b),
-            ArithOp.Div => Arith.Div(a, b),
-            _ => ConcatTyped(a, b),
-        };
+        return Op == ArithOp.Concat ? ConcatTyped(a, b) : Arith.Eval(Op, EvalType, a, b);
     }
 
     Value ConcatTyped(in Value a, in Value b)
@@ -411,6 +411,9 @@ public static class Coercion
             case TypeKind.Integer:
             case TypeKind.BigInt:
                 if (v.Tag == VTag.Int && v.Scale == t.Scale) return v;
+                break;
+            case TypeKind.Int128:
+                if (v.Tag is VTag.Int or VTag.Int128 && v.Scale == t.Scale) return v;
                 break;
             case TypeKind.Float:
             case TypeKind.Double:

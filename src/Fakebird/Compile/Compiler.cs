@@ -224,7 +224,13 @@ public sealed partial class Compiler
         switch (e)
         {
             case LiteralExpr l:
-                return new ConstNode(l.Value, l.Type);
+            {
+                var k = new ConstNode(l.Value, l.Type);
+                // LiteralNode::genConstant sends an int64 literal that fits in 32 bits as blr_long
+                if (l.Type is { Kind: TypeKind.BigInt } && l.Value.Tag == VTag.Int && l.Value.L is >= int.MinValue and <= int.MaxValue)
+                    k.EngineType = TypeRules.Exact(TypeKind.Integer, l.Type.Scale, l.Type.SubType);
+                return k;
+            }
             case ParamExpr p:
                 return BindParam(p, expected);
             case VariableExpr v:
@@ -239,8 +245,13 @@ public sealed partial class Compiler
                     case UnaryOp.Neg:
                     {
                         var x = Bind(u.Operand, s, expected);
-                        if (x is ConstNode k && !k.Value.IsNull) return new ConstNode(Arith.Neg(k.Value), k.Type);
-                        return new NegNode(x) { Type = x.Type, Name = "", NotNull = x.NotNull };
+                        var neg = new NegNode(x) { Type = x.Type, Name = NegName(u), NotNull = x.NotNull, EngineType = x.EngineType };
+                        if (x is ConstNode { Value.IsNull: false } k)
+                        {
+                            try { return new ConstNode(Arith.Neg(k.Value), k.Type) { Name = neg.Name, EngineType = k.EngineType }; }
+                            catch (FbError) { return neg; } // raised when evaluated, like Firebird
+                        }
+                        return neg;
                     }
                     case UnaryOp.Plus: return Bind(u.Operand, s, expected);
                     default: return new NotNode(BindBool(u.Operand, s));
@@ -420,6 +431,22 @@ public sealed partial class Compiler
         return (ll, Bind(r, s, ParamTypeFor(ll.Type) ?? (r is ParamExpr ? throw Err.DataTypeUnknown() : null)));
     }
 
+    /// <summary>NegateNode::setParameterName: CONSTANT for negated literals, the label of a negated product or
+    /// quotient, otherwise no name.</summary>
+    static string NegName(UnaryExpr u)
+    {
+        Expr inner = u.Operand;
+        var level = 0;
+        while (inner is UnaryExpr { Op: UnaryOp.Neg } n)
+        {
+            inner = n.Operand;
+            level++;
+        }
+        if (inner is LiteralExpr) return "CONSTANT";
+        if (level == 0 && inner is BinaryExpr { Op: BinaryOp.Mul or BinaryOp.Div } b) return b.Op == BinaryOp.Mul ? "MULTIPLY" : "DIVIDE";
+        return "";
+    }
+
     XNode BindBinary(BinaryExpr b, Scope s, SqlType? expected)
     {
         switch (b.Op)
@@ -500,7 +527,7 @@ public sealed partial class Compiler
         try
         {
             var v = n.Eval(null!);
-            return new ConstNode(v, n.Type) { Name = n.Name };
+            return new ConstNode(v, n.Type) { Name = n.Name, EngineType = n.EngineType };
         }
         catch (FbError)
         {
@@ -540,7 +567,13 @@ public sealed partial class Compiler
         };
         var (type, nullable) = TypeRules.Arith(op, l.Type, !l.NotNull, r.Type, !r.NotNull);
         var name = op switch { ArithOp.Add => "ADD", ArithOp.Sub => "SUBTRACT", ArithOp.Mul => "MULTIPLY", _ => "DIVIDE" };
-        return Fold(new ArithNode(op, l, r) { Type = type, Name = name, NotNull = !nullable });
+        SqlType? engine = null;
+        if (l.EngineType != null || r.EngineType != null)
+        {
+            var et = TypeRules.Arith(op, l.EvalType, false, r.EvalType, false).Type;
+            if (!et.Equals(type)) engine = et;
+        }
+        return Fold(new ArithNode(op, l, r) { Type = type, Name = name, NotNull = !nullable, EngineType = engine });
     }
 
     static SqlType ArithParamType(SqlType other, BinaryOp op, SqlType? expected)

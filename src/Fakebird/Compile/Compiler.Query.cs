@@ -159,9 +159,17 @@ public sealed partial class Compiler
                 if (f.Star || f.Args.Count != 1) throw Err.Dsql(-104, f.Name + " requires 1 argument");
                 spec.Arg = Bind(f.Args[0], s, SqlType.Double);
                 var t = spec.Arg.Type;
-                if (t.IsExact) spec.Type = t.SubType == 1 ? SqlType.Exact(TypeKind.BigInt, t.Scale) : SqlType.ExactExpr(TypeKind.BigInt, t.Scale);
-                else if (t.IsApprox || t.IsTextual || t.Kind == TypeKind.Null) spec.Type = SqlType.Double;
-                else throw Err.Dsql(-104, "Invalid argument for " + f.Name);
+                // SumAggNode/AvgAggNode::make: SUM of BIGINT/INT128 is INT128, AVG of INT128 is INT128, other exact
+                // values give BIGINT, all keeping scale and subtype
+                if (t.IsExact)
+                {
+                    var wide = t.Kind == TypeKind.Int128 || (spec.Kind == AggKind.Sum && t.Kind == TypeKind.BigInt);
+                    spec.Type = TypeRules.Exact(wide ? TypeKind.Int128 : TypeKind.BigInt, t.Scale, t.SubType);
+                }
+                else if (t.IsApprox || t.Kind == TypeKind.Null) spec.Type = SqlType.Double;
+                else
+                    throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err)
+                        .Gds(FbMessages.dsql_agg2_wrongarg).Str(f.Name).Build();
                 return spec;
             }
             case "MIN":

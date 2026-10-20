@@ -188,6 +188,20 @@ internal static class Err
     public static FbError NumericOverflow()
         => new StatusBuilder().Gds(isc_arith_except).Gds(isc_numeric_out_of_range).Build("22003");
 
+    /// <summary>Int128 overflow (Int128::overflow): arith_except + exception_integer_overflow.</summary>
+    public static FbError IntegerOverflow128()
+        => new StatusBuilder().Gds(isc_arith_except).Gds(isc_integer_overflow).Build();
+
+    /// <summary>BIGINT add/subtract/multiply overflow: exception_integer_overflow alone.</summary>
+    public static FbError IntegerOverflow()
+        => new StatusBuilder().Gds(isc_integer_overflow).Build();
+
+    public static FbError FloatDivideByZero()
+        => new StatusBuilder().Gds(isc_arith_except).Gds(FbMessages.exception_float_divide_by_zero).Build();
+
+    public static FbError FloatOverflow()
+        => new StatusBuilder().Gds(isc_arith_except).Gds(FbMessages.exception_float_overflow).Build();
+
     public static FbError DivideByZero()
         => new StatusBuilder().Gds(isc_arith_except).Gds(isc_divide_by_zero).Build("22012");
 

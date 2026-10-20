@@ -17,6 +17,8 @@ public enum TypeKind : byte
     Time,
     Timestamp,
     Boolean,
+    /// <summary>Firebird 4+ INT128 (also the internal type of exact multiplication/division with a BIGINT, and of SUM(BIGINT)).</summary>
+    Int128,
 }
 
 public enum Charset : byte { None, Octets, Utf8, Ascii, Win1252, Iso8859_1, UnicodeFss, Win1250, Win1251 }
@@ -57,6 +59,7 @@ public sealed class SqlType : IEquatable<SqlType>
     public static readonly SqlType SmallInt = new(TypeKind.SmallInt);
     public static readonly SqlType Integer = new(TypeKind.Integer);
     public static readonly SqlType BigInt = new(TypeKind.BigInt);
+    public static readonly SqlType Int128 = new(TypeKind.Int128);
     public static readonly SqlType Float = new(TypeKind.Float);
     public static readonly SqlType Double = new(TypeKind.Double);
     public static readonly SqlType Date = new(TypeKind.Date);
@@ -96,7 +99,7 @@ public sealed class SqlType : IEquatable<SqlType>
     public static SqlType ExactExpr(TypeKind kind, int scale)
         => scale == 0 ? Exact(kind, 0) : new SqlType(kind, scale: scale, precision: kind == TypeKind.Integer ? 9 : 18);
 
-    public bool IsExact => Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt;
+    public bool IsExact => Kind is TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt or TypeKind.Int128;
     public bool IsApprox => Kind is TypeKind.Float or TypeKind.Double;
     public bool IsNumeric => IsExact || IsApprox;
     public bool IsString => Kind is TypeKind.Char or TypeKind.VarChar;
@@ -121,6 +124,7 @@ public sealed class SqlType : IEquatable<SqlType>
         TypeKind.SmallInt => 2,
         TypeKind.Integer => 4,
         TypeKind.BigInt => 8,
+        TypeKind.Int128 => 16,
         TypeKind.Float => 4,
         TypeKind.Double => 8,
         TypeKind.Date => 4,
@@ -151,6 +155,7 @@ public sealed class SqlType : IEquatable<SqlType>
         TypeKind.SmallInt => Isc.SQL_SHORT,
         TypeKind.Integer => Isc.SQL_LONG,
         TypeKind.BigInt => Isc.SQL_INT64,
+        TypeKind.Int128 => Isc.SQL_INT128,
         TypeKind.Float => Isc.SQL_FLOAT,
         TypeKind.Double => Isc.SQL_DOUBLE,
         TypeKind.Char => Isc.SQL_TEXT,
@@ -167,9 +172,15 @@ public sealed class SqlType : IEquatable<SqlType>
     {
         TypeKind.Char or TypeKind.VarChar => WireCharsetId,
         TypeKind.Blob => SubType,
-        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt => SubType,
+        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt or TypeKind.Int128 => SubType,
         _ => 0,
     };
+
+    /// <summary>
+    /// The type as described to clients with DataTypeCompatibility = 3.0 (Firebird's "legacy" bindings): INT128
+    /// becomes BIGINT with the same scale and subtype.
+    /// </summary>
+    public SqlType Bound => Kind == TypeKind.Int128 ? new SqlType(TypeKind.BigInt, scale: Scale, precision: 18, subType: SubType) : this;
 
     public SqlType WithCollation(Collation c) => c == Collation ? this
         : new SqlType(Kind, Length, Scale, Precision, SubType, Charset, c);
@@ -187,11 +198,12 @@ public sealed class SqlType : IEquatable<SqlType>
 
     public override string ToString() => Kind switch
     {
-        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt when Scale > 0 =>
+        TypeKind.SmallInt or TypeKind.Integer or TypeKind.BigInt or TypeKind.Int128 when Scale > 0 =>
             $"{(SubType == 2 ? "DECIMAL" : "NUMERIC")}({Precision}, {Scale})",
         TypeKind.SmallInt => "SMALLINT",
         TypeKind.Integer => "INTEGER",
         TypeKind.BigInt => "BIGINT",
+        TypeKind.Int128 => "INT128",
         TypeKind.Float => "FLOAT",
         TypeKind.Double => "DOUBLE PRECISION",
         TypeKind.Char => $"CHAR({Length})",

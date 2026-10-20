@@ -87,6 +87,11 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   in the target's size, half-away rounding), doubles to text (`%g` with as many digits as fit the
   target), dates and times from text (all of Firebird's formats, two-digit years, month names, time
   zone suffixes), and the text of conversion errors.
+* **Arithmetic** is Firebird 5's: the result type is planned at prepare (BIGINT at the larger scale for
+  + and -, the sum of the scales for * and /, INT128 when a BIGINT is multiplied or divided and for
+  SUM(BIGINT)) and evaluated with the same algorithms (int64 division scaling, overflow checks and
+  their error codes). INT128 results are described as BIGINT (DataTypeCompatibility 3.0) and fail at
+  fetch when they do not fit; literals that fit in 32 bits are evaluated as INTEGER like Firebird's BLR.
 * **Describe information** follows Firebird 5's rules: result types of expressions (NUMERIC vs DECIMAL,
   storage size and scale of arithmetic, CASE/COALESCE/UNION common types, built-in functions), NULLABLE
   flags, and the names, relations and field names clients see.
