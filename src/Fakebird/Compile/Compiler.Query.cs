@@ -55,7 +55,7 @@ public sealed partial class Compiler
             {
                 if (f.Args.Count != 3) throw Err.Dsql(-104, "IIF requires 3 arguments");
                 var cond = BindBool(f.Args[0], s);
-                var results = BindCommon(f.Args.Skip(1).ToList(), s, expected, "IIF", out var type, out var nullable);
+                var results = BindIfChain(f.Args.Skip(1).ToList(), s, expected, "IIF", out var type, out var nullable);
                 return new CaseNode([(cond, results[0])], results[1]) { Type = type, Name = "CASE", NotNull = !nullable };
             }
             case "DECODE":
@@ -93,7 +93,8 @@ public sealed partial class Compiler
                 throw new StatusBuilder().Gds(FbMessages.funmismat).Str(f.Name).Build();
             var args = new XNode?[f.Args.Count];
             for (var i = 0; i < args.Length; i++)
-                if (f.Args[i] is not ParamExpr) args[i] = Bind(f.Args[i], s, null);
+                if (f.Args[i] is not ParamExpr)
+                    args[i] = def.TypesArgParams ? BindProvisional(f.Args[i], s) : Bind(f.Args[i], s, null);
             for (var i = 0; i < args.Length; i++)
                 if (args[i] == null)
                 {
@@ -116,16 +117,66 @@ public sealed partial class Compiler
             .Gds(Err.isc_random).Str(f.Name).Build();
     }
 
+    /// <summary>
+    /// Values whose result type is the list's (COALESCE, DECODE): parameters take that type. The list type is made
+    /// first, with the parameters inside expressions still of unknown type (CoalesceNode/DecodeNode::dsqlPass).
+    /// </summary>
     XNode[] BindCommon(List<Expr> exprs, Scope s, SqlType? expected, string name, out SqlType type, out bool nullable)
     {
         var bound = new XNode?[exprs.Count];
         for (var i = 0; i < exprs.Count; i++)
-            if (exprs[i] is not ParamExpr) bound[i] = Bind(exprs[i], s);
+            if (exprs[i] is not ParamExpr) bound[i] = BindProvisional(exprs[i], s);
         (type, nullable) = TypeRules.FromList(bound, name);
         if (bound.All(b => b == null)) type = expected ?? throw Err.DataTypeUnknown();
         if (type.Kind == TypeKind.Null && exprs.Any(e => e is ParamExpr)) type = expected ?? throw Err.DataTypeUnknown();
         for (var i = 0; i < exprs.Count; i++)
-            bound[i] ??= Bind(exprs[i], s, type);
+            if (bound[i] == null) bound[i] = Bind(exprs[i], s, type);
+            else if (HasInnerParam(exprs[i])) bound[i] = BindInContext(exprs[i], s, type, nullable);
+        return bound.Select(b => b!).ToArray();
+    }
+
+    /// <summary>Parameters inside an expression (not the expression itself), typed from the context.</summary>
+    static bool HasInnerParam(Expr e) => e is not ParamExpr && HasUntypedParam(e);
+
+    /// <summary>
+    /// IIF and searched CASE values (the last one is the ELSE): a chain of ValueIfNodes, built from the innermost.
+    /// Parameters inside a WHEN value take the descriptor of the values after it; those inside the ELSE value take
+    /// the last WHEN value's. Bare parameters take the list type, as before.
+    /// </summary>
+    XNode[] BindIfChain(List<Expr> r, Scope s, SqlType? expected, string name, out SqlType type, out bool nullable)
+    {
+        if (!r.Any(HasInnerParam)) return BindCommon(r, s, expected, name, out type, out nullable);
+        var m = r.Count;
+        var bound = new XNode?[m];
+        for (var i = 0; i < m; i++)
+            if (r[i] is not ParamExpr && !HasInnerParam(r[i])) bound[i] = Bind(r[i], s);
+        if (expected != null)
+        {
+            // the context's PASS1_set_parameter_type reaches the parameters of every value, replacing their types
+            for (var i = 0; i < m; i++)
+                if (HasInnerParam(r[i])) bound[i] = Bind(r[i], s, expected);
+        }
+        (SqlType? Type, bool Nullable) Desc(int i)
+            => bound[i] != null ? (bound[i]!.Type, !bound[i]!.NotNull) : r[i] is ParamExpr ? (null, false) : ProvisionalType(r[i], s);
+        void Set(int k, (SqlType? Type, bool Nullable) context)
+        {
+            if (bound[k] != null || (r[k] is ParamExpr && context.Type == null)) return;
+            // the missing ELSE is a NULL, described as CHAR(1): arithmetic on it fails when the statement is compiled
+            if (context.Type?.Kind == TypeKind.Null && r[k] is BinaryExpr { Op: BinaryOp.Add or BinaryOp.Sub })
+                throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Build();
+            bound[k] = r[k] is ParamExpr ? Bind(r[k], s, context.Type) : BindInContext(r[k], s, context.Type, context.Nullable);
+        }
+        Set(m - 2, Desc(m - 1));
+        Set(m - 1, Desc(m - 2));
+        for (var k = m - 3; k >= 0; k--)
+        {
+            var after = bound.Skip(k + 1).Where(b => b != null).ToArray();
+            Set(k, after.Length == 0 ? (null, false) : TypeRules.FromList(after, name));
+        }
+        (type, nullable) = TypeRules.FromList(bound, name);
+        if (type.Kind == TypeKind.Null && r.Any(e => e is ParamExpr)) type = expected ?? throw Err.DataTypeUnknown();
+        for (var i = 0; i < m; i++)
+            bound[i] ??= Bind(r[i], s, type);
         return bound.Select(b => b!).ToArray();
     }
 
@@ -142,6 +193,10 @@ public sealed partial class Compiler
         return n;
     }
 
+    /// <summary>SUM/AVG: a bare parameter is described as a string (makeNullString), which they reject; parameters
+    /// inside an expression stay of unknown type.</summary>
+    static SqlType? AggParamType(Expr arg) => arg is ParamExpr ? SqlType.VarChar(8191) : null;
+
     AggSpec MakeAggSpec(FuncExpr f, Scope s)
     {
         var spec = new AggSpec { Distinct = f.Distinct };
@@ -153,7 +208,7 @@ public sealed partial class Compiler
                 if (!f.Star)
                 {
                     if (f.Args.Count != 1) throw Err.Dsql(-104, "COUNT requires 1 argument");
-                    spec.Arg = Bind(f.Args[0], s, SqlType.VarChar(8191));
+                    spec.Arg = Bind(f.Args[0], s, null);
                     spec.Collation = spec.Arg.Type.Collation;
                 }
                 return spec;
@@ -162,7 +217,7 @@ public sealed partial class Compiler
             {
                 spec.Kind = f.Name == "SUM" ? AggKind.Sum : AggKind.Avg;
                 if (f.Star || f.Args.Count != 1) throw Err.Dsql(-104, f.Name + " requires 1 argument");
-                spec.Arg = Bind(f.Args[0], s, SqlType.Double);
+                spec.Arg = Bind(f.Args[0], s, AggParamType(f.Args[0]));
                 var t = spec.Arg.Type;
                 // SumAggNode/AvgAggNode::make: SUM of BIGINT/INT128 is INT128, AVG of INT128 is INT128, other exact
                 // values give BIGINT, all keeping scale and subtype
@@ -182,14 +237,14 @@ public sealed partial class Compiler
             case "MAX":
                 spec.Kind = f.Name == "MIN" ? AggKind.Min : AggKind.Max;
                 if (f.Star || f.Args.Count != 1) throw Err.Dsql(-104, f.Name + " requires 1 argument");
-                spec.Arg = Bind(f.Args[0], s, SqlType.VarChar(8191));
+                spec.Arg = Bind(f.Args[0], s, null);
                 spec.Type = spec.Arg.Type;
                 spec.Collation = spec.Arg.Type.Collation;
                 return spec;
             case "LIST":
                 spec.Kind = AggKind.List;
                 if (f.Star || f.Args.Count is < 1 or > 2) throw Err.Dsql(-104, "LIST requires 1 or 2 arguments");
-                spec.Arg = Bind(f.Args[0], s, SqlType.VarChar(8191));
+                spec.Arg = Bind(f.Args[0], s, SqlType.VarChar(8191)); // ListAggNode::setParameterType: strings
                 if (f.Args.Count > 1) spec.Separator = Bind(f.Args[1], s, SqlType.VarChar(8191));
                 // ListAggNode::make: a blob keeps its subtype, any string (OCTETS too) gives a text blob in its charset
                 var at = spec.Arg.Type;
@@ -395,10 +450,13 @@ public sealed partial class Compiler
             // the first branch describes the column; when it must be cast to the union's type, only an alias or a
             // column name survives (as the name), like Firebird's pass1 union processing
             var cast = !SameDescriptor(lc.Type, t);
+            var name = cast ? (lc.NamedColumn ? lc.Name : "") : lc.UnionName;
+            var field = cast ? "" : lc.UnionField;
             cols[i] = new OutCol
             {
-                Name = cast && lc.Derived ? "" : lc.Name, Field = cast ? "" : lc.Field, Relation = cast ? "" : lc.Relation, Type = t,
+                Name = name, Field = field, Relation = field.Length == 0 ? "" : lc.Relation, Type = t,
                 Nullable = l.Columns[i].Nullable || r.Columns[i].Nullable,
+                UnionName = name, UnionField = field, NamedColumn = name.Length > 0,
             };
         }
         return new UnionQuery { Left = l, Right = r, All = so.Kind == SetOpKind.UnionAll, Columns = cols };
@@ -518,6 +576,9 @@ public sealed partial class Compiler
         for (var i = 0; i < cols.Length; i++)
         {
             var name = names?[i] ?? cols[i].Name;
+            if (!view && name.Length == 0)
+                throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.dsql_command_err)
+                    .Gds(FbMessages.dsql_derived_field_unnamed).Num(i + 1).Str(relation.Length == 0 ? "<unnamed>" : relation).Build();
             if (!view && list.Any(c => c.Name == name))
                 throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.dsql_command_err)
                     .Gds(FbMessages.dsql_derived_field_dup_name).Str(name).Str(relation).Build();
@@ -712,7 +773,7 @@ public sealed partial class Compiler
                         if (star.Qualifier == null && src.HiddenCols?.Contains(i) == true) continue;
                         var n = MakeCol(s, s, src, i, qualified: star.Qualifier != null);
                         proj.Add(n);
-                        outCols.Add(OutColOf(n, null));
+                        outCols.Add(OutColOf(n, null, star));
                     }
                 }
                 if (!any) throw Err.TableUnknown(star.Qualifier ?? "*");
@@ -722,7 +783,7 @@ public sealed partial class Compiler
             var node = Bind(item.Expr, s, expected);
             if (item.Alias != null && !aliasIndex.TryAdd(item.Alias, proj.Count)) aliasIndex[item.Alias] = -1; // ambiguous
             proj.Add(node);
-            outCols.Add(OutColOf(node, item.Alias));
+            outCols.Add(OutColOf(node, item.Alias, item.Expr));
         }
 
         // ORDER BY
@@ -780,6 +841,19 @@ public sealed partial class Compiler
         return specQuery;
     }
 
+    static OutCol OutColOf(XNode n, string? alias, Expr? e = null)
+    {
+        var c = OutColOf(n, alias);
+        var column = e is ColumnRefExpr or StarExpr;
+        c.NamedColumn = alias != null || column;
+        if (alias != null || column || (e is LiteralExpr { Negated: false } lit && !lit.Value.IsNull) || (e is FuncExpr f && IsAggregate(f)))
+        {
+            c.UnionName = c.Name;
+            c.UnionField = alias == null && (!column || c.Name == "DB_KEY") ? c.Field : column && c.Relation.Length > 0 ? c.Field : "";
+        }
+        return c;
+    }
+
     static OutCol OutColOf(XNode n, string? alias) => new()
     {
         Name = alias ?? (n.Name is { Length: > 0 } ? n.Name : n.Field ?? ""),
@@ -789,7 +863,6 @@ public sealed partial class Compiler
         Type = n.Type.Kind == TypeKind.Null ? SqlType.Char(1, Charset.None) : n.Type,
         NullLiteral = n.Type.Kind == TypeKind.Null,
         Nullable = !n.NotNull,
-        Derived = alias == null && n.Field is not { Length: > 0 },
     };
 
     /// <summary>The named windows of the query specification being compiled (WINDOW clause).</summary>

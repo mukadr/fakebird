@@ -323,3 +323,18 @@ select cast(rdb$description as varchar(10)) from rdb$relation_fields where rdb$r
 select trim(rdb$parameter_name) from rdb$procedure_parameters where rdb$procedure_name = 'P1'
 -- @case
 select trim(rdb$relation_name) from rdb$relations where rdb$system_flag = 0 order by 1
+-- @case
+grant all on ty to nondba
+-- @commit
+-- @case
+grant select, insert, update (i), delete, references on ty to public with grant option
+-- @commit
+-- @case
+grant execute on procedure p1 to nondba
+-- @commit
+-- @case
+revoke all on ty from nondba
+-- @commit
+-- @case
+revoke execute on procedure p1 from nondba
+-- @commit

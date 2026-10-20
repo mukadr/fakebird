@@ -448,7 +448,7 @@ public sealed partial class Parser
             }
             return new UnaryExpr(UnaryOp.Neg, Unary()) { Pos = pos };
         }
-        if (AcceptOp("+")) return new UnaryExpr(UnaryOp.Plus, Unary()) { Pos = pos };
+        if (AcceptOp("+")) return Unary(); // parse.y: '+' value is the value itself
         return Postfix(Primary());
     }
 

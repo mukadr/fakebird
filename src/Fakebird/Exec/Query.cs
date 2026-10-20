@@ -11,10 +11,16 @@ public sealed class OutCol
     public string Relation = "";  // source table
     public SqlType Type = SqlType.Null;
     public bool Nullable = true;
-    /// <summary>Name derived from an expression (no alias, not a column): a UNION does not inherit it.</summary>
-    public bool Derived;
     /// <summary>A bare NULL (described as CHAR(1)): it does not take part in a UNION's type.</summary>
     public bool NullLiteral;
+    /// <summary>
+    /// Name and source column a UNION shows when this is its first branch's column (DsqlMapNode::setParameterName):
+    /// only aliases, columns, literals, aggregates and DB_KEY are named; a source column only for a table column.
+    /// </summary>
+    public string UnionName = "";
+    public string UnionField = "";
+    /// <summary>An alias or a column: the name a UNION keeps when it casts the column to the union's type.</summary>
+    public bool NamedColumn;
 }
 
 public abstract class QCursor

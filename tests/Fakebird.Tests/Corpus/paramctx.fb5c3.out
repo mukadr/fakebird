@@ -1,0 +1,3791 @@
+--- select abs(s - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(? + s) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select abs(s + ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select abs(? - s) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(i - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select abs(? + i) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+4 | 
+affected 0
+--- select abs(i + ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+4 | 
+affected 0
+--- select abs(? - i) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select abs(b - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(? + b) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5 | 
+affected 0
+--- select abs(b + ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5 | 
+affected 0
+--- select abs(? - b) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(n - ?) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+2.5 | 
+affected 0
+--- select abs(? + n) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select abs(n + ?) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select abs(? - n) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+2.5 | 
+affected 0
+--- select abs(d - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select abs(? + d) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+7.25 | 
+affected 0
+--- select abs(d + ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+7.25 | 
+affected 0
+--- select abs(? - d) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select abs(f - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select abs(? + f) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+8.5 | 
+affected 0
+--- select abs(f + ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+8.5 | 
+affected 0
+--- select abs(? - f) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select abs(r - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5.5 | 
+affected 0
+--- select abs(? + r) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select abs(r + ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select abs(? - r) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5.5 | 
+affected 0
+--- select abs(dt - ?) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(? + dt) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(dt + ?) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(? - dt) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(ts - ?) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(? + ts) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(ts + ?) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(? - ts) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(tm - ?) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(? + tm) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(tm + ?) from r
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select abs(? - tm) from r
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select abs(v - ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(? + v) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(v + ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(? - v) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select round(i - ?, 1) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+0 | 
+affected 0
+--- select round(i - ?) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+0 | 
+affected 0
+--- select trunc(i - ?) from r
+TRUNC:BIGINT (8,,,True,,TRUNC,False,False)
+0 | 
+affected 0
+--- select trunc(i - ?, 1) from r
+TRUNC:BIGINT (8,,,True,,TRUNC,False,False)
+0 | 
+affected 0
+--- select sign(i - ?) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+0 | 
+affected 0
+--- select mod(i - ?, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select mod(10, i - ?) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+ERROR 335544321 335544778 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.
+--- select sqrt(i - ?) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+0 | 
+affected 0
+--- select power(i - ?, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+0 | 
+affected 0
+--- select power(2, i - ?) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+1 | 
+affected 0
+--- select maxvalue(i - ?, 0) from r
+MAXVALUE:BIGINT (8,,,True,,MAXVALUE,False,False)
+0 | 
+affected 0
+--- select maxvalue(i - ?, 1.5) from r
+MAXVALUE:DECIMAL (8,8,1,True,,MAXVALUE,False,False)
+1.5 | 
+affected 0
+--- select minvalue(1, i - ?) from r
+MINVALUE:BIGINT (8,,,True,,MINVALUE,False,False)
+0 | 
+affected 0
+--- select floor(i - ?) from r
+FLOOR:BIGINT (8,,,True,,FLOOR,False,False)
+0 | 
+affected 0
+--- select ceil(i - ?) from r
+CEIL:BIGINT (8,,,True,,CEIL,False,False)
+0 | 
+affected 0
+--- select ceiling(i - ?) from r
+CEILING:BIGINT (8,,,True,,CEILING,False,False)
+0 | 
+affected 0
+--- select exp(i - ?) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+1 | 
+affected 0
+--- select ln(i - ?) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+ERROR 335544606 335544960 'LN' '' 42000
+expression evaluation not supported
+Argument for LN must be positive
+--- select log10(i - ?) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+ERROR 335544606 335544960 'LOG10' '' 42000
+expression evaluation not supported
+Argument for LOG10 must be positive
+--- select log(10, i - ?) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+ERROR 335544606 335544960 'LOG' '' 42000
+expression evaluation not supported
+Argument for LOG must be positive
+--- select sin(i - ?) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+0 | 
+affected 0
+--- select atan2(i - ?, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+0 | 
+affected 0
+--- select bin_and(i - ?, 1) from r
+BIN_AND:BIGINT (8,,,True,,BIN_AND,False,False)
+0 | 
+affected 0
+--- select bin_or(i - ?, 1) from r
+BIN_OR:BIGINT (8,,,True,,BIN_OR,False,False)
+1 | 
+affected 0
+--- select bin_shl(i - ?, 1) from r
+BIN_SHL:BIGINT (8,,,True,,BIN_SHL,False,False)
+0 | 
+affected 0
+--- select ascii_char(i - ? + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+< | 
+affected 0
+--- select char_length(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(i - ?) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', i - ?) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+ | 
+affected 0
+--- select lpad('x', 3, i - ?) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+00x | 
+affected 0
+--- select rpad('a', i - ?) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+ | 
+affected 0
+--- select left('abcdef', i - ?) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+ | 
+affected 0
+--- select right('abcdef', i - ?) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+ | 
+affected 0
+--- select position('a', 'abcabc', i - ?) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+ERROR 335544606 335544963 #3 'POSITION' '' 42000
+expression evaluation not supported
+Argument #3 for POSITION must be positive
+--- select replace('abc', 'a', i - ?) from r
+REPLACE:VARCHAR (60,,,True,,REPLACE,False,False)
+0bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from i - ?) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+ERROR 335544606 335544963 #3 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #3 for OVERLAY must be positive
+--- select dateadd(day, i - ?, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-15 00:00:00.0000 | 
+affected 0
+--- select dateadd(i - ? day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-15 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (i - ?)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(i - ?, 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select coalesce(null, i - ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select coalesce(i - ?, 1.5, 0) from r
+COALESCE:DECIMAL (8,8,1,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select coalesce(i - ?, ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select coalesce(?, i - ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(i - ?, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select nullif(i - ?, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+NULL | 
+affected 0
+--- select nullif(1, i - ?) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, i - ?, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select iif(1=0, 0, i - ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select iif(1=1, i - ?, 1.5) from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+0 | 
+affected 0
+--- select iif(1=1, i - ?, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select iif(1=1, i - ?, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, i - ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, i - ?, i - ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select iif(1=1, i - ?, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, i - ?) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then i - ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=1 then i - ? end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else i - ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then i - ? else 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=1 then i - ? when 1=0 then 2.5 else 0 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=1 then i - ? when 1=0 then i - ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=1 then i - ? when 1=0 then 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=0 then ? else i - ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case when 1=1 then i - ? else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, i - ?, 0) from r
+DECODE:BIGINT (8,,,True,,DECODE,False,False)
+0 | 
+affected 0
+--- select decode(1, 1, i - ?, 2, 1.5) from r
+DECODE:DECIMAL (8,8,1,True,,DECODE,False,False)
+0 | 
+affected 0
+--- select decode(1, 1, i - ?) from r
+DECODE:BIGINT (8,,,True,,DECODE,False,False)
+0 | 
+affected 0
+--- select case 1 when 1 then i - ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case 1 when 1 then i - ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select case 1 when 1 then i - ? when 2 then 1.5 else 0 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+0 | 
+affected 0
+--- select cast(i - ? as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(i - ? as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(i - ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(i - ?)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select abs(coalesce(i - ?, 0)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select coalesce(abs(i - ?), 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select iif(1=1, abs(i - ?), 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+0 | 
+affected 0
+--- select abs(iif(1=1, i - ?, 0)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select i - ? || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select i - ? from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (i - ?) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(i - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(i - ?)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select round(s + ?, 1) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+3 | 
+affected 0
+--- select round(s + ?) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+3 | 
+affected 0
+--- select trunc(s + ?) from r
+TRUNC:BIGINT (8,,,True,,TRUNC,False,False)
+3 | 
+affected 0
+--- select trunc(s + ?, 1) from r
+TRUNC:BIGINT (8,,,True,,TRUNC,False,False)
+3 | 
+affected 0
+--- select sign(s + ?) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+1 | 
+affected 0
+--- select mod(s + ?, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select mod(10, s + ?) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select sqrt(s + ?) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+1.7320508075688772 | 
+affected 0
+--- select power(s + ?, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+9 | 
+affected 0
+--- select power(2, s + ?) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+8 | 
+affected 0
+--- select maxvalue(s + ?, 0) from r
+MAXVALUE:BIGINT (8,,,True,,MAXVALUE,False,False)
+3 | 
+affected 0
+--- select maxvalue(s + ?, 1.5) from r
+MAXVALUE:DECIMAL (8,8,1,True,,MAXVALUE,False,False)
+3 | 
+affected 0
+--- select minvalue(1, s + ?) from r
+MINVALUE:BIGINT (8,,,True,,MINVALUE,False,False)
+1 | 
+affected 0
+--- select floor(s + ?) from r
+FLOOR:BIGINT (8,,,True,,FLOOR,False,False)
+3 | 
+affected 0
+--- select ceil(s + ?) from r
+CEIL:BIGINT (8,,,True,,CEIL,False,False)
+3 | 
+affected 0
+--- select ceiling(s + ?) from r
+CEILING:BIGINT (8,,,True,,CEILING,False,False)
+3 | 
+affected 0
+--- select exp(s + ?) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+20.085536923187668 | 
+affected 0
+--- select ln(s + ?) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+1.0986122886681098 | 
+affected 0
+--- select log10(s + ?) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+0.47712125471966244 | 
+affected 0
+--- select log(10, s + ?) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+0.47712125471966244 | 
+affected 0
+--- select sin(s + ?) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+0.1411200080598672 | 
+affected 0
+--- select atan2(s + ?, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+1.2490457723982544 | 
+affected 0
+--- select bin_and(s + ?, 1) from r
+BIN_AND:BIGINT (8,,,True,,BIN_AND,False,False)
+1 | 
+affected 0
+--- select bin_or(s + ?, 1) from r
+BIN_OR:BIGINT (8,,,True,,BIN_OR,False,False)
+3 | 
+affected 0
+--- select bin_shl(s + ?, 1) from r
+BIN_SHL:BIGINT (8,,,True,,BIN_SHL,False,False)
+6 | 
+affected 0
+--- select ascii_char(s + ? + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+? | 
+affected 0
+--- select char_length(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(s + ?) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', s + ?) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+  a | 
+affected 0
+--- select lpad('x', 3, s + ?) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+33x | 
+affected 0
+--- select rpad('a', s + ?) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+a   | 
+affected 0
+--- select left('abcdef', s + ?) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+abc | 
+affected 0
+--- select right('abcdef', s + ?) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+def | 
+affected 0
+--- select position('a', 'abcabc', s + ?) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+4 | 
+affected 0
+--- select replace('abc', 'a', s + ?) from r
+REPLACE:VARCHAR (60,,,True,,REPLACE,False,False)
+3bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from s + ?) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+abxdef | 
+affected 0
+--- select dateadd(day, s + ?, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-18 00:00:00.0000 | 
+affected 0
+--- select dateadd(s + ? day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-18 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (s + ?)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(s + ?, 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select coalesce(null, s + ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select coalesce(s + ?, 1.5, 0) from r
+COALESCE:DECIMAL (8,8,1,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select coalesce(s + ?, ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select coalesce(?, s + ?) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(s + ?, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select nullif(s + ?, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select nullif(1, s + ?) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, s + ?, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select iif(1=0, 0, s + ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select iif(1=1, s + ?, 1.5) from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+3 | 
+affected 0
+--- select iif(1=1, s + ?, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select iif(1=1, s + ?, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, s + ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, s + ?, s + ?) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select iif(1=1, s + ?, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, s + ?) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then s + ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=1 then s + ? end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else s + ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then s + ? else 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=1 then s + ? when 1=0 then 2.5 else 0 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=1 then s + ? when 1=0 then s + ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=1 then s + ? when 1=0 then 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=0 then ? else s + ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case when 1=1 then s + ? else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, s + ?, 0) from r
+DECODE:BIGINT (8,,,True,,DECODE,False,False)
+3 | 
+affected 0
+--- select decode(1, 1, s + ?, 2, 1.5) from r
+DECODE:DECIMAL (8,8,1,True,,DECODE,False,False)
+3 | 
+affected 0
+--- select decode(1, 1, s + ?) from r
+DECODE:BIGINT (8,,,True,,DECODE,False,False)
+3 | 
+affected 0
+--- select case 1 when 1 then s + ? else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case 1 when 1 then s + ? end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select case 1 when 1 then s + ? when 2 then 1.5 else 0 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+3 | 
+affected 0
+--- select cast(s + ? as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(s + ? as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(s + ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(s + ?)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select abs(coalesce(s + ?, 0)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select coalesce(abs(s + ?), 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+3 | 
+affected 0
+--- select iif(1=1, abs(s + ?), 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+3 | 
+affected 0
+--- select abs(iif(1=1, s + ?, 0)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select s + ? || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select s + ? from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (s + ?) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(s + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(s + ?)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+3 | 
+affected 0
+--- select round(d - ?, 1) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+3.3 | 
+affected 0
+--- select round(d - ?) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+3 | 
+affected 0
+--- select trunc(d - ?) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+3 | 
+affected 0
+--- select trunc(d - ?, 1) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+3.2 | 
+affected 0
+--- select sign(d - ?) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+1 | 
+affected 0
+--- select mod(d - ?, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select mod(10, d - ?) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select sqrt(d - ?) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+1.8027756377319946 | 
+affected 0
+--- select power(d - ?, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+10.5625 | 
+affected 0
+--- select power(2, d - ?) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+9.513656920021768 | 
+affected 0
+--- select maxvalue(d - ?, 0) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+3.25 | 
+affected 0
+--- select maxvalue(d - ?, 1.5) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+3.25 | 
+affected 0
+--- select minvalue(1, d - ?) from r
+MINVALUE:DOUBLE PRECISION (8,,,True,,MINVALUE,False,False)
+1 | 
+affected 0
+--- select floor(d - ?) from r
+FLOOR:DOUBLE PRECISION (8,,,True,,FLOOR,False,False)
+3 | 
+affected 0
+--- select ceil(d - ?) from r
+CEIL:DOUBLE PRECISION (8,,,True,,CEIL,False,False)
+4 | 
+affected 0
+--- select ceiling(d - ?) from r
+CEILING:DOUBLE PRECISION (8,,,True,,CEILING,False,False)
+4 | 
+affected 0
+--- select exp(d - ?) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+25.790339917193062 | 
+affected 0
+--- select ln(d - ?) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+1.1786549963416462 | 
+affected 0
+--- select log10(d - ?) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+0.5118833609788744 | 
+affected 0
+--- select log(10, d - ?) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+0.5118833609788743 | 
+affected 0
+--- select sin(d - ?) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+-0.10819513453010837 | 
+affected 0
+--- select atan2(d - ?, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+1.2722973952087173 | 
+affected 0
+--- select bin_and(d - ?, 1) from r
+ERROR 335544606 335544945 'BIN_AND' '' 42000
+expression evaluation not supported
+Arguments for BIN_AND must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_or(d - ?, 1) from r
+ERROR 335544606 335544945 'BIN_OR' '' 42000
+expression evaluation not supported
+Arguments for BIN_OR must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_shl(d - ?, 1) from r
+ERROR 335544606 335544945 'BIN_SHL' '' 42000
+expression evaluation not supported
+Arguments for BIN_SHL must be integral types or NUMERIC/DECIMAL without scale
+--- select ascii_char(d - ? + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+? | 
+affected 0
+--- select char_length(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(d - ?) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', d - ?) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+  a | 
+affected 0
+--- select lpad('x', 3, d - ?) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+3.x | 
+affected 0
+--- select rpad('a', d - ?) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+a   | 
+affected 0
+--- select left('abcdef', d - ?) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+abc | 
+affected 0
+--- select right('abcdef', d - ?) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+def | 
+affected 0
+--- select position('a', 'abcabc', d - ?) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+4 | 
+affected 0
+--- select replace('abc', 'a', d - ?) from r
+REPLACE:VARCHAR (72,,,True,,REPLACE,False,False)
+3.250000000000000bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from d - ?) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+abxdef | 
+affected 0
+--- select dateadd(day, d - ?, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-18 00:00:00.0000 | 
+affected 0
+--- select dateadd(d - ? day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-18 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (d - ?)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(d - ?, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select coalesce(null, d - ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select coalesce(d - ?, 1.5, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select coalesce(d - ?, ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select coalesce(?, d - ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(d - ?, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select nullif(d - ?, 0) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select nullif(1, d - ?) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, d - ?, 0) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=0, 0, d - ?) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=1, d - ?, 1.5) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=1, d - ?, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=1, d - ?, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, d - ?) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, d - ?, d - ?) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=1, d - ?, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, d - ?) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then d - ? else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=1 then d - ? end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else d - ? end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then d - ? else 2.5 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=1 then d - ? when 1=0 then 2.5 else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=1 then d - ? when 1=0 then d - ? else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=1 then d - ? when 1=0 then 2.5 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=0 then ? else d - ? end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case when 1=1 then d - ? else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, d - ?, 0) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+3.25 | 
+affected 0
+--- select decode(1, 1, d - ?, 2, 1.5) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+3.25 | 
+affected 0
+--- select decode(1, 1, d - ?) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+3.25 | 
+affected 0
+--- select case 1 when 1 then d - ? else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case 1 when 1 then d - ? end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select case 1 when 1 then d - ? when 2 then 1.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select cast(d - ? as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(d - ? as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(d - ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(d - ?)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select abs(coalesce(d - ?, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select coalesce(abs(d - ?), 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+3.25 | 
+affected 0
+--- select iif(1=1, abs(d - ?), 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+3.25 | 
+affected 0
+--- select abs(iif(1=1, d - ?, 0)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select d - ? || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select d - ? from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (d - ?) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(d - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(d - ?)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select round(n + ?, 1) from r
+ROUND:NUMERIC (8,8,2,True,,ROUND,False,False)
+6.5 | 
+affected 0
+--- select round(n + ?) from r
+ROUND:NUMERIC (8,8,0,True,,ROUND,False,False)
+7 | 
+affected 0
+--- select trunc(n + ?) from r
+TRUNC:NUMERIC (8,8,0,True,,TRUNC,False,False)
+6 | 
+affected 0
+--- select trunc(n + ?, 1) from r
+TRUNC:NUMERIC (8,8,2,True,,TRUNC,False,False)
+6.5 | 
+affected 0
+--- select sign(n + ?) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+1 | 
+affected 0
+--- select mod(n + ?, 2) from r
+MOD:NUMERIC (8,8,0,True,,MOD,False,False)
+1 | 
+affected 0
+--- select mod(10, n + ?) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+3 | 
+affected 0
+--- select sqrt(n + ?) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+2.5495097567963922 | 
+affected 0
+--- select power(n + ?, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+42.25 | 
+affected 0
+--- select power(2, n + ?) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+90.50966799187809 | 
+affected 0
+--- select maxvalue(n + ?, 0) from r
+MAXVALUE:NUMERIC (8,8,2,True,,MAXVALUE,False,False)
+6.5 | 
+affected 0
+--- select maxvalue(n + ?, 1.5) from r
+MAXVALUE:NUMERIC (8,8,2,True,,MAXVALUE,False,False)
+6.5 | 
+affected 0
+--- select minvalue(1, n + ?) from r
+MINVALUE:NUMERIC (8,8,2,True,,MINVALUE,False,False)
+1 | 
+affected 0
+--- select floor(n + ?) from r
+FLOOR:BIGINT (8,,,True,,FLOOR,False,False)
+6 | 
+affected 0
+--- select ceil(n + ?) from r
+CEIL:BIGINT (8,,,True,,CEIL,False,False)
+7 | 
+affected 0
+--- select ceiling(n + ?) from r
+CEILING:BIGINT (8,,,True,,CEILING,False,False)
+7 | 
+affected 0
+--- select exp(n + ?) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+665.1416330443618 | 
+affected 0
+--- select ln(n + ?) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+1.8718021769015913 | 
+affected 0
+--- select log10(n + ?) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+0.8129133566428556 | 
+affected 0
+--- select log(10, n + ?) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+0.8129133566428555 | 
+affected 0
+--- select sin(n + ?) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+0.21511998808781552 | 
+affected 0
+--- select atan2(n + ?, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+1.4181469983996315 | 
+affected 0
+--- select bin_and(n + ?, 1) from r
+ERROR 335544606 335544945 'BIN_AND' '' 42000
+expression evaluation not supported
+Arguments for BIN_AND must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_or(n + ?, 1) from r
+ERROR 335544606 335544945 'BIN_OR' '' 42000
+expression evaluation not supported
+Arguments for BIN_OR must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_shl(n + ?, 1) from r
+ERROR 335544606 335544945 'BIN_SHL' '' 42000
+expression evaluation not supported
+Arguments for BIN_SHL must be integral types or NUMERIC/DECIMAL without scale
+--- select ascii_char(n + ? + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+C | 
+affected 0
+--- select char_length(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(n + ?) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', n + ?) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+      a | 
+affected 0
+--- select lpad('x', 3, n + ?) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+6.x | 
+affected 0
+--- select rpad('a', n + ?) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+a       | 
+affected 0
+--- select left('abcdef', n + ?) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+abcdef | 
+affected 0
+--- select right('abcdef', n + ?) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+abcdef | 
+affected 0
+--- select position('a', 'abcabc', n + ?) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+0 | 
+affected 0
+--- select replace('abc', 'a', n + ?) from r
+REPLACE:VARCHAR (63,,,True,,REPLACE,False,False)
+6.50bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from n + ?) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+abcdefx | 
+affected 0
+--- select dateadd(day, n + ?, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-22 00:00:00.0000 | 
+affected 0
+--- select dateadd(n + ? day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-22 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (n + ?)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(n + ?, 0) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select coalesce(null, n + ?) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select coalesce(n + ?, 1.5, 0) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select coalesce(n + ?, ?) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select coalesce(?, n + ?) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(n + ?, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select nullif(n + ?, 0) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select nullif(1, n + ?) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, n + ?, 0) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=0, 0, n + ?) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=1, n + ?, 1.5) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=1, n + ?, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=1, n + ?, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, n + ?) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, n + ?, n + ?) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=1, n + ?, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, n + ?) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then n + ? else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=1 then n + ? end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else n + ? end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then n + ? else 2.5 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=1 then n + ? when 1=0 then 2.5 else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=1 then n + ? when 1=0 then n + ? else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=1 then n + ? when 1=0 then 2.5 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=0 then ? else n + ? end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case when 1=1 then n + ? else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, n + ?, 0) from r
+DECODE:NUMERIC (8,8,2,True,,DECODE,False,False)
+6.5 | 
+affected 0
+--- select decode(1, 1, n + ?, 2, 1.5) from r
+DECODE:NUMERIC (8,8,2,True,,DECODE,False,False)
+6.5 | 
+affected 0
+--- select decode(1, 1, n + ?) from r
+DECODE:NUMERIC (8,8,2,True,,DECODE,False,False)
+6.5 | 
+affected 0
+--- select case 1 when 1 then n + ? else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case 1 when 1 then n + ? end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select case 1 when 1 then n + ? when 2 then 1.5 else 0 end from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select cast(n + ? as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(n + ? as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(n + ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(n + ?)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select abs(coalesce(n + ?, 0)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select coalesce(abs(n + ?), 0) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+6.5 | 
+affected 0
+--- select iif(1=1, abs(n + ?), 0) from r
+CASE:NUMERIC (8,8,2,True,,CASE,False,False)
+6.5 | 
+affected 0
+--- select abs(iif(1=1, n + ?, 0)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select n + ? || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select n + ? from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (n + ?) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(n + ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(n + ?)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select round(f - ?, 1) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+4.5 | 
+affected 0
+--- select round(f - ?) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+5 | 
+affected 0
+--- select trunc(f - ?) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+4 | 
+affected 0
+--- select trunc(f - ?, 1) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+4.5 | 
+affected 0
+--- select sign(f - ?) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+1 | 
+affected 0
+--- select mod(f - ?, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select mod(10, f - ?) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select sqrt(f - ?) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+2.1213203435596424 | 
+affected 0
+--- select power(f - ?, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+20.25 | 
+affected 0
+--- select power(2, f - ?) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+22.627416997969522 | 
+affected 0
+--- select maxvalue(f - ?, 0) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+4.5 | 
+affected 0
+--- select maxvalue(f - ?, 1.5) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+4.5 | 
+affected 0
+--- select minvalue(1, f - ?) from r
+MINVALUE:DOUBLE PRECISION (8,,,True,,MINVALUE,False,False)
+1 | 
+affected 0
+--- select floor(f - ?) from r
+FLOOR:DOUBLE PRECISION (8,,,True,,FLOOR,False,False)
+4 | 
+affected 0
+--- select ceil(f - ?) from r
+CEIL:DOUBLE PRECISION (8,,,True,,CEIL,False,False)
+5 | 
+affected 0
+--- select ceiling(f - ?) from r
+CEILING:DOUBLE PRECISION (8,,,True,,CEILING,False,False)
+5 | 
+affected 0
+--- select exp(f - ?) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+90.01713130052181 | 
+affected 0
+--- select ln(f - ?) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+1.5040773967762742 | 
+affected 0
+--- select log10(f - ?) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+0.6532125137753437 | 
+affected 0
+--- select log(10, f - ?) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+0.6532125137753436 | 
+affected 0
+--- select sin(f - ?) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+-0.977530117665097 | 
+affected 0
+--- select atan2(f - ?, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+1.3521273809209546 | 
+affected 0
+--- select bin_and(f - ?, 1) from r
+ERROR 335544606 335544945 'BIN_AND' '' 42000
+expression evaluation not supported
+Arguments for BIN_AND must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_or(f - ?, 1) from r
+ERROR 335544606 335544945 'BIN_OR' '' 42000
+expression evaluation not supported
+Arguments for BIN_OR must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_shl(f - ?, 1) from r
+ERROR 335544606 335544945 'BIN_SHL' '' 42000
+expression evaluation not supported
+Arguments for BIN_SHL must be integral types or NUMERIC/DECIMAL without scale
+--- select ascii_char(f - ? + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+A | 
+affected 0
+--- select char_length(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(f - ?) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', f - ?) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+    a | 
+affected 0
+--- select lpad('x', 3, f - ?) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+4.x | 
+affected 0
+--- select rpad('a', f - ?) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+a     | 
+affected 0
+--- select left('abcdef', f - ?) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+abcde | 
+affected 0
+--- select right('abcdef', f - ?) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+bcdef | 
+affected 0
+--- select position('a', 'abcabc', f - ?) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+0 | 
+affected 0
+--- select replace('abc', 'a', f - ?) from r
+REPLACE:VARCHAR (72,,,True,,REPLACE,False,False)
+4.500000000000000bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from f - ?) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+abcdxf | 
+affected 0
+--- select dateadd(day, f - ?, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-20 00:00:00.0000 | 
+affected 0
+--- select dateadd(f - ? day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-20 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (f - ?)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(f - ?, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select coalesce(null, f - ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select coalesce(f - ?, 1.5, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select coalesce(f - ?, ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select coalesce(?, f - ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(f - ?, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select nullif(f - ?, 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select nullif(1, f - ?) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, f - ?, 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=0, 0, f - ?) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=1, f - ?, 1.5) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=1, f - ?, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=1, f - ?, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, f - ?) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, f - ?, f - ?) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=1, f - ?, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, f - ?) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then f - ? else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=1 then f - ? end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else f - ? end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then f - ? else 2.5 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=1 then f - ? when 1=0 then 2.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=1 then f - ? when 1=0 then f - ? else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=1 then f - ? when 1=0 then 2.5 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=0 then ? else f - ? end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case when 1=1 then f - ? else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, f - ?, 0) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+4.5 | 
+affected 0
+--- select decode(1, 1, f - ?, 2, 1.5) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+4.5 | 
+affected 0
+--- select decode(1, 1, f - ?) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+4.5 | 
+affected 0
+--- select case 1 when 1 then f - ? else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case 1 when 1 then f - ? end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select case 1 when 1 then f - ? when 2 then 1.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select cast(f - ? as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(f - ? as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(f - ?) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(f - ?)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select abs(coalesce(f - ?, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select coalesce(abs(f - ?), 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+4.5 | 
+affected 0
+--- select iif(1=1, abs(f - ?), 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+4.5 | 
+affected 0
+--- select abs(iif(1=1, f - ?, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select f - ? || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select f - ? from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (f - ?) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(f - ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(f - ?)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select round(? - b, 1) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+-1 | 
+affected 0
+--- select round(? - b) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+-1 | 
+affected 0
+--- select trunc(? - b) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+-1 | 
+affected 0
+--- select trunc(? - b, 1) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+-1 | 
+affected 0
+--- select sign(? - b) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+-1 | 
+affected 0
+--- select mod(? - b, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+-1 | 
+affected 0
+--- select mod(10, ? - b) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select sqrt(? - b) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+ERROR 335544606 335544967 'SQRT' '' 42000
+expression evaluation not supported
+Argument for SQRT must be zero or positive
+--- select power(? - b, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+1 | 
+affected 0
+--- select power(2, ? - b) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+0.5 | 
+affected 0
+--- select maxvalue(? - b, 0) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+0 | 
+affected 0
+--- select maxvalue(? - b, 1.5) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+1.5 | 
+affected 0
+--- select minvalue(1, ? - b) from r
+MINVALUE:DOUBLE PRECISION (8,,,True,,MINVALUE,False,False)
+-1 | 
+affected 0
+--- select floor(? - b) from r
+FLOOR:DOUBLE PRECISION (8,,,True,,FLOOR,False,False)
+-1 | 
+affected 0
+--- select ceil(? - b) from r
+CEIL:DOUBLE PRECISION (8,,,True,,CEIL,False,False)
+-1 | 
+affected 0
+--- select ceiling(? - b) from r
+CEILING:DOUBLE PRECISION (8,,,True,,CEILING,False,False)
+-1 | 
+affected 0
+--- select exp(? - b) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+0.36787944117144233 | 
+affected 0
+--- select ln(? - b) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+ERROR 335544606 335544960 'LN' '' 42000
+expression evaluation not supported
+Argument for LN must be positive
+--- select log10(? - b) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+ERROR 335544606 335544960 'LOG10' '' 42000
+expression evaluation not supported
+Argument for LOG10 must be positive
+--- select log(10, ? - b) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+ERROR 335544606 335544960 'LOG' '' 42000
+expression evaluation not supported
+Argument for LOG must be positive
+--- select sin(? - b) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+-0.8414709848078965 | 
+affected 0
+--- select atan2(? - b, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+-0.7853981633974483 | 
+affected 0
+--- select bin_and(? - b, 1) from r
+ERROR 335544606 335544945 'BIN_AND' '' 42000
+expression evaluation not supported
+Arguments for BIN_AND must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_or(? - b, 1) from r
+ERROR 335544606 335544945 'BIN_OR' '' 42000
+expression evaluation not supported
+Arguments for BIN_OR must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_shl(? - b, 1) from r
+ERROR 335544606 335544945 'BIN_SHL' '' 42000
+expression evaluation not supported
+Arguments for BIN_SHL must be integral types or NUMERIC/DECIMAL without scale
+--- select ascii_char(? - b + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+; | 
+affected 0
+--- select char_length(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(? - b) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from ? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', ? - b) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+ERROR 335544606 335544962 #2 'LPAD' '' 42000
+expression evaluation not supported
+Argument #2 for LPAD must be zero or positive
+--- select lpad('x', 3, ? - b) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+-1x | 
+affected 0
+--- select rpad('a', ? - b) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+ERROR 335544606 335544962 #2 'RPAD' '' 42000
+expression evaluation not supported
+Argument #2 for RPAD must be zero or positive
+--- select left('abcdef', ? - b) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+ERROR 335544853 #-1 '' 22011
+Invalid length parameter -1 to SUBSTRING. Negative integers are not allowed.
+--- select right('abcdef', ? - b) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+ERROR 335544853 #-1 '' 22011
+Invalid length parameter -1 to SUBSTRING. Negative integers are not allowed.
+--- select position('a', 'abcabc', ? - b) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+ERROR 335544606 335544963 #3 'POSITION' '' 42000
+expression evaluation not supported
+Argument #3 for POSITION must be positive
+--- select replace('abc', 'a', ? - b) from r
+REPLACE:VARCHAR (72,,,True,,REPLACE,False,False)
+-1.000000000000000bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from ? - b) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+ERROR 335544606 335544963 #3 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #3 for OVERLAY must be positive
+--- select dateadd(day, ? - b, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-14 00:00:00.0000 | 
+affected 0
+--- select dateadd(? - b day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-14 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (? - b)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(? - b, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select coalesce(null, ? - b) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select coalesce(? - b, 1.5, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select coalesce(? - b, ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select coalesce(?, ? - b) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(? - b, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select nullif(? - b, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select nullif(1, ? - b) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, ? - b, 0) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select iif(1=0, 0, ? - b) from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select iif(1=1, ? - b, 1.5) from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select iif(1=1, ? - b, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select iif(1=1, ? - b, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, ? - b) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, ? - b, ? - b) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select iif(1=1, ? - b, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, ? - b) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then ? - b else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=1 then ? - b end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else ? - b end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then ? - b else 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=1 then ? - b when 1=0 then 2.5 else 0 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=1 then ? - b when 1=0 then ? - b else 0 end from r
+CASE:BIGINT (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=1 then ? - b when 1=0 then 2.5 end from r
+CASE:DECIMAL (8,8,1,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=0 then ? else ? - b end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case when 1=1 then ? - b else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, ? - b, 0) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+-1 | 
+affected 0
+--- select decode(1, 1, ? - b, 2, 1.5) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+-1 | 
+affected 0
+--- select decode(1, 1, ? - b) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+-1 | 
+affected 0
+--- select case 1 when 1 then ? - b else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case 1 when 1 then ? - b end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select case 1 when 1 then ? - b when 2 then 1.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+-1 | 
+affected 0
+--- select cast(? - b as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(? - b as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(? - b) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(? - b)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(coalesce(? - b, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select coalesce(abs(? - b), 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, abs(? - b), 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select abs(iif(1=1, ? - b, 0)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select ? - b || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select ? - b from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (? - b) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(? - b) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(? - b)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select round(? + r, 1) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+9.5 | 
+affected 0
+--- select round(? + r) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+10 | 
+affected 0
+--- select trunc(? + r) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+9 | 
+affected 0
+--- select trunc(? + r, 1) from r
+TRUNC:DOUBLE PRECISION (8,,,True,,TRUNC,False,False)
+9.5 | 
+affected 0
+--- select sign(? + r) from r
+SIGN:SMALLINT (2,,,True,,SIGN,False,False)
+1 | 
+affected 0
+--- select mod(? + r, 2) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select mod(10, ? + r) from r
+MOD:INTEGER (4,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select sqrt(? + r) from r
+SQRT:DOUBLE PRECISION (8,,,True,,SQRT,False,False)
+3.082207001484488 | 
+affected 0
+--- select power(? + r, 2) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+90.25 | 
+affected 0
+--- select power(2, ? + r) from r
+POWER:DOUBLE PRECISION (8,,,True,,POWER,False,False)
+724.0773439350247 | 
+affected 0
+--- select maxvalue(? + r, 0) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+9.5 | 
+affected 0
+--- select maxvalue(? + r, 1.5) from r
+MAXVALUE:DOUBLE PRECISION (8,,,True,,MAXVALUE,False,False)
+9.5 | 
+affected 0
+--- select minvalue(1, ? + r) from r
+MINVALUE:DOUBLE PRECISION (8,,,True,,MINVALUE,False,False)
+1 | 
+affected 0
+--- select floor(? + r) from r
+FLOOR:DOUBLE PRECISION (8,,,True,,FLOOR,False,False)
+9 | 
+affected 0
+--- select ceil(? + r) from r
+CEIL:DOUBLE PRECISION (8,,,True,,CEIL,False,False)
+10 | 
+affected 0
+--- select ceiling(? + r) from r
+CEILING:DOUBLE PRECISION (8,,,True,,CEILING,False,False)
+10 | 
+affected 0
+--- select exp(? + r) from r
+EXP:DOUBLE PRECISION (8,,,True,,EXP,False,False)
+13359.726829661873 | 
+affected 0
+--- select ln(? + r) from r
+LN:DOUBLE PRECISION (8,,,True,,LN,False,False)
+2.2512917986064953 | 
+affected 0
+--- select log10(? + r) from r
+LOG10:DOUBLE PRECISION (8,,,True,,LOG10,False,False)
+0.9777236052888477 | 
+affected 0
+--- select log(10, ? + r) from r
+LOG:DOUBLE PRECISION (8,,,True,,LOG,False,False)
+0.9777236052888477 | 
+affected 0
+--- select sin(? + r) from r
+SIN:DOUBLE PRECISION (8,,,True,,SIN,False,False)
+-0.0751511204618093 | 
+affected 0
+--- select atan2(? + r, 1) from r
+ATAN2:DOUBLE PRECISION (8,,,True,,ATAN2,False,False)
+1.4659193880646628 | 
+affected 0
+--- select bin_and(? + r, 1) from r
+ERROR 335544606 335544945 'BIN_AND' '' 42000
+expression evaluation not supported
+Arguments for BIN_AND must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_or(? + r, 1) from r
+ERROR 335544606 335544945 'BIN_OR' '' 42000
+expression evaluation not supported
+Arguments for BIN_OR must be integral types or NUMERIC/DECIMAL without scale
+--- select bin_shl(? + r, 1) from r
+ERROR 335544606 335544945 'BIN_SHL' '' 42000
+expression evaluation not supported
+Arguments for BIN_SHL must be integral types or NUMERIC/DECIMAL without scale
+--- select ascii_char(? + r + 60) from r
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+F | 
+affected 0
+--- select char_length(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select octet_length(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select upper(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select trim(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select reverse(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select hex_encode(? + r) from r
+ERROR 335545217 '' 22023
+Invalid first parameter datatype - need string or blob
+--- select substring('abcdef' from ? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select lpad('a', ? + r) from r
+LPAD:VARCHAR (8191,,,True,,LPAD,False,False)
+         a | 
+affected 0
+--- select lpad('x', 3, ? + r) from r
+LPAD:VARCHAR (3,,,True,,LPAD,False,False)
+9.x | 
+affected 0
+--- select rpad('a', ? + r) from r
+RPAD:VARCHAR (8191,,,True,,RPAD,False,False)
+a          | 
+affected 0
+--- select left('abcdef', ? + r) from r
+LEFT:VARCHAR (6,,,True,,LEFT,False,False)
+abcdef | 
+affected 0
+--- select right('abcdef', ? + r) from r
+RIGHT:VARCHAR (6,,,True,,RIGHT,False,False)
+abcdef | 
+affected 0
+--- select position('a', 'abcabc', ? + r) from r
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+0 | 
+affected 0
+--- select replace('abc', 'a', ? + r) from r
+REPLACE:VARCHAR (72,,,True,,REPLACE,False,False)
+9.500000000000000bc | 
+affected 0
+--- select overlay('abcdef' placing 'x' from ? + r) from r
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+abcdefx | 
+affected 0
+--- select dateadd(day, ? + r, dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-25 00:00:00.0000 | 
+affected 0
+--- select dateadd(? + r day to dt) from r
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-01-25 00:00:00.0000 | 
+affected 0
+--- select extract(year from dt + (? + r)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select coalesce(? + r, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select coalesce(null, ? + r) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select coalesce(? + r, 1.5, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select coalesce(? + r, ?) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select coalesce(?, ? + r) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+2 | 
+affected 0
+--- select coalesce(? + r, f) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select nullif(? + r, 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select nullif(1, ? + r) from r
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | 
+affected 0
+--- select iif(1=1, ? + r, 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=0, 0, ? + r) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=1, ? + r, 1.5) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=1, ? + r, f) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=1, ? + r, ?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select iif(1=1, ?, ? + r) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+2 | 
+affected 0
+--- select iif(1=1, ? + r, ? + r) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=1, ? + r, null) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select iif(1=1, null, ? + r) from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=1 then ? + r else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=1 then ? + r end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select case when 1=0 then 0 else ? + r end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=0 then 1 when 1=1 then ? + r else 2.5 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=1 then ? + r when 1=0 then 2.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=1 then ? + r when 1=0 then ? + r else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=1 then ? + r when 1=0 then 2.5 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=0 then ? else ? + r end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case when 1=1 then ? + r else null end from r
+ERROR 335544606 '' 42000
+expression evaluation not supported
+--- select decode(1, 1, ? + r, 0) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+9.5 | 
+affected 0
+--- select decode(1, 1, ? + r, 2, 1.5) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+9.5 | 
+affected 0
+--- select decode(1, 1, ? + r) from r
+DECODE:DOUBLE PRECISION (8,,,True,,DECODE,False,False)
+9.5 | 
+affected 0
+--- select case 1 when 1 then ? + r else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case 1 when 1 then ? + r end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select case 1 when 1 then ? + r when 2 then 1.5 else 0 end from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select cast(? + r as integer) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select cast(? + r as varchar(10)) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select sum(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select avg(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select min(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(? + r) from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select abs(abs(? + r)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select abs(coalesce(? + r, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select coalesce(abs(? + r), 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+9.5 | 
+affected 0
+--- select iif(1=1, abs(? + r), 0) from r
+CASE:DOUBLE PRECISION (8,,,True,,CASE,False,False)
+9.5 | 
+affected 0
+--- select abs(iif(1=1, ? + r, 0)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select ? + r || 'x' from r
+ERROR 335544569 335544606 336397247 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Strings cannot be added or subtracted in dialect 3
+--- select ? + r from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select (? + r) + 0 from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select -(? + r) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select abs(-(? + r)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select abs(i * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(i / ?) from r
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select abs(-i - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+4 | 
+affected 0
+--- select abs(i - ? - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+2 | 
+affected 0
+--- select abs((i - ?) / 2) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select abs((i - ?) * 2) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select abs(i - (? - 1)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(i + (1 + ?)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+5 | 
+affected 0
+--- select abs(1 + i - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(i - ? * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(? - ? + i) from r
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select abs(i - cast(? as integer)) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select round(i - ?, ?) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+0 | 
+affected 0
+--- select mod(i - ?, ?) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+0 | 
+affected 0
+--- select abs(n * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(n / ?) from r
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select abs(-n - ?) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select abs(n - ? - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+0.5 | 
+affected 0
+--- select abs((n - ?) / 2) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+1.25 | 
+affected 0
+--- select abs((n - ?) * 2) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+5 | 
+affected 0
+--- select abs(n - (? - 1)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+3.5 | 
+affected 0
+--- select abs(n + (1 + ?)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+7.5 | 
+affected 0
+--- select abs(1 + n - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+3.5 | 
+affected 0
+--- select abs(n - ? * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(? - ? + n) from r
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select abs(n - cast(? as integer)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+2.5 | 
+affected 0
+--- select round(n - ?, ?) from r
+ROUND:NUMERIC (8,8,2,True,,ROUND,False,False)
+2.5 | 
+affected 0
+--- select mod(n - ?, ?) from r
+MOD:NUMERIC (8,8,0,True,,MOD,False,False)
+1 | 
+affected 0
+--- select abs(d * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(d / ?) from r
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select abs(-d - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+7.25 | 
+affected 0
+--- select abs(d - ? - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1.25 | 
+affected 0
+--- select abs((d - ?) / 2) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+1.625 | 
+affected 0
+--- select abs((d - ?) * 2) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+6.5 | 
+affected 0
+--- select abs(d - (? - 1)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+4.25 | 
+affected 0
+--- select abs(d + (1 + ?)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+8.25 | 
+affected 0
+--- select abs(1 + d - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.25 | 
+affected 0
+--- select abs(d - ? * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(? - ? + d) from r
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select abs(d - cast(? as integer)) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select round(d - ?, ?) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+3.25 | 
+affected 0
+--- select mod(d - ?, ?) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select abs(f * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(f / ?) from r
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select abs(-f - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+8.5 | 
+affected 0
+--- select abs(f - ? - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+2.5 | 
+affected 0
+--- select abs((f - ?) / 2) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+2.25 | 
+affected 0
+--- select abs((f - ?) * 2) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9 | 
+affected 0
+--- select abs(f - (? - 1)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5.5 | 
+affected 0
+--- select abs(f + (1 + ?)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+9.5 | 
+affected 0
+--- select abs(1 + f - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+5.5 | 
+affected 0
+--- select abs(f - ? * ?) from r
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select abs(? - ? + f) from r
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select abs(f - cast(? as integer)) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.5 | 
+affected 0
+--- select round(f - ?, ?) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+4.5 | 
+affected 0
+--- select mod(f - ?, ?) from r
+MOD:BIGINT (8,,,True,,MOD,False,False)
+1 | 
+affected 0
+--- select abs(1 - ?) from r
+ABS:BIGINT (8,,,False,,ABS,False,False)
+1 | 
+affected 0
+--- select coalesce(1 - ?, 0) from r
+COALESCE:BIGINT (8,,,False,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select abs(1.5 - ?) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+0.5 | 
+affected 0
+--- select coalesce(1.5 - ?, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,False,,COALESCE,False,False)
+-0.5 | 
+affected 0
+--- select abs(? - 1e0) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+1 | 
+affected 0
+--- select coalesce(? - 1e0, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,False,,COALESCE,False,False)
+1 | 
+affected 0
+--- select abs(? + 2147483648) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+2147483650 | 
+affected 0
+--- select coalesce(? + 2147483648, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,False,,COALESCE,False,False)
+2147483650 | 
+affected 0
+--- select abs(? - 0.001) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+1.999 | 
+affected 0
+--- select coalesce(? - 0.001, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,False,,COALESCE,False,False)
+1.999 | 
+affected 0
+--- select abs(cast(1 as smallint) + ?) from r
+ABS:BIGINT (8,,,False,,ABS,False,False)
+3 | 
+affected 0
+--- select coalesce(cast(1 as smallint) + ?, 0) from r
+COALESCE:BIGINT (8,,,False,,COALESCE,False,False)
+3 | 
+affected 0
+--- select abs(id + ?) from r
+ABS:BIGINT (8,,,False,,ABS,False,False)
+3 | 
+affected 0
+--- select coalesce(id + ?, 0) from r
+COALESCE:BIGINT (8,,,False,,COALESCE,False,False)
+3 | 
+affected 0
+--- select abs(char_length(v) - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+1 | 
+affected 0
+--- select coalesce(char_length(v) - ?, 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+-1 | 
+affected 0
+--- select abs(extract(day from dt) - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+13 | 
+affected 0
+--- select coalesce(extract(day from dt) - ?, 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+13 | 
+affected 0
+--- select abs(datediff(day, dt, dt) - ?) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+2 | 
+affected 0
+--- select coalesce(datediff(day, dt, dt) - ?, 0) from r
+COALESCE:DOUBLE PRECISION (8,,,True,,COALESCE,False,False)
+-2 | 
+affected 0
+--- select abs((select max(i) from r) - ?) from r
+ABS:BIGINT (8,,,True,,ABS,False,False)
+0 | 
+affected 0
+--- select coalesce((select max(i) from r) - ?, 0) from r
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+0 | 
+affected 0
+--- select abs(cast(? as integer) - d) from r
+ABS:NUMERIC (8,8,2,True,,ABS,False,False)
+3.25 | 
+affected 0
+--- select coalesce(cast(? as integer) - d, 0) from r
+COALESCE:NUMERIC (8,8,2,True,,COALESCE,False,False)
+-3.25 | 
+affected 0
+--- select round(i - ?, 2) from r
+ROUND:BIGINT (8,,,True,,ROUND,False,False)
+0 | 
+affected 0
+--- select round(d - ?, 2) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+2.7 | 
+affected 0
+--- select round(n + ?, 2) from r
+ROUND:NUMERIC (8,8,2,True,,ROUND,False,False)
+5.5 | 
+affected 0
+--- select round(f - ?, 2) from r
+ROUND:DOUBLE PRECISION (8,,,True,,ROUND,False,False)
+6.4 | 
+affected 0
+--- select 1 from r where d - ? > 0
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select 1 from r where abs(d - ?) > 0
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select 1 from r where abs(d - ?) < 100
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select abs(d - ?) from r where abs(d - ?) < 100
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.25 | 
+affected 0
+--- select 1 from r where d between ? - 1 and ? + 1
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+affected 0
+--- select 1 from r where d in (? - 1, ? + 1)
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+affected 0
+--- select 1 from r where coalesce(d - ?, 0) > 0
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select 1 from r where iif(1=1, d - ?, 0) > 0
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select d from r order by abs(d - ?)
+D:NUMERIC (8,15,2,True,R,D,False,False)
+5.25 | 
+affected 0
+--- select abs(d - ?) from r group by abs(d - ?)
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select abs(d - ?) from r group by 1
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.25 | 
+affected 0
+--- select (select abs(d - ?) from rdb$database) from r
+ABS:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+4.25 | 
+affected 0
+--- select max(abs(d - ?)) from r
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+4.25 | 
+affected 0
+--- select sum(abs(i - ?)) from r
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 
+affected 0
+--- select abs(d - ?) from r union all select abs(i - ?) from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+4.25 | 
+1 | 
+affected 0
+--- select cast(? as integer) from r
+CAST:INTEGER (4,,,True,,CAST,False,False)
+1 | 
+affected 0
+--- select sum(?) from r
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select avg(?) from r
+ERROR 335544569 335544606 336397242 'AVG' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for AVG in dialect 3 must be numeric
+--- select min(?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select max(?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select count(?) from r
+ERROR 335544569 335544436 #-804 335544573 '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- select list(?) from r
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+1 | 
+affected 0
+--- select abs(?) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(-?) from r
+ERROR 335544569 335544606 336397256 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for negation (minus operator)
+--- select abs(+?) from r
+ABS:DOUBLE PRECISION (8,,,False,,ABS,False,False)
+1 | 
+affected 0
+--- select abs(? - ?) from r
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select coalesce(? - 1, 0) from r
+COALESCE:BIGINT (8,,,False,,COALESCE,False,False)
+0 | 
+affected 0
+--- with u as (select p from g where id = ?) select coalesce(u.p, 99) from r left join u on 1=1
+COALESCE:INTEGER (4,,,True,,COALESCE,False,False)
+99 | 
+affected 0
+--- with u as (select p from g where id = ?) select u.p from r left join u on 1=1 where r.id = ?
+P:INTEGER (4,,,True,G,P,False,False)
+NULL | 
+affected 0
+--- with u as (select p from g where id = ?),
+ID:INTEGER (4,,,True,G,ID,False,False)
+DMAX:NUMERIC (8,15,2,True,G,DMAX,False,False)
+D:NUMERIC (8,15,2,True,R,D,False,False)
+O:INTEGER (4,,,True,,CASE,False,False)
+DF:DOUBLE PRECISION (8,,,True,,ABS,False,False)
+RA:CHAR (1,,,False,,CASE,False,False)
+2 | 20 | 5.25 | 5 | 5 | T | 
+affected 0
+--- select 1 from r union all select 1 from r
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+1 | 
+affected 0
+--- select -1 from r union all select -1 from r
+:INTEGER (4,,,False,,,False,False)
+-1 | 
+-1 | 
+affected 0
+--- select 'a' from r union all select 'a' from r
+CONSTANT:CHAR (1,,,False,,CONSTANT,False,False)
+a | 
+a | 
+affected 0
+--- select null from r union all select null from r
+:CHAR (1,,,True,,,False,False)
+NULL | 
+NULL | 
+affected 0
+--- select 1+1 from r union all select 1+1 from r
+:BIGINT (8,,,False,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select 1.5 from r union all select 1.5 from r
+CONSTANT:DECIMAL (8,8,1,False,,CONSTANT,False,False)
+1.5 | 
+1.5 | 
+affected 0
+--- select -1.5 from r union all select -1.5 from r
+:DECIMAL (8,8,1,False,,,False,False)
+-1.5 | 
+-1.5 | 
+affected 0
+--- select 1e0 from r union all select 1e0 from r
+CONSTANT:DOUBLE PRECISION (8,,,False,,CONSTANT,False,False)
+1 | 
+1 | 
+affected 0
+--- select count(*) from r union all select count(*) from r
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 
+1 | 
+affected 0
+--- select sum(i) from r union all select sum(i) from r
+SUM:BIGINT (8,,,True,,SUM,False,False)
+2 | 
+2 | 
+affected 0
+--- select max(i) from r union all select max(i) from r
+MAX:INTEGER (4,,,True,,MAX,False,False)
+2 | 
+2 | 
+affected 0
+--- select max(i) + 1 from r union all select max(i) + 1 from r
+:BIGINT (8,,,True,,,False,False)
+3 | 
+3 | 
+affected 0
+--- select i from r union all select i from r
+I:INTEGER (4,,,True,R,I,False,False)
+2 | 
+2 | 
+affected 0
+--- select i as x from r union all select i as x from r
+X:INTEGER (4,,,True,R,I,False,False)
+2 | 
+2 | 
+affected 0
+--- select abs(i) as x from r union all select abs(i) as x from r
+X:BIGINT (8,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select abs(i) from r union all select abs(i) from r
+:BIGINT (8,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select abs(d) from r union all select abs(d) from r
+:NUMERIC (8,8,2,True,,,False,False)
+5.25 | 
+5.25 | 
+affected 0
+--- select f + 1 from r union all select f + 1 from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+7.5 | 
+7.5 | 
+affected 0
+--- select upper(v) from r union all select upper(v) from r
+:VARCHAR (10,,,True,,,False,False)
+7 | 
+7 | 
+affected 0
+--- select current_date from r union all select current_date from r
+:DATE (4,,,False,,,False,False)
+2026-10-20 00:00:00.0000 | 
+2026-10-20 00:00:00.0000 | 
+affected 0
+--- select (select max(i) from r) from r union all select (select max(i) from r) from r
+:INTEGER (4,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select cast(i as bigint) from r union all select cast(i as bigint) from r
+:BIGINT (8,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select cast(i as integer) from r union all select cast(i as integer) from r
+:INTEGER (4,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select coalesce(i, 0) from r union all select coalesce(i, 0) from r
+:INTEGER (4,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select -i from r union all select -i from r
+:INTEGER (4,,,True,,,False,False)
+-2 | 
+-2 | 
+affected 0
+--- select true from r union all select true from r
+CONSTANT:BOOLEAN (1,,,False,,CONSTANT,False,False)
+True | 
+True | 
+affected 0
+--- select x'41' from r union all select x'41' from r
+CONSTANT:CHAR (1,,,False,,CONSTANT,False,False)
+41 | 
+41 | 
+affected 0
+--- select date '2024-01-01' from r union all select date '2024-01-01' from r
+CONSTANT:DATE (4,,,False,,CONSTANT,False,False)
+2024-01-01 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+affected 0
+--- select current_user from r union all select current_user from r
+:VARCHAR (63,,,False,,,False,False)
+SYSDBA | 
+SYSDBA | 
+affected 0
+--- select i || '' from r union all select i || '' from r
+:VARCHAR (11,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select abs(d - ?) from r union all select abs(d - ?) from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+3.25 | 
+3.25 | 
+affected 0
+--- select abs(?) from r union all select abs(?) from r
+:DOUBLE PRECISION (8,,,False,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select cast(? as double precision) from r union all select cast(? as double precision) from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select abs(d) from r union all select abs(i) from r
+:NUMERIC (8,8,2,True,,,False,False)
+5.25 | 
+2 | 
+affected 0
+--- select abs(i) from r union all select abs(b) from r
+:BIGINT (8,,,True,,,False,False)
+2 | 
+3 | 
+affected 0
+--- select abs(f) from r union all select abs(i) from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+6.5 | 
+2 | 
+affected 0
+--- select f from r union all select i from r
+F:DOUBLE PRECISION (8,,,True,R,F,False,False)
+6.5 | 
+2 | 
+affected 0
+--- select abs(f) from r union all select f from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+6.5 | 
+6.5 | 
+affected 0
+--- select upper(v) from r union all select v from r
+:VARCHAR (10,,,True,,,False,False)
+7 | 
+7 | 
+affected 0
+--- select abs(d - ?) from r union all select abs(i) from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+3.25 | 
+2 | 
+affected 0
+--- select abs(d) from r union all select abs(i - ?) from r
+:NUMERIC (8,8,2,True,,,False,False)
+5.25 | 
+0 | 
+affected 0
+--- select i from r union all select d from r
+I:NUMERIC (8,8,2,True,,,False,False)
+2 | 
+5.25 | 
+affected 0
+--- select i as x from r union all select d from r
+X:NUMERIC (8,8,2,True,,,False,False)
+2 | 
+5.25 | 
+affected 0
+--- select d - cast(? as double precision) from r union all select i from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+3.25 | 
+2 | 
+affected 0
+--- select d + 1e0 from r union all select i from r
+:DOUBLE PRECISION (8,,,True,,,False,False)
+6.25 | 
+2 | 
+affected 0
+--- select 1 from r union all select d from r
+:NUMERIC (8,8,2,True,,,False,False)
+1 | 
+5.25 | 
+affected 0
+--- select count(*) from r union all select d from r
+:NUMERIC (8,8,2,True,,,False,False)
+1 | 
+5.25 | 
+affected 0
+--- select y from (select i + 1 as y, i as z from r) union all select 1 from r
+Y:BIGINT (8,,,True,,,False,False)
+3 | 
+1 | 
+affected 0
+--- select z from (select i + 1 as y, i as z from r) union all select 1 from r
+Z:INTEGER (4,,,True,R,I,False,False)
+2 | 
+1 | 
+affected 0
+--- select dt.c from (select i + 1 from r) dt (c) union all select 1 from r
+C:BIGINT (8,,,True,,,False,False)
+3 | 
+1 | 
+affected 0
+--- select abs(i) from r union select abs(i) from r union select abs(i) from r
+:BIGINT (8,,,True,,,False,False)
+2 | 
+affected 0
+--- select i from r union all select i from r union all select abs(i) from r
+I:BIGINT (8,,,True,,,False,False)
+2 | 
+2 | 
+2 | 
+affected 0
+--- select x from (select abs(i) from r union all select abs(i) from r) t (x)
+X:BIGINT (8,,,True,,,False,False)
+2 | 
+2 | 
+affected 0
+--- select * from (select abs(i), i from r union all select abs(i), i from r)
+ERROR 335544569 335544436 #-104 335544570 336397220 #1 '<unnamed>' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+no column name specified for column number 1 in derived table <unnamed>
+--- select * from (select abs(i), i from r union all select abs(i), i from r) t
+ERROR 335544569 335544436 #-104 335544570 336397220 #1 'T' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+no column name specified for column number 1 in derived table T
+--- select * from (select abs(i) a, i from r union all select abs(i), i from r)
+A:BIGINT (8,,,True,,,False,False)
+I:INTEGER (4,,,True,R,I,False,False)
+2 | 2 | 
+2 | 2 | 
+affected 0
+--- select abs(i) from r group by abs(i)
+ABS:BIGINT (8,,,True,,ABS,False,False)
+2 | 
+affected 0
+--- select i + 1 from r group by i
+ADD:BIGINT (8,,,True,,ADD,False,False)
+3 | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 0) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+ERROR 335544606 335544963 #3 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #3 for OVERLAY must be positive
+--- select overlay('abcdef' placing 'x' from -1) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+ERROR 335544606 335544963 #3 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #3 for OVERLAY must be positive
+--- select overlay('abcdef' placing 'x' from 1) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+xbcdef | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 6) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+abcdex | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 7) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+abcdefx | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 9) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+abcdefx | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 1 for -1) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+ERROR 335544606 335544962 #4 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #4 for OVERLAY must be zero or positive
+--- select overlay('abcdef' placing 'x' from 2 for 0) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+axbcdef | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 2 for 9) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+ax | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 0 for -1) from r
+OVERLAY:VARCHAR (7,,,False,,OVERLAY,False,False)
+ERROR 335544606 335544962 #4 'OVERLAY' '' 42000
+expression evaluation not supported
+Argument #4 for OVERLAY must be zero or positive
+--- select overlay('abcdef' placing 'x' from null for -1) from r
+OVERLAY:CHAR (1,,,True,,OVERLAY,False,False)
+NULL | 
+affected 0
+--- select overlay('abcdef' placing 'x' from 0 for null) from r
+OVERLAY:CHAR (1,,,True,,OVERLAY,False,False)
+NULL | 
+affected 0
+--- update r set d = d - ? where id = 1 returning d
+D:NUMERIC (8,15,2,True,R,D,False,False)
+3.25 | 
+affected 1
+--- update r set i = abs(d - ?) where id = 1 returning i
+I:INTEGER (4,,,True,R,I,False,False)
+0 | 
+affected 1
+--- update r set n = iif(1=1, n + ?, 0) where id = 1 returning n
+N:NUMERIC (4,9,2,True,R,N,False,False)
+6 | 
+affected 1
+--- insert into r (id, d) values (? + 1, coalesce(? - 1, 0)) returning id, d
+ID:INTEGER (4,,,True,R,ID,True,False)
+D:NUMERIC (8,15,2,True,R,D,False,False)
+3 | 0 | 
+affected 1
+--- execute block (x numeric(15,2) = ?) returns (y double precision) as begin y = abs(x - 0.5); suspend; end
+Y:DOUBLE PRECISION (8,,,True,,Y,False,False)
+1.5 | 
+affected 0

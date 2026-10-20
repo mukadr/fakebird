@@ -16,12 +16,23 @@ public sealed class BuiltinDef
     public bool Deterministic = true;
     /// <summary>Result nullability; by default nullable when any argument is (Firebird's initResult).</summary>
     public Func<XNode[], bool>? Nullable;
+    /// <summary>A Firebird system function with a setParams function: the parameters inside its arguments take the
+    /// arguments' own descriptors (SysFuncCallNode::dsqlPass).</summary>
+    public bool TypesArgParams => !Builtins.NoSetParams.Contains(Name);
 }
 
 public static class Builtins
 {
     static readonly Dictionary<string, BuiltinDef> Defs = new(StringComparer.Ordinal);
     static readonly SqlType LongVarchar = SqlType.VarChar(8191);
+
+    /// <summary>Functions that are their own nodes in Firebird (UPPER, SUBSTRING, EXTRACT...) or system functions
+    /// without a setParams function.</summary>
+    internal static readonly HashSet<string> NoSetParams = new(StringComparer.Ordinal)
+    {
+        "UPPER", "LOWER", "TRIM", "SUBSTRING", "SUBSTRING_SIMILAR", "CHAR_LENGTH", "OCTET_LENGTH", "BIT_LENGTH", "EXTRACT",
+        "REVERSE", "GEN_UUID", "PI", "RAND", "HEX_ENCODE", "HEX_DECODE", "BASE64_ENCODE", "BASE64_DECODE",
+    };
 
     public static BuiltinDef? Find(string name) => Defs.TryGetValue(name, out var d) ? d : null;
 
@@ -428,8 +439,12 @@ public static class Builtins
             {
                 var l = Long(c, a[3]);
                 if (l == null) return Value.Null;
+                if (l < 0)
+                    throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argnmustbe_nonneg).Num(4).Str("OVERLAY").Build();
                 len = l.Value;
             }
+            if (from <= 0)
+                throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argnmustbe_positive).Num(3).Str("OVERLAY").Build();
             return S(Substr(s, 1, from.Value - 1) + p + Substr(s, from.Value + len, null));
         }, (i, a) => i >= 2 ? SqlType.Integer : LongVarchar);
         Def("ASCII_CHAR", 1, 1, a => a[0].Type.Kind == TypeKind.Null ? SqlType.Null : SqlType.Char(1, Charset.None), (c, a, f) =>
@@ -497,7 +512,7 @@ public static class Builtins
             TypeKind.Null => SqlType.Integer,
             TypeKind.SmallInt => SqlType.ExactExpr(TypeKind.Integer, a[0].Type.Scale),
             TypeKind.Integer => SqlType.ExactExpr(TypeKind.BigInt, a[0].Type.Scale),
-            TypeKind.BigInt or TypeKind.Float or TypeKind.Double => a[0].Type,
+            TypeKind.BigInt or TypeKind.Int128 or TypeKind.Float or TypeKind.Double => a[0].Type,
             _ => SqlType.Double,
         }, (c, a, f) =>
         {
@@ -507,6 +522,11 @@ public static class Builtins
             {
                 if (v.L == long.MinValue) throw Err.NumericOverflow();
                 return Value.Int(Math.Abs(v.L), v.Scale);
+            }
+            if (v.Tag == VTag.Int128)
+            {
+                if (v.AsInt128 == Int128.MinValue) throw Err.NumericOverflow();
+                return Value.Wide(Int128.Abs(v.AsInt128), v.Scale);
             }
             return D(Math.Abs(Conv.ToDouble(v)));
         }, (i, a) => SqlType.Double);

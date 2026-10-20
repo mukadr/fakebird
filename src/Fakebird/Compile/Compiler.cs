@@ -372,7 +372,8 @@ public sealed partial class Compiler
             case CastExpr ca:
             {
                 var t = ResolveType(ca.Type);
-                var x = Bind(ca.Operand, s, t);
+                // CastNode::setParameterType: only a bare parameter takes the target type
+                var x = Bind(ca.Operand, s, ca.Operand is ParamExpr ? t : null);
                 if (x is ParamNode pn && ca.Operand is ParamExpr)
                 {
                     pn.Name = "CAST";
@@ -431,7 +432,7 @@ public sealed partial class Compiler
         var t = expected;
         if (t.Kind == TypeKind.Char && t.Charset != Charset.Octets) t = SqlType.VarChar(Math.Max(t.Length, 1), t.Charset, t.Collation);
         ParamTypes[p.Index] = t;
-        return new ParamNode(p.Index, t);
+        return new ParamNode(p.Index, t) { NotNull = _contextParamNotNull };
     }
 
     XNode BindVariable(string name, int pos)
@@ -657,15 +658,91 @@ public sealed partial class Compiler
     /// </summary>
     SqlType UntypedArithParam(ArithOp op, BinaryExpr b, Scope s)
     {
+        if (op is ArithOp.Mul or ArithOp.Div || (b.Left is ParamExpr && b.Right is ParamExpr)) CheckUntypedArith(op, null);
+        var other = Bind(b.Left is ParamExpr ? b.Right : b.Left, s).Type;
+        CheckUntypedArith(op, other);
+        return other;
+    }
+
+    /// <summary>ArithmeticNode::makeDialect3 with an operand of unknown type (other is the known one, if any).</summary>
+    static void CheckUntypedArith(ArithOp op, SqlType? other)
+    {
         FbError Eval(int code) => new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(code).Build();
         if (op == ArithOp.Mul) throw Eval(FbMessages.dsql_invalid_type_multip_dial3);
         if (op == ArithOp.Div) throw Eval(FbMessages.dsql_invalid_type_div_dial3);
-        if (b.Left is ParamExpr && b.Right is ParamExpr) throw Eval(FbMessages.dsql_invalid_type_addsub_dial3);
-        var other = Bind(b.Left is ParamExpr ? b.Right : b.Left, s);
-        if (other.Type.IsString) throw Eval(FbMessages.dsql_nostring_addsub_dial3);
-        if (other.Type.IsDateTime)
+        if (other == null) throw Eval(FbMessages.dsql_invalid_type_addsub_dial3);
+        if (other.IsString) throw Eval(FbMessages.dsql_nostring_addsub_dial3);
+        if (other.IsDateTime)
             throw Eval(op == ArithOp.Add ? FbMessages.dsql_invalid_dateortime_add : FbMessages.dsql_invalid_datetime_subtract);
-        return other.Type;
+    }
+
+    /// <summary>
+    /// Binds an expression whose parameters take the expression's own descriptor, made while they are still of
+    /// unknown type (system function arguments, COALESCE and DECODE values).
+    /// </summary>
+    XNode BindProvisional(Expr e, Scope s)
+    {
+        if (e is ParamExpr || !HasUntypedParam(e)) return Bind(e, s, null);
+        var (t, nullable) = ProvisionalType(e, s);
+        return BindInContext(e, s, t, nullable);
+    }
+
+    /// <summary>Binds an expression whose parameters take a descriptor of the context, nullability included.</summary>
+    XNode BindInContext(Expr e, Scope s, SqlType? type, bool nullable)
+    {
+        var save = _contextParamNotNull;
+        _contextParamNotNull = type != null && !nullable;
+        try
+        {
+            return Bind(e, s, type);
+        }
+        finally
+        {
+            _contextParamNotNull = save;
+        }
+    }
+
+    /// <summary>Parameters bound now are described NOT NULL (their context's descriptor is).</summary>
+    bool _contextParamNotNull;
+
+    /// <summary>
+    /// MAKE_desc of an expression with parameters of unknown type (ParameterNode::make leaves dtype_unknown):
+    /// ArithmeticNode::makeDialect3 takes its mixed-types path, where the known operand's type wins over the unknown
+    /// one and INT64 is first turned into DOUBLE. Null when the expression is a bare parameter.
+    /// </summary>
+    (SqlType? Type, bool Nullable) ProvisionalType(Expr e, Scope s)
+    {
+        switch (e)
+        {
+            case ParamExpr:
+                return (null, false);
+            case UnaryExpr u when HasUntypedParam(u.Operand):
+                return ProvisionalType(u.Operand, s);
+            case BinaryExpr { Op: BinaryOp.Add or BinaryOp.Sub or BinaryOp.Mul or BinaryOp.Div } b when HasUntypedParam(b):
+            {
+                var op = b.Op switch
+                {
+                    BinaryOp.Add => ArithOp.Add,
+                    BinaryOp.Sub => ArithOp.Sub,
+                    BinaryOp.Mul => ArithOp.Mul,
+                    _ => ArithOp.Div,
+                };
+                var l = ProvisionalType(b.Left, s);
+                var r = ProvisionalType(b.Right, s);
+                if (l.Type != null && r.Type != null) return TypeRules.Arith(op, l.Type, l.Nullable, r.Type, r.Nullable);
+                var (other, nullable) = l.Type != null ? l : r;
+                CheckUntypedArith(op, other);
+                return (other!.Kind switch
+                {
+                    TypeKind.SmallInt or TypeKind.Integer => SqlType.ExactExpr(TypeKind.BigInt, other.Scale),
+                    TypeKind.BigInt or TypeKind.Float or TypeKind.Double => SqlType.Double,
+                    _ => other,
+                }, nullable);
+            }
+            default:
+                var x = Bind(e, s);
+                return (x.Type, !x.NotNull);
+        }
     }
 
     public static SqlType ArithType(ArithOp op, SqlType a, SqlType b)
@@ -726,16 +803,26 @@ public sealed partial class Compiler
         // result type: bind non-parameter results first
         var results = new List<Expr>(ce.Whens.Select(w => w.Then));
         if (ce.Else != null) results.Add(ce.Else);
+        if (ce.Operand == null && results.Any(HasInnerParam))
+        {
+            // a chain of ValueIfNodes, the last one's ELSE being NULL when there is none
+            var chain = new List<Expr>(results);
+            if (ce.Else == null) chain.Add(new LiteralExpr(Value.Null, SqlType.Null));
+            var values = BindIfChain(chain, s, expected, "CASE", out var t, out var n);
+            var ws = ce.Whens.Select((w, k) => (BindBool(w.When, s), values[k])).ToArray();
+            return new CaseNode(ws, ce.Else == null ? null : values[^1]) { Type = t, NotNull = !n };
+        }
         var bound = new Dictionary<Expr, XNode>(ReferenceEqualityComparer.Instance);
         foreach (var r in results)
-            if (r is not ParamExpr) bound[r] = Bind(r, s);
+            if (r is not ParamExpr) bound[r] = BindProvisional(r, s);
         var branches = results.Select(r => bound.GetValueOrDefault(r)).ToList();
         if (ce.Else == null) branches.Add(new ConstNode(Value.Null, SqlType.Null)); // a CASE without ELSE can return NULL
         var (type, nullable) = TypeRules.FromList(branches, "CASE");
         if (bound.Count == 0) type = expected ?? throw Err.DataTypeUnknown();
         if (type.Kind == TypeKind.Null && results.Any(r => r is ParamExpr)) type = expected ?? throw Err.DataTypeUnknown();
+        // DecodeNode::dsqlPass: parameters, also those inside the values, take the list type
         foreach (var r in results)
-            if (r is ParamExpr) bound[r] = Bind(r, s, type);
+            if (r is ParamExpr || HasInnerParam(r)) bound[r] = Bind(r, s, type);
         XNode? els = ce.Else == null ? null : bound[ce.Else];
         if (ce.Operand != null)
         {
@@ -750,7 +837,8 @@ public sealed partial class Compiler
     /// <summary>AtNode: a TIME or TIMESTAMP moved to WITH TIME ZONE, then given the zone (AT LOCAL: the session's).</summary>
     XNode BindAt(AtExpr at, Scope s, SqlType? expected)
     {
-        var x = Bind(at.Operand, s, expected);
+        // AtNode::dsqlPass: without a context, a bare parameter is described as a string (makeNullString)
+        var x = Bind(at.Operand, s, expected ?? (at.Operand is ParamExpr ? SqlType.VarChar(8191) : null));
         var zone = at.Zone == null ? null : Bind(at.Zone, s, SqlType.Char(32, Charset.Ascii));
         var t = x.Type.Kind is TypeKind.Time or TypeKind.TimeTz ? SqlType.TimeTz
             : x.Type.Kind is TypeKind.Timestamp or TypeKind.TimestampTz ? SqlType.TimestampTz

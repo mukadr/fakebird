@@ -188,10 +188,16 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   runtime (NULL means 0 rows, negative values fail at execute, FIRST/SKIP cannot mix with ROWS/OFFSET).
 * **Parameters** are typed from their context (assignment target, other side of a comparison, CAST,
   function arguments); in the select list an operator on an untyped parameter fails like Firebird
-  (`Data type unknown`, `Invalid data type for multiplication`).
+  (`Data type unknown`, `Invalid data type for multiplication`). Parameters inside an expression follow
+  Firebird's two steps: the expression is first described with them unknown (the known operand wins,
+  BIGINT and NUMERIC(10-18) becoming DOUBLE PRECISION), then they take a context's descriptor: a
+  system function argument's own (`abs(d - ?)` is DOUBLE PRECISION for a NUMERIC(15,2) `d`), the
+  COALESCE/DECODE list type, the other IIF/searched CASE branch, or the assignment target. CAST,
+  aggregates and plain select items leave them unknown.
 * **Describe information** follows Firebird 5's rules: result types of expressions (NUMERIC vs DECIMAL,
   storage size and scale of arithmetic, CASE/COALESCE/UNION common types, built-in functions), NULLABLE
-  flags, and the names, relations and field names clients see.
+  flags, and the names, relations and field names clients see (a UNION column is named only when its
+  first branch has an alias, a column, a literal or an aggregate there).
 * **Client paths verified**: FbConnection/FbCommand/FbDataReader (parameters, blobs, GUIDs,
   booleans, output parameters, multiple open readers), FbTransaction (savepoints, isolation, wait
   options), FbConnection.CreateDatabase/DropDatabase, Dapper, EF Core (EnsureCreated, Migrate with

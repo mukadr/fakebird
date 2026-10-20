@@ -642,3 +642,13 @@ T8 |
 TY | 
 V2 | 
 affected 0
+--- grant all on ty to nondba
+affected 0
+--- grant select, insert, update (i), delete, references on ty to public with grant option
+affected 0
+--- grant execute on procedure p1 to nondba
+affected 0
+--- revoke all on ty from nondba
+affected 0
+--- revoke execute on procedure p1 from nondba
+affected 0
