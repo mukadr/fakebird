@@ -170,8 +170,9 @@ public sealed partial class Compiler
         comp.BeginRoutine(isTrigger: true);
         var newStream = comp.NewStream(table.Columns.Count);
         var oldStream = comp.NewStream(table.Columns.Count);
-        comp.RootScope!.Add(TableItem(table, "NEW", newStream, true, "NEW"));
-        comp.RootScope.Add(TableItem(table, "OLD", oldStream, true, "OLD"));
+        // an INSERT trigger has no OLD record and a DELETE trigger no NEW one: their columns are unknown
+        if ((t.Events & (TriggerEvent.Insert | TriggerEvent.Update)) != 0) comp.RootScope!.Add(TableItem(table, "NEW", newStream, true, "NEW"));
+        if ((t.Events & (TriggerEvent.Update | TriggerEvent.Delete)) != 0) comp.RootScope!.Add(TableItem(table, "OLD", oldStream, true, "OLD"));
         comp._triggerNewStream = newStream;
         comp._triggerTable = table;
         comp._triggerBefore = t.Timing == TriggerTiming.Before;
@@ -308,13 +309,15 @@ public sealed partial class Compiler
                 return VarTarget(c.Name, c);
             case ColumnRefExpr { Qualifier: "NEW" } c when r.IsTrigger:
             {
+                if (_triggerEvents == TriggerEvent.Delete) throw Err.ColumnUnknown("NEW." + c.Name, c.Line, c.Col);
                 if (!_triggerBefore) throw Err.Random("Cannot update NEW context in AFTER trigger");
-                if (_triggerEvents == TriggerEvent.Delete) throw Err.Random("NEW context is not available in DELETE trigger");
                 var t = _triggerTable!;
                 var ci = t.FindColumn(c.Name);
-                if (ci < 0) throw Err.ColumnUnknown("NEW." + c.Name);
+                if (ci < 0) throw Err.ColumnUnknown("NEW." + c.Name, c.Line, c.Col);
                 return new Target(_triggerNewStream, ci, t.Columns[ci].Type, false, "NEW." + c.Name);
             }
+            case ColumnRefExpr { Qualifier: "OLD" } c when r.IsTrigger && _triggerEvents == TriggerEvent.Insert:
+                throw Err.ColumnUnknown("OLD." + c.Name, c.Line, c.Col);
             case ColumnRefExpr c:
                 throw Err.Random($"Cannot assign to {c}");
         }
@@ -557,12 +560,13 @@ public sealed class ExecStatementP(XNode sql, XNode[] args, string[]? names, Tar
     public override Flow Exec(Ctx c)
     {
         var text = sql.Eval(c);
-        if (text.IsNull) throw Err.Random("EXECUTE STATEMENT: SQL text is NULL");
-        var sqlText = Conv.ToStr(text);
+        // a NULL text is an empty statement (Unexpected end of command)
+        var sqlText = text.IsNull ? "" : Conv.ToStr(text);
         int[]? order = null; // named parameters: the argument used by each positional marker
         if (names != null) (sqlText, order) = NamedParams.Rewrite(sqlText, names);
         var p = Compiler.Prepare(c.Db, sqlText);
-        if (p.ParamTypes.Length != (order?.Length ?? args.Length)) throw Err.Random("Input parameters mismatch in EXECUTE STATEMENT");
+        if (p.ParamTypes.Length != (order?.Length ?? args.Length)) throw new StatusBuilder().Gds(FbMessages.eds_input_prm_mismatch).Build();
+        if (into != null && p.Outputs.Length != into.Length) throw new StatusBuilder().Gds(FbMessages.eds_output_prm_mismatch).Build();
         var vals = new Value[p.ParamTypes.Length];
         var argVals = new Value[args.Length];
         for (var i = 0; i < argVals.Length; i++) argVals[i] = args[i].Eval(c);
@@ -581,7 +585,8 @@ public sealed class ExecStatementP(XNode sql, XNode[] args, string[]? names, Tar
             throw;
         }
         var rows = r.Rows ?? [];
-        c.RowCount = p.StmtType == Wire.Isc.stmt_select ? rows.Count : r.Inserted + r.Updated + r.Deleted;
+        // Firebird leaves ROW_COUNT at 0 after a dynamic DML statement
+        c.RowCount = p.StmtType == Wire.Isc.stmt_select ? rows.Count : 0;
         if (body == null)
         {
             if (into != null)
@@ -610,6 +615,7 @@ static class NamedParams
     {
         var sb = new System.Text.StringBuilder(sql.Length);
         var order = new List<int>();
+        string? missing = null;
         var i = 0;
         while (i < sql.Length)
         {
@@ -643,13 +649,17 @@ static class NamedParams
                 while (end < sql.Length && (char.IsLetterOrDigit(sql[end]) || sql[end] is '_' or '$')) end++;
                 var name = sql[start..end].ToUpperInvariant();
                 var idx = Array.FindIndex(names, n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
-                if (idx < 0) throw Err.Random("EXECUTE STATEMENT: parameter " + name + " is not defined");
+                if (idx < 0) missing ??= name;
                 order.Add(idx);
                 sb.Append('?');
                 i = end;
             }
             else sb.Append(sql[i++]);
         }
+        // every named argument must be used; then every marker must have its argument
+        for (var k = 0; k < names.Length; k++)
+            if (!order.Contains(k)) throw new StatusBuilder().Gds(FbMessages.eds_input_prm_not_used).Str(names[k]).Build();
+        if (missing != null) throw new StatusBuilder().Gds(FbMessages.eds_input_prm_mismatch).Build();
         return (sb.ToString(), order.ToArray());
     }
 }

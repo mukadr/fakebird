@@ -1,0 +1,241 @@
+--- create trigger tr_b1 for tr before insert or update position 10 as begin new.s = coalesce(new.s, '') || 'b1'; insert into lg values (next value for sq, 'b1 ' || iif(inserting, 'I', 'U') || ' ' || new.id); end
+affected 0
+--- create trigger tr_b0 for tr before insert position 0 as begin new.s = coalesce(new.s, '') || 'b0'; insert into lg values (next value for sq, 'b0 ' || new.id); end
+affected 0
+--- create trigger tr_a for tr after insert or update or delete as begin insert into lg values (next value for sq, 'a ' || iif(inserting, 'I', iif(updating, 'U', 'D')) || ' ' || coalesce(old.v, -1) || '>' || coalesce(new.v, -1)); end
+affected 0
+--- create trigger tr_bb for tr before insert position 10 as begin new.s = new.s || 'bb'; end
+affected 0
+--- create trigger tr_bd for tr before delete as begin if (old.v = 666) then exception tr_ex using (old.id); end
+affected 0
+--- create trigger tr_bu for tr before update as begin if (new.v < 0) then new.v = 0; if (new.id <> old.id) then exception tr_ex using ('id change'); end
+affected 0
+--- create trigger chi_bd for chi before delete as begin insert into lg values (next value for sq, 'chi del ' || old.id || ' pid ' || old.pid); end
+affected 0
+--- create trigger chi_bu for chi before update as begin insert into lg values (next value for sq, 'chi upd ' || old.pid || '>' || new.pid); end
+affected 0
+--- insert into tr (id, v) values (1, 10)
+affected 1
+--- insert into tr (id, v, s) values (2, 20, 'x')
+affected 1
+--- update tr set v = v + 1
+affected 2
+--- update tr set v = -5 where id = 1
+affected 1
+--- update tr set id = 9 where id = 1
+ERROR 335544517 #1 335544382 'TR_EX' 335545016 'blocked: id change' 'id change' 335544842 'At trigger 'TR_BU' line: 1, col: 110' '' HY000
+TR_EX
+blocked: id change
+--- insert into tr (id, v) values (3, 666)
+affected 1
+--- delete from tr where id = 3
+ERROR 335544517 #1 335544382 'TR_EX' 335545016 'blocked: 3' '3' 335544842 'At trigger 'TR_BD' line: 1, col: 74' '' HY000
+TR_EX
+blocked: 3
+--- delete from tr where id = 2
+affected 1
+--- select id, v, s from tr order by id
+ID:INTEGER (4,,,False,TR,ID,True,False)
+V:INTEGER (4,,,True,TR,V,False,False)
+S:VARCHAR (20,,,True,TR,S,False,False)
+1 | 0 | b0b1bbb1b1 | 
+3 | 666 | b0b1bb | 
+affected 0
+--- select n, msg from lg order by n
+N:INTEGER (4,,,True,LG,N,False,False)
+MSG:VARCHAR (80,,,True,LG,MSG,False,False)
+1 | b0 1 | 
+2 | b1 I 1 | 
+3 | a I -1>10 | 
+4 | b0 2 | 
+5 | b1 I 2 | 
+6 | a I -1>20 | 
+7 | b1 U 1 | 
+8 | a U 10>11 | 
+9 | b1 U 2 | 
+10 | a U 20>21 | 
+11 | b1 U 1 | 
+12 | a U 11>0 | 
+13 | b0 3 | 
+14 | b1 I 3 | 
+15 | a I -1>666 | 
+16 | a D 21>-1 | 
+affected 0
+--- insert into chi values (1, 1, 1)
+affected 1
+--- insert into chi values (2, 1, 2)
+affected 1
+--- update par set id = 10 where id = 1
+affected 1
+--- delete from par where id = 10
+affected 1
+--- select n, msg from lg where msg starting 'chi' order by n
+N:INTEGER (4,,,True,LG,N,False,False)
+MSG:VARCHAR (80,,,True,LG,MSG,False,False)
+17 | chi upd 1>10 | 
+18 | chi upd 1>10 | 
+19 | chi del 1 pid 10 | 
+20 | chi del 2 pid 10 | 
+affected 0
+--- alter trigger tr_b0 inactive
+affected 0
+--- insert into tr (id, v) values (4, 40)
+affected 1
+--- select id, s from tr where id = 4
+ID:INTEGER (4,,,False,TR,ID,True,False)
+S:VARCHAR (20,,,True,TR,S,False,False)
+4 | b1bb | 
+affected 0
+--- alter trigger tr_b0 active position 20
+affected 0
+--- insert into tr (id, v) values (5, 50)
+affected 1
+--- select id, s from tr where id = 5
+ID:INTEGER (4,,,False,TR,ID,True,False)
+S:VARCHAR (20,,,True,TR,S,False,False)
+5 | b1bbb0 | 
+affected 0
+--- create trigger tr_nope for nosuch before insert as begin end
+ERROR 335544351 336397270 'TR_NOPE' 335544569 335544436 #-204 335544580 335544382 'NOSUCH' 336397208 #0 #0 '' 42000
+unsuccessful metadata update
+CREATE TRIGGER TR_NOPE failed
+Dynamic SQL Error
+SQL error code = -204
+Table unknown
+NOSUCH
+At line 0, column 0
+--- create trigger tr_old for tr before insert as begin old.v = 1; end
+ERROR 335544351 336397270 'TR_OLD' 335544569 335544436 #-206 335544578 335544382 'OLD.V' 336397208 #1 #53 '' 42000
+unsuccessful metadata update
+CREATE TRIGGER TR_OLD failed
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+OLD.V
+At line 1, column 53
+--- create trigger tr_old2 for tr before insert as begin new.v = old.v; end
+ERROR 335544351 336397270 'TR_OLD2' 335544569 335544436 #-206 335544578 335544382 'OLD.V' 336397208 #1 #62 '' 42000
+unsuccessful metadata update
+CREATE TRIGGER TR_OLD2 failed
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+OLD.V
+At line 1, column 62
+--- create trigger tr_del for tr before delete as begin new.v = 1; end
+ERROR 335544351 336397270 'TR_DEL' 335544569 335544436 #-206 335544578 335544382 'NEW.V' 336397208 #1 #53 '' 42000
+unsuccessful metadata update
+CREATE TRIGGER TR_DEL failed
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+NEW.V
+At line 1, column 53
+--- create trigger tr_ins for tr before insert as begin if (deleting) then new.v = 1; end
+affected 0
+--- select trim(rdb$trigger_name), rdb$trigger_sequence, rdb$trigger_type, rdb$trigger_inactive from rdb$triggers where rdb$system_flag = 0 order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$TRIGGER_SEQUENCE:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$TRIGGER_SEQUENCE,False,False)
+RDB$TRIGGER_TYPE:BIGINT (8,,,True,RDB$TRIGGERS,RDB$TRIGGER_TYPE,False,False)
+RDB$TRIGGER_INACTIVE:SMALLINT (2,,,True,RDB$TRIGGERS,RDB$TRIGGER_INACTIVE,False,False)
+CHI_BD | 0 | 5 | 0 | 
+CHI_BU | 0 | 3 | 0 | 
+TR_A | 0 | 114 | 0 | 
+TR_B0 | 20 | 1 | 0 | 
+TR_B1 | 10 | 17 | 0 | 
+TR_BB | 10 | 1 | 0 | 
+TR_BD | 0 | 5 | 0 | 
+TR_BU | 0 | 3 | 0 | 
+TR_INS | 0 | 1 | 0 | 
+affected 0
+--- execute block returns (r varchar(40)) as begin execute statement 'select s from tr where id = 4' into :r; suspend; end
+R:VARCHAR (40,,,True,,R,False,False)
+b1bb | 
+affected 0
+--- execute block returns (r integer) as begin execute statement 'select count(*) from tr' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+4 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement ('select v from tr where id = ?') (5) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+50 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement ('select v from tr where id = :a and v > :b') (a := 5, b := 0) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+50 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement ('select v from tr where id = :a') (a := 5, b := 0) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335545253 'B' 335544842 'At block line: 1, col: 44' '' 42000
+Input parameter 'B' is not used in SQL query text
+--- execute block returns (r integer) as begin execute statement ('select v from tr where id = :a') (b := 5) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335545253 'B' 335544842 'At block line: 1, col: 44' '' 42000
+Input parameter 'B' is not used in SQL query text
+--- execute block returns (r integer) as begin execute statement ('select v from tr where id = ?') (5, 6) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544927 335544842 'At block line: 1, col: 44' '' 42000
+Input parameters mismatch
+--- execute block returns (r integer) as begin execute statement 'select v from tr' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544652 335544842 'At block line: 1, col: 44' '' 21000
+multiple rows in singleton select
+--- execute block returns (r integer) as begin execute statement 'select v from tr where id = 999' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+NULL | 
+affected 0
+--- execute block returns (r integer, s varchar(20)) as begin for execute statement 'select id, s from tr order by id' into :r, :s do suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+S:VARCHAR (20,,,True,,S,False,False)
+1 | b0b1bbb1b1 | 
+3 | b0b1bb | 
+4 | b1bb | 
+5 | b1bbb0 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement 'update tr set v = v where id > 0'; r = row_count; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+0 | 
+affected 0
+--- execute block as begin execute statement 'insert into lg values (-1, ''es'')'; end
+
+affected 0
+--- execute block returns (r integer) as begin execute statement 'selec 1 from rdb$database' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544569 335544436 #-104 335544634 #1 #1 335544382 'selec' 335544842 'At block line: 1, col: 44' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 1
+selec
+--- execute block returns (r integer) as begin execute statement 'select 1, 2 from rdb$database' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544928 335544842 'At block line: 1, col: 44' '' 42000
+Output parameters mismatch
+--- execute block returns (r integer) as declare q varchar(100) = 'select 7 from rdb$database'; begin execute statement q into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+7 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement 'execute block returns (x integer) as begin x = 3; suspend; end' into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+3 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement 'select 1 from rdb$database' with autonomous transaction into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+1 | 
+affected 0
+--- execute block returns (r integer) as begin execute statement ('select ? from rdb$database') (null) into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544569 335544436 #-804 335544573 335544842 'At block line: 1, col: 44' '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Data type unknown
+--- execute block returns (r integer) as begin execute statement null into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544569 335544436 #-104 335544851 #1 #1 335544842 'At block line: 1, col: 44' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Unexpected end of command - line 1, column 1
+--- select n, msg from lg where n = -1
+N:INTEGER (4,,,True,LG,N,False,False)
+MSG:VARCHAR (80,,,True,LG,MSG,False,False)
+-1 | es | 
+affected 0

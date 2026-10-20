@@ -83,7 +83,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   isc_formatted_exception with its arguments; a bare EXCEPTION outside a handler does nothing; OPEN
   restarts an open cursor and CLOSE of a closed one is ignored; EXECUTE PROCEDURE/BLOCK without outputs
   still return their (empty) output row; and the errors (unknown procedure, parameter mismatch,
-  SUSPEND without RETURNS, duplicate variables, labels on non-loops) carry Firebird's codes.
+  SUSPEND without RETURNS, duplicate variables, labels on non-loops) carry Firebird's codes. An INSERT
+  trigger has no OLD record and a DELETE trigger no NEW one (their columns are unknown). EXECUTE STATEMENT
+  checks its parameters like Firebird (unused named parameters, input/output count mismatches), a NULL
+  text is an empty statement, and ROW_COUNT stays 0 after dynamic DML.
 * **READ COMMITTED reads a statement-level snapshot** (READ CONSISTENCY): a top-level statement,
   including all the PSQL it runs, sees the data committed when it started, and is restarted when it
   meets a row committed after that. Concurrent transactions conflict like Firebird's: a NOWAIT

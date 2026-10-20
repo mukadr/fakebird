@@ -1167,7 +1167,10 @@ public static class Ddl
                 Position = st.Position ?? 0, Body = st.Body!, Source = st.Source,
             };
         }
-        var table = db.Tables.TryGetValue(t.Table!, out var tt) ? tt : throw Err.TableUnknown(t.Table!);
+        // Firebird reports the trigger's unknown table at line 0, column 0
+        var table = db.Tables.TryGetValue(t.Table!, out var tt) ? tt
+            : throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204).Gds(Err.isc_dsql_relation_err)
+                .Gds(Err.isc_random).Str(t.Table!).Gds(Err.isc_dsql_line_col_error).Num(0).Num(0).Build();
         if (old != null && old.Table != null && db.Tables.TryGetValue(old.Table, out var oldTable)) oldTable.Triggers.Remove(old.Name);
         db.Triggers[t.Name] = t;
         table.Triggers.Add(t.Name);
