@@ -158,7 +158,15 @@ public static partial class CorpusRunner
                             break;
                         default:
                             var tx = Tx();
-                            results.Add(Describe(conns[current].Cn, tx, step.Text, step.Params));
+                            var d = Describe(conns[current].Cn, tx, step.Text, step.Params);
+                            results.Add(d);
+                            // the client gave up halfway through a response: the connection is unusable
+                            if (d.Contains("CLIENT EXCEPTION"))
+                            {
+                                try { conns[current].Cn.Dispose(); } catch { /* broken */ }
+                                FbConnection.ClearAllPools();
+                                conns.Remove(current);
+                            }
                             break;
                     }
                 }

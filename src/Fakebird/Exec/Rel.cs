@@ -547,6 +547,8 @@ public sealed class SortKey
     public bool Descending;
     public bool NullsFirst;
     public Collation Collation;
+    /// <summary>Blobs sort by blob id (creation order), not by content: their keys compare equal.</summary>
+    public bool IsBlob;
 }
 
 public sealed class SortRel : RelNode
@@ -580,13 +582,16 @@ public sealed class SortRel : RelNode
         for (var i = 0; i < idx.Length; i++) idx[i] = i;
         Array.Sort(idx, (x, y) =>
         {
-            var r = CompareKeys(arr[x].Keys, arr[y].Keys, keys);
+            var r = CompareKeys(arr[x].Keys, arr[y].Keys, keys, x, y);
             return r != 0 ? r : x.CompareTo(y);
         });
         return new Cursor(c, Save, arr, idx);
     }
 
-    public static int CompareKeys(Value[] a, Value[] b, SortKey[] keys)
+    public static int CompareKeys(Value[] a, Value[] b, SortKey[] keys) => CompareKeys(a, b, keys, 0, 0);
+
+    /// <summary>Compares sort keys; blobs order by creation (approximated by the rows' input positions).</summary>
+    public static int CompareKeys(Value[] a, Value[] b, SortKey[] keys, int posA, int posB)
     {
         for (var i = 0; i < keys.Length; i++)
         {
@@ -600,7 +605,7 @@ public sealed class SortRel : RelNode
                 r = x.IsNull ? (k.NullsFirst ? -1 : 1) : (k.NullsFirst ? 1 : -1);
                 return r;
             }
-            r = Conv.Compare(x, y, k.Collation);
+            r = k.IsBlob ? posA.CompareTo(posB) : Conv.Compare(x, y, k.Collation);
             if (r != 0) return k.Descending ? -r : r;
         }
         return 0;

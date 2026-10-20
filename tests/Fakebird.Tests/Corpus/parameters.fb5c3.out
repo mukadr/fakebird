@@ -204,12 +204,8 @@ CLIENT EXCEPTION InvalidCastException: Invalid cast from 'Int64' to 'DateTime'.
 --- select iif(? > 1, 'y', 'n') from src
 CASE:CHAR (1,,,False,,CASE,False,False)
 y | 
-y | 
-y | 
 affected 0
 --- select n2 between ? and ? * 2 from src
 :BOOLEAN (1,,,True,,,False,False)
 False | 
-NULL | 
-NULL | 
 affected 0

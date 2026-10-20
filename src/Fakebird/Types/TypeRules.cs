@@ -45,7 +45,7 @@ public static class TypeRules
         TypeKind.Char or TypeKind.VarChar => t.Length,
         TypeKind.SmallInt => 6 + (t.Scale > 0 ? 1 : 0),
         TypeKind.Integer => 11 + (t.Scale > 0 ? 1 : 0),
-        TypeKind.BigInt => 21 + (t.Scale > 0 ? 1 : 0),
+        TypeKind.BigInt => 20 + (t.Scale > 0 ? 1 : 0),
         TypeKind.Int128 => 47 + (t.Scale > 0 ? 1 : 0),
         TypeKind.Float => 15,
         TypeKind.Double => 24,
@@ -244,6 +244,42 @@ public static class TypeRules
         if (cur.Charset == Charset.None || arg.Charset == Charset.Octets) return arg;
         if (cur.Charset == Charset.Ascii && arg.Charset != Charset.None) return arg;
         return cur;
+    }
+
+    static int Bpc(Charset cs) => cs switch { Charset.Utf8 => 4, Charset.UnicodeFss => 3, _ => 1 };
+
+    /// <summary>Character set of a descriptor: text and text blobs have one, everything else is NONE.</summary>
+    static Charset CharsetOf(SqlType t) => t.IsString || t.IsTextBlob ? t.Charset : t.Kind == TypeKind.Blob ? Charset.Octets : Charset.None;
+
+    /// <summary>
+    /// ConcatenateNode::make / makeConcatenate: a NULL operand counts as empty text in the other's character set; the
+    /// result charset follows getResultTextType; lengths add up in the result's bytes (raw bytes for NONE/OCTETS).
+    /// </summary>
+    public static (SqlType Type, bool Nullable) Concat(SqlType a, bool aNullable, SqlType b, bool bNullable)
+    {
+        var nullable = aNullable || bNullable;
+        if (a.Kind == TypeKind.Null && b.Kind == TypeKind.Null) return (SqlType.Char(1, Charset.None), true);
+        if (a.Kind == TypeKind.Null) a = SqlType.Char(0, CharsetOf(b), b.Collation);
+        if (b.Kind == TypeKind.Null) b = SqlType.Char(0, CharsetOf(a), a.Collation);
+        var ca = CharsetOf(a);
+        var cb = CharsetOf(b);
+        // getResultTextType
+        var (cs, donor) = ca == Charset.None || cb == Charset.Octets ? (cb, b) : ca == Charset.Ascii && cb != Charset.None ? (cb, b) : (ca, a);
+        var collation = donor.IsString ? donor.Collation : Collation.Binary;
+        if (a.Kind == TypeKind.Blob || b.Kind == TypeKind.Blob)
+        {
+            // getResultBlobSubType: a binary second operand makes the blob binary, else the first one decides
+            var sub = b.Kind == TypeKind.Blob && b.SubType != 1 || b.Kind != TypeKind.Blob && cb == Charset.Octets ? 0
+                : a.Kind == TypeKind.Blob ? a.SubType : 1;
+            return (sub == 1 ? new SqlType(TypeKind.Blob, subType: 1, charset: cs == Charset.None || cs == Charset.Octets ? Charset.Utf8 : cs) : SqlType.BlobBinary, nullable);
+        }
+        long Bytes(SqlType t, Charset c) => t.IsString ? (long)t.Length * Bpc(c) : StringLength(t);
+        var raw = cs is Charset.None or Charset.Octets;
+        long len = raw
+            ? Bytes(a, ca) + Bytes(b, cb)
+            : Bytes(a, ca) / Bpc(ca) + Bytes(b, cb) / Bpc(cb);
+        var max = 32765 / Bpc(cs);
+        return (SqlType.VarChar((int)Math.Min(len, max), cs, collation), nullable);
     }
 
     /// <summary>Convenience overload over bound nodes.</summary>

@@ -30,6 +30,7 @@ public sealed class AggState
     StringBuilder? _list;
     List<byte>? _blist;
     HashSet<IndexKey>? _distinct;
+    bool _nullSeparator;
 
     public AggState(AggSpec spec) => _spec = spec;
 
@@ -45,7 +46,9 @@ public sealed class AggState
         if (_spec.Distinct)
         {
             _distinct ??= new();
-            if (!_distinct.Add(new IndexKey([v], [_spec.Collation]))) return;
+            // the sort that removes duplicates compares VARCHARs with their trailing blanks
+            var dk = v.Tag == VTag.String && _spec.Arg!.Type.Kind == TypeKind.VarChar ? Value.Str(v.AsString + "\uFFFF") : v;
+            if (!_distinct.Add(new IndexKey([dk], [_spec.Collation]))) return;
         }
         switch (_spec.Kind)
         {
@@ -99,7 +102,9 @@ public sealed class AggState
                 if (_spec.Separator != null)
                 {
                     var sv = _spec.Separator.Eval(c);
-                    sep = sv.IsNull ? "" : Conv.ToStr(sv);
+                    // a NULL separator makes the whole LIST NULL
+                    if (sv.IsNull) { _nullSeparator = true; break; }
+                    sep = Conv.ToStr(sv);
                 }
                 if (v.Tag == VTag.Bytes && _spec.Type.SubType != 1)
                 {
@@ -113,8 +118,8 @@ public sealed class AggState
                     if (_any) _list.Append(sep);
                     var str = Conv.ToStr(v);
                     _list.Append(str);
-                    // Firebird concatenates the stored CHAR bytes: multi-byte charsets pad to the byte length
-                    if (_spec.Arg!.Type is { Kind: TypeKind.Char, BytesPerChar: > 1 } ct)
+                    // DISTINCT values come back from the sort record, where a multi-byte CHAR is padded to its byte length
+                    if (_spec.Distinct && _spec.Arg!.Type is { Kind: TypeKind.Char, BytesPerChar: > 1 } ct)
                         _list.Append(' ', Math.Max(0, ct.Length * ct.BytesPerChar - Conv.Utf8.GetByteCount(str)));
                 }
                 _any = true;
@@ -144,7 +149,7 @@ public sealed class AggState
             case AggKind.Max:
                 return _any ? _best : Value.Null;
             case AggKind.List:
-                if (!_any) return Value.Null;
+                if (!_any || _nullSeparator) return Value.Null;
                 return _blist != null ? Value.Bytes(_blist.ToArray()) : Value.Str(_list!.ToString());
         }
         return Value.Null;
@@ -193,6 +198,12 @@ public sealed class AggregateRel : RelNode
                 for (var i = 0; i < states.Length; i++) states[i] = new AggState(Aggs[i]);
                 list.Add((kv, Frames.Save(c, Save), states));
             }
+            else if (!SameValues(list[gi].Keys, kv) && SortsAfterOrSame(kv, list[gi].Keys))
+            {
+                // equal but not identical keys ('ab' and 'ab  ', 'A' and 'a' under a _CI collation): Firebird groups
+                // sorted rows and shows the values of the group's last row in sort-key order (case/accent-sensitive)
+                list[gi] = (kv, Frames.Save(c, Save), list[gi].States);
+            }
             foreach (var s in list[gi].States) s.Add(c);
         }
         if (list.Count == 0 && Keys.Length == 0)
@@ -202,6 +213,26 @@ public sealed class AggregateRel : RelNode
             list.Add(([], SaveNullRows, states));
         }
         return new Cursor(this, c, list);
+    }
+
+    bool SortsAfterOrSame(Value[] a, Value[] b)
+    {
+        for (var i = 0; i < a.Length; i++)
+        {
+            if (a[i].IsNull || b[i].IsNull) continue;
+            var col = KeyCollations[i] is Collation.CaseInsensitive or Collation.CaseAccentInsensitive ? Collation.Unicode : KeyCollations[i];
+            var r = Conv.Compare(a[i], b[i], col);
+            if (r != 0) return r > 0;
+        }
+        return true;
+    }
+
+    static bool SameValues(Value[] a, Value[] b)
+    {
+        for (var i = 0; i < a.Length; i++)
+            if (a[i].Tag != b[i].Tag || a[i].L != b[i].L || a[i].Tag is VTag.String && a[i].AsString != b[i].AsString)
+                return false;
+        return true;
     }
 
     sealed class Cursor(AggregateRel n, Ctx c, List<(Value[] Keys, Value[][] Frame, AggState[] States)> groups) : RowCursor

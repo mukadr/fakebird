@@ -125,6 +125,7 @@ public sealed partial class Compiler
         var n = name.ToUpperInvariant();
         if (n.EndsWith("_CI_AI", StringComparison.Ordinal) || n == "PT_BR" || n.EndsWith("_AI", StringComparison.Ordinal)) return Collation.CaseAccentInsensitive;
         if (n.EndsWith("_CI", StringComparison.Ordinal)) return Collation.CaseInsensitive;
+        if (n == "UNICODE") return Collation.Unicode;
         return Collation.Binary;
     }
 
@@ -194,7 +195,9 @@ public sealed partial class Compiler
         if (len < 1 || len > 32767) throw Err.Dsql(-842, "Length out of range");
         var cs = CharsetOf(ts.Charset);
         var t = new SqlType(kind, length: len, charset: cs);
-        if (t.ByteLength > 32765 + (kind == TypeKind.Char ? 2 : 0)) throw Err.Dsql(-204, "Implementation limit exceeded: column too long");
+        if (t.ByteLength > 32765 + (kind == TypeKind.Char ? 2 : 0))
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204).Gds(Err.isc_dsql_datatype_err)
+                .Gds(FbMessages.imp_exc).Gds(FbMessages.field_name).Str(ts.FieldName ?? "").Build();
         return t;
     }
 
@@ -225,7 +228,8 @@ public sealed partial class Compiler
         {
             case LiteralExpr l:
             {
-                var k = new ConstNode(l.Value, l.Type);
+                // a negated literal is described with its positive literal's descriptor (see ConstNode.Literal)
+                var k = new ConstNode(l.Value, l.Type) { Literal = l.Negated && l.Value.Tag == VTag.Int && l.Value.L != long.MinValue ? Value.Int(-l.Value.L, l.Value.Scale) : l.Value };
                 // LiteralNode::genConstant sends an int64 literal that fits in 32 bits as blr_long
                 if (l.Type is { Kind: TypeKind.BigInt } && l.Value.Tag == VTag.Int && l.Value.L is >= int.MinValue and <= int.MaxValue)
                     k.EngineType = TypeRules.Exact(TypeKind.Integer, l.Type.Scale, l.Type.SubType);
@@ -250,7 +254,7 @@ public sealed partial class Compiler
                         var neg = new NegNode(x) { Type = x.Type, Name = NegName(u), NotNull = x.NotNull, EngineType = x.EngineType };
                         if (x is ConstNode { Value.IsNull: false } k)
                         {
-                            try { return new ConstNode(Arith.Neg(k.Value), k.Type) { Name = neg.Name, EngineType = k.EngineType }; }
+                            try { return new ConstNode(Arith.Neg(k.Value), k.Type) { Name = neg.Name, EngineType = k.EngineType, Literal = k.Literal }; }
                             catch (FbError) { return neg; } // raised when evaluated, like Firebird
                         }
                         return neg;
@@ -505,19 +509,8 @@ public sealed partial class Compiler
                 }
                 var l = Bind(b.Left, s, expected);
                 var r = Bind(b.Right, s, expected);
-                SqlType t;
-                if (l.Type.Kind == TypeKind.Blob || r.Type.Kind == TypeKind.Blob) t = SqlType.BlobText;
-                else
-                {
-                    var len = Math.Min(DisplayLength(l.Type) + DisplayLength(r.Type), 32765);
-                    var cs = l.Type.IsString ? l.Type.Charset : r.Type.IsString ? r.Type.Charset : Charset.Utf8;
-                    if (l.Type.IsString && r.Type.IsString && l.Type.Charset != r.Type.Charset)
-                        cs = l.Type.Charset == Charset.Octets ? r.Type.Charset : l.Type.Charset;
-                    if (cs == Charset.Octets && !(l.Type.IsOctets && r.Type.IsOctets)) cs = Charset.Utf8;
-                    len = Math.Min(len, 32765 / (cs == Charset.Utf8 ? 4 : cs == Charset.UnicodeFss ? 3 : 1));
-                    t = SqlType.VarChar(Math.Max(1, len), cs, MergeCollation(l.Type, r.Type));
-                }
-                var node = new ArithNode(ArithOp.Concat, l, r) { Type = t, Name = "CONCATENATION" };
+                var (t, nullable) = TypeRules.Concat(l.Type, !l.NotNull, r.Type, !r.NotNull);
+                var node = new ArithNode(ArithOp.Concat, l, r) { Type = t, Name = "CONCATENATION", NotNull = !nullable };
                 return Fold(node);
             }
             default:
@@ -675,7 +668,6 @@ public sealed partial class Compiler
         var p = Bind(lk.Pattern, s, SqlType.VarChar(8191));
         var esc = lk.Escape == null ? null : Bind(lk.Escape, s, SqlType.VarChar(1));
         var col = MergeCollation(x.Type, p.Type);
-        if (lk.Kind == LikeKind.Containing) col = col == Collation.Binary ? Collation.CaseInsensitive : col;
         return new LikeNode(lk.Kind, x, p, esc, lk.Not, col);
     }
 

@@ -68,6 +68,17 @@ public static class Builtins
     /// <summary>Longest string in characters (MAX_STR_SIZE 32765 bytes / bytes per character).</summary>
     static int MaxChars(Charset cs) => 32765 / (cs == Charset.Utf8 ? 4 : cs == Charset.UnicodeFss ? 3 : 1);
 
+    static FbError BadSubstringLength(long n)
+        => new StatusBuilder().Gds(FbMessages.bad_substring_length).Num((int)n).Build();
+
+    /// <summary>Length in bytes of text stored in the type's character set.</summary>
+    static long ByteLength(string s, SqlType t) => t.Charset switch
+    {
+        Charset.Utf8 or Charset.UnicodeFss => Conv.Utf8.GetByteCount(s),
+        Charset.Octets => Conv.Utf8.GetByteCount(s),
+        _ => Conv.CharLength(s),
+    };
+
     static long? ConstLong(XNode n) => n is ConstNode { Value.IsNull: false } k && (k.Type.IsExact || k.Type.IsApprox) ? Conv.ToInt64(k.Value) : null;
 
     static SqlType HintString(int i, XNode?[] a) => LongVarchar;
@@ -334,33 +345,48 @@ public static class Builtins
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
-            return S(Conv.ToStr(v).ToUpperInvariant());
+            if (v.Tag == VTag.Bytes) return v; // OCTETS have no case
+            return S(CaseMap.Upper(Conv.ToStr(v)));
         }, HintString);
         Def("LOWER", 1, 1, a => a[0].Type.IsTextual || a[0].Type.Kind == TypeKind.Null ? a[0].Type : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
-            return S(Conv.ToStr(v).ToLowerInvariant());
+            if (v.Tag == VTag.Bytes) return v;
+            return S(CaseMap.Lower(Conv.ToStr(v)));
         }, HintString);
-        Def("TRIM", 3, 3, a => StrResult(a[2]), (c, a, f) =>
+        Def("TRIM", 3, 3, a => a[2].Type.Kind == TypeKind.Null ? SqlType.VarChar(1, Charset.Ascii) : StrResult(a[2]), (c, a, f) =>
         {
             var spec = ((ConstNode)a[0]).Value.AsString;
-            var s = Str(c, a[2]);
-            if (s == null) return Value.Null;
+            var src = a[2].Eval(c);
+            if (src.IsNull) return Value.Null;
             var charsV = a[1].Eval(c);
-            string chars;
-            if (a[1] is ConstNode { Value.IsNull: true }) chars = " ";
-            else if (charsV.IsNull) return Value.Null;
-            else chars = Conv.ToStr(charsV);
+            if (charsV.IsNull) return Value.Null;
+            if (src.Tag == VTag.Bytes)
+            {
+                // OCTETS: the space character is NUL
+                var b = src.AsBytes;
+                var tb = a[1] is ConstNode { Value.Tag: VTag.String, Value.AsString: " " } && f.Args[1].Type.Kind == TypeKind.VarChar && charsV.AsString == " "
+                    ? [(byte)0] : charsV.Tag == VTag.Bytes ? charsV.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(charsV));
+                if (tb.Length == 0) return src;
+                int lo = 0, hi = b.Length;
+                if (spec is "BOTH" or "LEADING")
+                    while (hi - lo >= tb.Length && b.AsSpan(lo, tb.Length).SequenceEqual(tb)) lo += tb.Length;
+                if (spec is "BOTH" or "TRAILING")
+                    while (hi - lo >= tb.Length && b.AsSpan(hi - tb.Length, tb.Length).SequenceEqual(tb)) hi -= tb.Length;
+                return Value.Bytes(b[lo..hi]);
+            }
+            var s = Conv.ToStr(src);
+            var chars = Conv.ToStr(charsV);
             if (chars.Length == 0) return S(s);
             if (spec is "BOTH" or "LEADING")
                 while (s.StartsWith(chars, StringComparison.Ordinal)) s = s[chars.Length..];
             if (spec is "BOTH" or "TRAILING")
                 while (s.EndsWith(chars, StringComparison.Ordinal)) s = s[..^chars.Length];
             return S(s);
-        }, HintString, nullable: a => !a[2].NotNull || a[1] is not ConstNode { Value.IsNull: true } && !a[1].NotNull);
+        }, HintString, nullable: a => !a[2].NotNull || !a[1].NotNull);
         Def("SUBSTRING", 2, 3, a => a.Length > 2 && ConstLong(a[2]) is { } n && a[0].Type.Kind != TypeKind.Blob
-            ? StrResult(a[0], (int)Math.Min(Math.Max(0, n), TypeRules.StringLength(a[0].Type))) : StrResult(a[0]), (c, a, f) =>
+            ? (n < 0 ? throw BadSubstringLength(n) : StrResult(a[0], (int)Math.Min(n, TypeRules.StringLength(a[0].Type)))) : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
@@ -371,7 +397,7 @@ public static class Builtins
             {
                 len = Long(c, a[2]);
                 if (len == null) return Value.Null;
-                if (len < 0) throw Err.Random("Invalid length parameter " + len + " to SUBSTRING. Negative integers are not allowed.");
+                if (len < 0) throw BadSubstringLength(len.Value);
             }
             if (v.Tag == VTag.Bytes)
             {
@@ -394,18 +420,20 @@ public static class Builtins
             var s = Str(c, a[0]);
             var n = Long(c, a[1]);
             if (s == null || n == null) return Value.Null;
-            if (n < 0) throw Err.Random("Invalid length parameter " + n + " to LEFT. Negative integers are not allowed.");
+            // LEFT and RIGHT are SUBSTRINGs: a negative length reports SUBSTRING
+            if (n < 0) throw BadSubstringLength(n.Value);
             return S(Substr(s, 1, n));
-        }, (i, a) => i == 0 ? LongVarchar : SqlType.Integer);
+        }, (i, a) => i == 0 ? LongVarchar : SqlType.Integer, nullable: a => a[0].Type.Kind != TypeKind.Blob && a.Any(x => !x.NotNull));
         Def("RIGHT", 2, 2, a => StrResult(a[0]), (c, a, f) =>
         {
             var s = Str(c, a[0]);
             var n = Long(c, a[1]);
             if (s == null || n == null) return Value.Null;
+            if (n < 0) throw BadSubstringLength(n.Value);
             var len = Conv.CharLength(s);
             if (n >= len) return S(s);
             return S(Substr(s, len - n.Value + 1, n));
-        }, (i, a) => i == 0 ? LongVarchar : SqlType.Integer);
+        }, (i, a) => i == 0 ? LongVarchar : SqlType.Integer, nullable: a => a[0].Type.Kind != TypeKind.Blob && a.Any(x => !x.NotNull));
         Def("CHAR_LENGTH", 1, 1, a => a[0].Type.Kind == TypeKind.Blob ? SqlType.BigInt : SqlType.Integer, (c, a, f) =>
         {
             var v = a[0].Eval(c);
@@ -419,14 +447,14 @@ public static class Builtins
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
             if (v.Tag == VTag.Bytes) return Value.Int(v.AsBytes.Length);
-            return Value.Int(Conv.Utf8.GetByteCount(Conv.ToStr(v)));
+            return Value.Int(ByteLength(Conv.ToStr(v), a[0].Type));
         }, HintString);
         Def("BIT_LENGTH", 1, 1, a => a[0].Type.Kind == TypeKind.Blob ? SqlType.BigInt : SqlType.Integer, (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
             if (v.Tag == VTag.Bytes) return Value.Int(v.AsBytes.Length * 8L);
-            return Value.Int(Conv.Utf8.GetByteCount(Conv.ToStr(v)) * 8L);
+            return Value.Int(ByteLength(Conv.ToStr(v), a[0].Type) * 8L);
         }, HintString);
         Def("POSITION", 2, 3, a => SqlType.Integer, (c, a, f) =>
         {
@@ -439,7 +467,12 @@ public static class Builtins
                 var st = Long(c, a[2]);
                 if (st == null) return Value.Null;
                 start = st.Value;
+                if (start <= 0)
+                    throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argnmustbe_positive).Num(3).Str("POSITION").Build();
             }
+            var col = a[1].Type.Collation;
+            sub = Folding.Fold(sub, col);
+            s = Folding.Fold(s, col);
             if (sub.Length == 0) return Value.Int(start <= Conv.CharLength(s) + 1 ? start : 0);
             var from = Substr(s, start, null);
             var idx = from.IndexOf(sub, StringComparison.Ordinal);
@@ -453,15 +486,27 @@ public static class Builtins
             var repl = Str(c, a[2]);
             if (s == null || find == null || repl == null) return Value.Null;
             if (find.Length == 0) return S(s);
-            return S(s.Replace(find, repl, StringComparison.Ordinal));
+            var col = a[0].Type.Collation;
+            if (col == Collation.Binary || col == Collation.Unicode) return S(s.Replace(find, repl, StringComparison.Ordinal));
+            // case/accent-insensitive collations find the matches on the folded text
+            var folded = Folding.Fold(s, col);
+            var ff = Folding.Fold(find, col);
+            var sb = new StringBuilder();
+            var pos = 0;
+            for (var at = folded.IndexOf(ff, StringComparison.Ordinal); at >= 0; at = folded.IndexOf(ff, pos, StringComparison.Ordinal))
+            {
+                sb.Append(s, pos, at - pos).Append(repl);
+                pos = at + ff.Length;
+            }
+            return S(sb.Append(s, pos, s.Length - pos).ToString());
         }, HintString);
         Def("REVERSE", 1, 1, a => StrResult(a[0]), (c, a, f) =>
         {
             var s = Str(c, a[0]);
             if (s == null) return Value.Null;
-            var arr = s.ToCharArray();
-            Array.Reverse(arr);
-            return S(new string(arr));
+            var runes = s.EnumerateRunes().ToArray();
+            Array.Reverse(runes);
+            return S(string.Concat(runes.Select(r => r.ToString())));
         }, HintString);
         Def("LPAD", 2, 3, a => PadType(a), (c, a, f) => Pad(c, a, true), (i, a) => i == 1 ? SqlType.Integer : LongVarchar);
         Def("RPAD", 2, 3, a => PadType(a), (c, a, f) => Pad(c, a, false), (i, a) => i == 1 ? SqlType.Integer : LongVarchar);
@@ -489,10 +534,38 @@ public static class Builtins
             if (n is < 0 or > 255) throw Err.NumericOverflow();
             return S(((char)n.Value).ToString());
         }, HintInt);
+        Def("SUBSTRING_SIMILAR", 3, 3, a => StrResult(a[0]), (c, a, f) =>
+        {
+            var v = Str(c, a[0]);
+            var p = Str(c, a[1]);
+            var e = Str(c, a[2]);
+            if (v == null || p == null || e == null) return Value.Null;
+            var col = a[0].Type.Collation;
+            var m = SimilarTo.CompileSubstring(Folding.Fold(p, col), e, col is Collation.CaseInsensitive or Collation.CaseAccentInsensitive)
+                .Match(Folding.Fold(v, col));
+            if (!m.Success) return Value.Null;
+            var g = m.Groups[1];
+            // positions in the folded text map 1:1 to the original (folding keeps one code unit per code unit)
+            return S(v.Substring(g.Index, g.Length));
+        }, HintString, nullable: _ => true);
+        Def("UNICODE_VAL", 1, 1, a => SqlType.Integer, (c, a, f) =>
+        {
+            var s = Str(c, a[0]);
+            if (s == null) return Value.Null;
+            return Value.Int(s.Length == 0 ? 0 : char.ConvertToUtf32(s, 0));
+        }, HintString);
+        Def("UNICODE_CHAR", 1, 1, a => a[0].Type.Kind == TypeKind.Null ? SqlType.Null : SqlType.Char(1, Charset.Utf8), (c, a, f) =>
+        {
+            var n = Long(c, a[0]);
+            if (n == null) return Value.Null;
+            if (n is < 0 or > 0x10FFFF || n is >= 0xD800 and <= 0xDFFF) throw Err.NumericOverflow();
+            return S(char.ConvertFromUtf32((int)n.Value));
+        }, HintInt);
         Def("ASCII_VAL", 1, 1, a => SqlType.SmallInt, (c, a, f) =>
         {
             var s = Str(c, a[0]);
             if (s == null) return Value.Null;
+            if (s.Length > 0 && s[0] > 127) throw new StatusBuilder().Gds(Err.isc_arith_except).Gds(FbMessages.transliteration_failed).Build();
             return Value.Int(s.Length == 0 ? 0 : s[0]);
         }, HintString);
         Def("HASH", 1, 1, a => SqlType.BigInt, (c, a, f) =>
@@ -754,7 +827,7 @@ public static class Builtins
         if (a.Length > 2 && a[2].Type.Kind == TypeKind.Blob) return a[2].Type;
         var cs = v.IsString ? v.Charset : Charset.Ascii;
         var col = v.IsString ? v.Collation : Collation.Binary;
-        var len = ConstLong(a[1]) is { } n ? (int)Math.Max(0, Math.Min(n, MaxChars(cs))) : MaxChars(cs);
+        var len = a[1] is ConstNode { Literal: { IsNull: false } lit } ? (int)Math.Max(0, Math.Min(Conv.ToInt64(lit), MaxChars(cs))) : MaxChars(cs);
         return SqlType.VarChar(len, cs, col);
     }
 
@@ -775,17 +848,28 @@ public static class Builtins
 
     static Value Pad(Ctx c, XNode[] a, bool left)
     {
-        var s = Str(c, a[0]);
+        var v = a[0].Eval(c);
         var n = Long(c, a[1]);
-        if (s == null || n == null) return Value.Null;
-        var pad = " ";
-        if (a.Length > 2)
+        if (v.IsNull || n == null) return Value.Null;
+        var pv = a.Length > 2 ? a[2].Eval(c) : Value.Null;
+        if (a.Length > 2 && pv.IsNull) return Value.Null;
+        if (n < 0)
+            throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argnmustbe_nonneg).Num(2)
+                .Str(left ? "LPAD" : "RPAD").Build();
+        if (v.Tag == VTag.Bytes)
         {
-            pad = Str(c, a[2])!;
-            if (pad == null) return Value.Null;
+            // binary strings pad with their space character, NUL
+            var bytes = v.AsBytes;
+            var padBytes = a.Length > 2 ? (pv.Tag == VTag.Bytes ? pv.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(pv))) : [(byte)0];
+            var len = (int)n.Value;
+            if (bytes.Length >= len) return Value.Bytes(left ? bytes[..len] : bytes[..len]);
+            if (padBytes.Length == 0) return v;
+            var fill = new byte[len - bytes.Length];
+            for (var i = 0; i < fill.Length; i++) fill[i] = padBytes[i % padBytes.Length];
+            return Value.Bytes(left ? [.. fill, .. bytes] : [.. bytes, .. fill]);
         }
-        if (n < 0) throw Err.Random("Invalid length parameter to LPAD/RPAD. Negative integers are not allowed.");
-        return S(PadOrCut(s, (int)n.Value, pad, left));
+        var pad = a.Length > 2 ? Conv.ToStr(pv) : " ";
+        return S(PadOrCut(Conv.ToStr(v), (int)n.Value, pad, left));
     }
 
     static Value Round(Ctx c, XNode[] a, FuncNode f, MidpointRounding mode, bool toInteger)

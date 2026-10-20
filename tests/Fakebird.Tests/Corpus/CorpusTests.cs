@@ -77,7 +77,9 @@ public class CorpusTests(ServerFixture fx, ITestOutputHelper output)
         finally
         {
             FbConnection.ClearAllPools();
-            FbConnection.DropDatabase(cs);
+            // a connection the client abandoned may still be attached on the server: dropping is best effort
+            try { FbConnection.DropDatabase(cs); }
+            catch (FbException) { }
         }
     }
 

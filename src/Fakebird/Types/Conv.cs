@@ -356,7 +356,8 @@ public static class Conv
             }
             return Value.Bytes(bytes);
         }
-        var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Int128 or VTag.Double ? NumberText(v, t) : ToStr(v);
+        var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Int128 or VTag.Double ? NumberText(v, t)
+            : v.Tag == VTag.Bytes ? DecodeStrict(v.AsBytes) : ToStr(v);
         var len = CharLength(s);
         if (len > t.Length)
         {
@@ -371,6 +372,15 @@ public static class Conv
         else if (!ReferenceEquals(s, v.O)) return Value.Str(s);
         else return v;
         return Value.Str(s);
+    }
+
+    static readonly UTF8Encoding StrictUtf8 = new(false, true);
+
+    /// <summary>Binary data moved into text must be well-formed UTF-8 (isc_malformed_string).</summary>
+    static string DecodeStrict(byte[] b)
+    {
+        try { return StrictUtf8.GetString(b); }
+        catch (DecoderFallbackException) { throw new StatusBuilder().Gds(FbMessages.malformed_string).Build(); }
     }
 
     /// <summary>Length in characters (Unicode code points, like Firebird UTF8).</summary>
@@ -467,7 +477,9 @@ public static class Conv
         return collation switch
         {
             Collation.Binary => CompareOrdinalCodePoints(x, y),
-            Collation.CaseInsensitive => x.CompareTo(y, StringComparison.OrdinalIgnoreCase),
+            // ICU: tertiary strength for UNICODE, secondary (case-insensitive) for _CI, primary for _CI_AI
+            Collation.Unicode => Math.Sign(Invariant.Compare(x, y, CompareOptions.None)),
+            Collation.CaseInsensitive => Math.Sign(Invariant.Compare(x, y, CompareOptions.IgnoreCase)),
             _ => Invariant.Compare(x, y, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace),
         };
     }
@@ -518,7 +530,8 @@ public static class Conv
                 return collation switch
                 {
                     Collation.Binary => string.GetHashCode(span),
-                    Collation.CaseInsensitive => string.GetHashCode(span, StringComparison.OrdinalIgnoreCase),
+                    Collation.Unicode => Invariant.GetHashCode(span, CompareOptions.None),
+                    Collation.CaseInsensitive => Invariant.GetHashCode(span, CompareOptions.IgnoreCase),
                     _ => Invariant.GetHashCode(span, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace),
                 };
             }

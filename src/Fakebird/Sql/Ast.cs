@@ -15,6 +15,8 @@ public abstract class Expr
 
 public sealed class LiteralExpr(Value value, SqlType type) : Expr
 {
+    /// <summary>A negative number written with a minus sign (a NegateNode of a literal for Firebird).</summary>
+    public bool Negated;
     public readonly Value Value = value;
     public readonly SqlType Type = type;
 }
@@ -210,6 +212,8 @@ public sealed class ContextVarExpr(string name, int precision = -1) : Expr
 
 public sealed class TypeSpec
 {
+    /// <summary>Name of the column/variable being declared (for "COLUMN name" in limit errors).</summary>
+    public string? FieldName;
     /// <summary>Base type keyword (INTEGER, VARCHAR, NUMERIC, BLOB, ...) or null for domain/TYPE OF.</summary>
     public string? BaseType;
     public int? Length;

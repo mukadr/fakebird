@@ -1,0 +1,3269 @@
+--- select id, c5, char_length(c5), octet_length(c5), bit_length(c5), c5 || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+C5:CHAR (5,,,True,ST,C5,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (6,,,True,,CONCATENATION,False,False)
+1 | ab    | 5 | 5 | 40 | ab   | | 
+2 | ab    | 5 | 5 | 40 | ab   | | 
+3 |       | 5 | 5 | 40 |      | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | çãé   | 5 | 8 | 64 | çãé  | | 
+6 |  x    | 5 | 5 | 40 |  x   | | 
+affected 0
+--- select id, upper(c5), lower(c5), trim(c5), trim(leading from c5), trim(trailing from c5), reverse(c5) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:CHAR (5,,,True,,UPPER,False,False)
+LOWER:CHAR (5,,,True,,LOWER,False,False)
+TRIM:VARCHAR (5,,,True,,TRIM,False,False)
+TRIM:VARCHAR (5,,,True,,TRIM,False,False)
+TRIM:VARCHAR (5,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (5,,,True,,REVERSE,False,False)
+1 | AB    | ab    | ab | ab    | ab |    ba | 
+2 | AB    | ab    | ab | ab    | ab |    ba | 
+3 |       |       |  |  |  |       | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃÉ   | çãé   | çãé | çãé   | çãé |   éãç | 
+6 |  X    |  x    | x | x    |  x |    x  | 
+affected 0
+--- select id, substring(c5 from 2), substring(c5 from 2 for 2), substring(c5 from 0 for 2), substring(c5 from -1 for 3), left(c5, 2), right(c5, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (5,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (5,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (5,,,True,,RIGHT,False,False)
+1 | b    | b  | a | a | ab |    | 
+2 | b    | b  | a | a | ab |    | 
+3 |      |    |   |   |    |    | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ãé   | ãé | ç | ç | çã |    | 
+6 | x    | x  |   |   |  x |    | 
+affected 0
+--- select id, position('b' in c5), position('b', c5, 2), lpad(c5, 6, '*'), rpad(c5, 6, '-'), lpad(c5, 1), rpad(c5, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | *ab    | ab   - | a |  | 
+2 | 2 | 2 | *ab    | ab   - | a |  | 
+3 | 0 | 0 | *      |      - |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | *çãé   | çãé  - | ç |  | 
+6 | 0 | 0 | * x    |  x   - |   |  | 
+affected 0
+--- select id, replace(c5, 'b', 'XYZ'), replace(c5, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (15,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (5,,,True,,REPLACE,False,False)
+1 | aXYZ    | ab    | 
+2 | aXYZ    | ab    | 
+3 |       |       | 
+4 | NULL | NULL | 
+5 | çãé   | çãé   | 
+6 |  x    |  x    | 
+affected 0
+--- select id, overlay(c5 placing 'ZZ' from 2), overlay(c5 placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (7,,,True,,OVERLAY,False,False)
+1 | aZZ   | aZZb    | 
+2 | aZZ   | aZZb    | 
+3 |  ZZ   |  ZZ     | 
+4 | NULL | NULL | 
+5 | çZZ   | çZZãé   | 
+6 |  ZZ   |  ZZx    | 
+affected 0
+--- select id, c5 = 'ab', c5 = 'ab  ', c5 < 'b', c5 > 'AB', c5 like 'a%', c5 like '_b', c5 starting with 'a', c5 containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | True | True | False | True | True | 
+2 | True | True | True | True | True | False | True | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, c5 similar to 'a[bB]%', c5 like '%', c5 is distinct from 'ab', coalesce(c5, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:CHAR (5,,,True,,COALESCE,False,False)
+1 | True | True | False | ab    | 
+2 | True | True | False | ab    | 
+3 | False | True | True |       | 
+4 | NULL | NULL | True | ?     | 
+5 | False | True | True | çãé   | 
+6 | False | True | True |  x    | 
+affected 0
+--- select max(c5), min(c5), count(distinct c5), list(c5, ';') from st
+MAX:CHAR (5,,,True,,MAX,False,False)
+MIN:CHAR (5,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+çãé   |       | 4 | ab   ;ab   ;     ;çãé  ; x    | 
+affected 0
+--- select id from st order by c5, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+1 | 
+2 | 
+5 | 
+affected 0
+--- select id from st order by c5 desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select c5, count(*) from st group by c5 order by 1
+C5:CHAR (5,,,True,ST,C5,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+      | 1 | 
+ x    | 1 | 
+ab    | 2 | 
+çãé   | 1 | 
+affected 0
+--- select id, v10, char_length(v10), octet_length(v10), bit_length(v10), v10 || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+V10:VARCHAR (10,,,True,ST,V10,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | ab | 2 | 2 | 16 | ab| | 
+2 | ab    | 5 | 5 | 40 | ab   | | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | çãé€😀 | 5 | 13 | 104 | çãé€😀| | 
+6 |  x  | 3 | 3 | 24 |  x | | 
+affected 0
+--- select id, upper(v10), lower(v10), trim(v10), trim(leading from v10), trim(trailing from v10), reverse(v10) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | AB | ab | ab | ab | ab | ba | 
+2 | AB    | ab    | ab | ab    | ab |    ba | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃÉ€😀 | çãé€😀 | çãé€😀 | çãé€😀 | çãé€😀 | 😀€éãç | 
+6 |  X  |  x  | x | x  |  x |  x  | 
+affected 0
+--- select id, substring(v10 from 2), substring(v10 from 2 for 2), substring(v10 from 0 for 2), substring(v10 from -1 for 3), left(v10, 2), right(v10, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | b | b | a | a | ab | ab | 
+2 | b    | b  | a | a | ab |    | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ãé€😀 | ãé | ç | ç | çã | €😀 | 
+6 | x  | x  |   |   |  x | x  | 
+affected 0
+--- select id, position('b' in v10), position('b', v10, 2), lpad(v10, 6, '*'), rpad(v10, 6, '-'), lpad(v10, 1), rpad(v10, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ****ab | ab---- | a |  | 
+2 | 2 | 2 | *ab    | ab   - | a |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | *çãé€😀 | çãé€😀- | ç |  | 
+6 | 0 | 0 | *** x  |  x --- |   |  | 
+affected 0
+--- select id, replace(v10, 'b', 'XYZ'), replace(v10, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | aXYZ | ab | 
+2 | aXYZ    | ab    | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | çãé€😀 | çãé€😀 | 
+6 |  x  |  x  | 
+affected 0
+--- select id, overlay(v10 placing 'ZZ' from 2), overlay(v10 placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | aZZ | aZZb | 
+2 | aZZ   | aZZb    | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | çZZ€😀 | çZZãé€😀 | 
+6 |  ZZ |  ZZx  | 
+affected 0
+--- select id, v10 = 'ab', v10 = 'ab  ', v10 < 'b', v10 > 'AB', v10 like 'a%', v10 like '_b', v10 starting with 'a', v10 containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | True | True | True | True | True | 
+2 | True | True | True | True | True | False | True | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, v10 similar to 'a[bB]%', v10 like '%', v10 is distinct from 'ab', coalesce(v10, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | True | True | False | ab | 
+2 | True | True | False | ab    | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | çãé€😀 | 
+6 | False | True | True |  x  | 
+affected 0
+--- select max(v10), min(v10), count(distinct v10), list(v10, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+çãé€😀 |  | 5 | ab;ab   ;;çãé€😀; x  | 
+affected 0
+--- select id from st order by v10, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+1 | 
+2 | 
+5 | 
+affected 0
+--- select id from st order by v10 desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select v10, count(*) from st group by v10 order by 1
+V10:VARCHAR (10,,,True,ST,V10,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+ x  | 1 | 
+ab    | 2 | 
+çãé€😀 | 1 | 
+affected 0
+--- select id, v1, char_length(v1), octet_length(v1), bit_length(v1), v1 || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+V1:VARCHAR (1,,,True,ST,V1,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (2,,,True,,CONCATENATION,False,False)
+1 | a | 1 | 1 | 8 | a| | 
+2 |   | 1 | 1 | 8 |  | | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | é | 1 | 2 | 16 | é| | 
+6 | x | 1 | 1 | 8 | x| | 
+affected 0
+--- select id, upper(v1), lower(v1), trim(v1), trim(leading from v1), trim(trailing from v1), reverse(v1) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (1,,,True,,UPPER,False,False)
+LOWER:VARCHAR (1,,,True,,LOWER,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (1,,,True,,REVERSE,False,False)
+1 | A | a | a | a | a | a | 
+2 |   |   |  |  |  |   | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | É | é | é | é | é | é | 
+6 | X | x | x | x | x | x | 
+affected 0
+--- select id, substring(v1 from 2), substring(v1 from 2 for 2), substring(v1 from 0 for 2), substring(v1 from -1 for 3), left(v1, 2), right(v1, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (1,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (1,,,True,,RIGHT,False,False)
+1 |  |  | a | a | a | a | 
+2 |  |  |   |   |   |   | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 |  |  | é | é | é | é | 
+6 |  |  | x | x | x | x | 
+affected 0
+--- select id, position('b' in v1), position('b', v1, 2), lpad(v1, 6, '*'), rpad(v1, 6, '-'), lpad(v1, 1), rpad(v1, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 0 | 0 | *****a | a----- | a |  | 
+2 | 0 | 0 | *****  |  ----- |   |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | *****é | é----- | é |  | 
+6 | 0 | 0 | *****x | x----- | x |  | 
+affected 0
+--- select id, replace(v1, 'b', 'XYZ'), replace(v1, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (3,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (1,,,True,,REPLACE,False,False)
+1 | a | a | 
+2 |   |   | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | é | é | 
+6 | x | x | 
+affected 0
+--- select id, overlay(v1 placing 'ZZ' from 2), overlay(v1 placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (3,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (3,,,True,,OVERLAY,False,False)
+1 | aZZ | aZZ | 
+2 |  ZZ |  ZZ | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | éZZ | éZZ | 
+6 | xZZ | xZZ | 
+affected 0
+--- select id, v1 = 'ab', v1 = 'ab  ', v1 < 'b', v1 > 'AB', v1 like 'a%', v1 like '_b', v1 starting with 'a', v1 containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | True | True | True | False | True | False | 
+2 | False | False | True | False | False | False | False | False | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | False | True | False | False | False | False | 
+affected 0
+--- select id, v1 similar to 'a[bB]%', v1 like '%', v1 is distinct from 'ab', coalesce(v1, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (1,,,True,,COALESCE,False,False)
+1 | False | True | True | a | 
+2 | False | True | True |   | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | é | 
+6 | False | True | True | x | 
+affected 0
+--- select max(v1), min(v1), count(distinct v1), list(v1, ';') from st
+MAX:VARCHAR (1,,,True,,MAX,False,False)
+MIN:VARCHAR (1,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+é |   | 5 | a; ;;é;x | 
+affected 0
+--- select id from st order by v1, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+2 | 
+3 | 
+1 | 
+6 | 
+5 | 
+affected 0
+--- select id from st order by v1 desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+6 | 
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select v1, count(*) from st group by v1 order by 1
+V1:VARCHAR (1,,,True,ST,V1,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 2 | 
+a | 1 | 
+x | 1 | 
+é | 1 | 
+affected 0
+--- select id, c1, char_length(c1), octet_length(c1), bit_length(c1), c1 || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+C1:CHAR (1,,,True,ST,C1,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (2,,,True,,CONCATENATION,False,False)
+1 | a | 1 | 1 | 8 | a| | 
+2 |   | 1 | 1 | 8 |  | | 
+3 |   | 1 | 1 | 8 |  | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | é | 1 | 2 | 16 | é| | 
+6 | x | 1 | 1 | 8 | x| | 
+affected 0
+--- select id, upper(c1), lower(c1), trim(c1), trim(leading from c1), trim(trailing from c1), reverse(c1) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:CHAR (1,,,True,,UPPER,False,False)
+LOWER:CHAR (1,,,True,,LOWER,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (1,,,True,,REVERSE,False,False)
+1 | A | a | a | a | a | a | 
+2 |   |   |  |  |  |   | 
+3 |   |   |  |  |  |   | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | É | é | é | é | é | é | 
+6 | X | x | x | x | x | x | 
+affected 0
+--- select id, substring(c1 from 2), substring(c1 from 2 for 2), substring(c1 from 0 for 2), substring(c1 from -1 for 3), left(c1, 2), right(c1, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (1,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (1,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (1,,,True,,RIGHT,False,False)
+1 |  |  | a | a | a | a | 
+2 |  |  |   |   |   |   | 
+3 |  |  |   |   |   |   | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 |  |  | é | é | é | é | 
+6 |  |  | x | x | x | x | 
+affected 0
+--- select id, position('b' in c1), position('b', c1, 2), lpad(c1, 6, '*'), rpad(c1, 6, '-'), lpad(c1, 1), rpad(c1, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 0 | 0 | *****a | a----- | a |  | 
+2 | 0 | 0 | *****  |  ----- |   |  | 
+3 | 0 | 0 | *****  |  ----- |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | *****é | é----- | é |  | 
+6 | 0 | 0 | *****x | x----- | x |  | 
+affected 0
+--- select id, replace(c1, 'b', 'XYZ'), replace(c1, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (3,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (1,,,True,,REPLACE,False,False)
+1 | a | a | 
+2 |   |   | 
+3 |   |   | 
+4 | NULL | NULL | 
+5 | é | é | 
+6 | x | x | 
+affected 0
+--- select id, overlay(c1 placing 'ZZ' from 2), overlay(c1 placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (3,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (3,,,True,,OVERLAY,False,False)
+1 | aZZ | aZZ | 
+2 |  ZZ |  ZZ | 
+3 |  ZZ |  ZZ | 
+4 | NULL | NULL | 
+5 | éZZ | éZZ | 
+6 | xZZ | xZZ | 
+affected 0
+--- select id, c1 = 'ab', c1 = 'ab  ', c1 < 'b', c1 > 'AB', c1 like 'a%', c1 like '_b', c1 starting with 'a', c1 containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | True | True | True | False | True | False | 
+2 | False | False | True | False | False | False | False | False | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | False | True | False | False | False | False | 
+affected 0
+--- select id, c1 similar to 'a[bB]%', c1 like '%', c1 is distinct from 'ab', coalesce(c1, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:CHAR (1,,,True,,COALESCE,False,False)
+1 | False | True | True | a | 
+2 | False | True | True |   | 
+3 | False | True | True |   | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | é | 
+6 | False | True | True | x | 
+affected 0
+--- select max(c1), min(c1), count(distinct c1), list(c1, ';') from st
+MAX:CHAR (1,,,True,,MAX,False,False)
+MIN:CHAR (1,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+é |   | 4 | a; ; ;é;x | 
+affected 0
+--- select id from st order by c1, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+2 | 
+3 | 
+1 | 
+6 | 
+5 | 
+affected 0
+--- select id from st order by c1 desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+6 | 
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select c1, count(*) from st group by c1 order by 1
+C1:CHAR (1,,,True,ST,C1,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+  | 2 | 
+a | 1 | 
+x | 1 | 
+é | 1 | 
+affected 0
+--- select id, ci, char_length(ci), octet_length(ci), bit_length(ci), ci || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+CI:VARCHAR (10,,,True,ST,CI,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | Ab | 2 | 2 | 16 | Ab| | 
+2 | aB | 2 | 2 | 16 | aB| | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃÉ | 3 | 6 | 48 | ÇÃÉ| | 
+6 | X | 1 | 1 | 8 | X| | 
+affected 0
+--- select id, upper(ci), lower(ci), trim(ci), trim(leading from ci), trim(trailing from ci), reverse(ci) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | AB | ab | Ab | Ab | Ab | bA | 
+2 | AB | ab | aB | aB | aB | Ba | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃÉ | çãé | ÇÃÉ | ÇÃÉ | ÇÃÉ | ÉÃÇ | 
+6 | X | x | X | X | X | X | 
+affected 0
+--- select id, substring(ci from 2), substring(ci from 2 for 2), substring(ci from 0 for 2), substring(ci from -1 for 3), left(ci, 2), right(ci, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | b | b | A | A | Ab | Ab | 
+2 | B | B | a | a | aB | aB | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÃÉ | ÃÉ | Ç | Ç | ÇÃ | ÃÉ | 
+6 |  |  | X | X | X | X | 
+affected 0
+--- select id, position('b' in ci), position('b', ci, 2), lpad(ci, 6, '*'), rpad(ci, 6, '-'), lpad(ci, 1), rpad(ci, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ****Ab | Ab---- | A |  | 
+2 | 2 | 2 | ****aB | aB---- | a |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | ***ÇÃÉ | ÇÃÉ--- | Ç |  | 
+6 | 0 | 0 | *****X | X----- | X |  | 
+affected 0
+--- select id, replace(ci, 'b', 'XYZ'), replace(ci, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | AXYZ | Ab | 
+2 | aXYZ | aB | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | ÇÃÉ | ÇÃÉ | 
+6 | X | X | 
+affected 0
+--- select id, overlay(ci placing 'ZZ' from 2), overlay(ci placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | AZZ | AZZb | 
+2 | aZZ | aZZB | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | ÇZZ | ÇZZÃÉ | 
+6 | XZZ | XZZ | 
+affected 0
+--- select id, ci = 'ab', ci = 'ab  ', ci < 'b', ci > 'AB', ci like 'a%', ci like '_b', ci starting with 'a', ci containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | False | True | True | True | True | 
+2 | True | True | True | False | True | True | True | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | False | True | False | False | False | False | 
+affected 0
+--- select id, ci similar to 'a[bB]%', ci like '%', ci is distinct from 'ab', coalesce(ci, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | True | True | False | Ab | 
+2 | True | True | False | aB | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | ÇÃÉ | 
+6 | False | True | True | X | 
+affected 0
+--- select max(ci), min(ci), count(distinct ci), list(ci, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+X |  | 4 | Ab;aB;;ÇÃÉ;X | 
+affected 0
+--- select id from st order by ci, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+2 | 
+1 | 
+5 | 
+6 | 
+affected 0
+--- select id from st order by ci desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+6 | 
+5 | 
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select ci, count(*) from st group by ci order by 1
+CI:VARCHAR (10,,,True,ST,CI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+Ab | 2 | 
+ÇÃÉ | 1 | 
+X | 1 | 
+affected 0
+--- select id, cai, char_length(cai), octet_length(cai), bit_length(cai), cai || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+CAI:VARCHAR (10,,,True,ST,CAI,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | Ábc | 3 | 4 | 32 | Ábc| | 
+2 | abc | 3 | 3 | 24 | abc| | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | cae | 3 | 3 | 24 | cae| | 
+6 | X | 1 | 1 | 8 | X| | 
+affected 0
+--- select id, upper(cai), lower(cai), trim(cai), trim(leading from cai), trim(trailing from cai), reverse(cai) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | ÁBC | ábc | Ábc | Ábc | Ábc | cbÁ | 
+2 | ABC | abc | abc | abc | abc | cba | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | CAE | cae | cae | cae | cae | eac | 
+6 | X | x | X | X | X | X | 
+affected 0
+--- select id, substring(cai from 2), substring(cai from 2 for 2), substring(cai from 0 for 2), substring(cai from -1 for 3), left(cai, 2), right(cai, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | bc | bc | Á | Á | Áb | bc | 
+2 | bc | bc | a | a | ab | bc | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ae | ae | c | c | ca | ae | 
+6 |  |  | X | X | X | X | 
+affected 0
+--- select id, position('b' in cai), position('b', cai, 2), lpad(cai, 6, '*'), rpad(cai, 6, '-'), lpad(cai, 1), rpad(cai, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ***Ábc | Ábc--- | Á |  | 
+2 | 2 | 2 | ***abc | abc--- | a |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | ***cae | cae--- | c |  | 
+6 | 0 | 0 | *****X | X----- | X |  | 
+affected 0
+--- select id, replace(cai, 'b', 'XYZ'), replace(cai, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | ÁXYZc | Ábc | 
+2 | aXYZc | abc | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | cae | cae | 
+6 | X | X | 
+affected 0
+--- select id, overlay(cai placing 'ZZ' from 2), overlay(cai placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | ÁZZ | ÁZZbc | 
+2 | aZZ | aZZbc | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | cZZ | cZZae | 
+6 | XZZ | XZZ | 
+affected 0
+--- select id, cai = 'ab', cai = 'ab  ', cai < 'b', cai > 'AB', cai like 'a%', cai like '_b', cai starting with 'a', cai containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | True | True | True | False | True | True | 
+2 | False | False | True | True | True | False | True | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | False | True | False | False | False | False | 
+affected 0
+--- select id, cai similar to 'a[bB]%', cai like '%', cai is distinct from 'ab', coalesce(cai, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | True | True | True | Ábc | 
+2 | True | True | True | abc | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | cae | 
+6 | False | True | True | X | 
+affected 0
+--- select max(cai), min(cai), count(distinct cai), list(cai, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+X |  | 4 | Ábc;abc;;cae;X | 
+affected 0
+--- select id from st order by cai, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+2 | 
+1 | 
+5 | 
+6 | 
+affected 0
+--- select id from st order by cai desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+6 | 
+5 | 
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select cai, count(*) from st group by cai order by 1
+CAI:VARCHAR (10,,,True,ST,CAI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+Ábc | 2 | 
+cae | 1 | 
+X | 1 | 
+affected 0
+--- select id, o8, char_length(o8), octet_length(o8), bit_length(o8), o8 || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+O8:VARCHAR (8,,,True,ST,O8,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (12,,,True,,CONCATENATION,False,False)
+1 | 6162 | 2 | 2 | 16 | 61627C | 
+2 | 4142 | 2 | 2 | 16 | 41427C | 
+3 |  | 0 | 0 | 0 | 7C | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | 78 | 1 | 1 | 8 | 787C | 
+6 | 2078 | 2 | 2 | 16 | 20787C | 
+affected 0
+--- select id, upper(o8), lower(o8), trim(o8), trim(leading from o8), trim(trailing from o8), reverse(o8) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (8,,,True,,UPPER,False,False)
+LOWER:VARCHAR (8,,,True,,LOWER,False,False)
+TRIM:VARCHAR (8,,,True,,TRIM,False,False)
+TRIM:VARCHAR (8,,,True,,TRIM,False,False)
+TRIM:VARCHAR (8,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (8,,,True,,REVERSE,False,False)
+1 | 6162 | 6162 | 6162 | 6162 | 6162 | 6261 | 
+2 | 4142 | 4142 | 4142 | 4142 | 4142 | 4241 | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 78 | 78 | 78 | 78 | 78 | 78 | 
+6 | 2078 | 2078 | 2078 | 2078 | 2078 | 7820 | 
+affected 0
+--- select id, substring(o8 from 2), substring(o8 from 2 for 2), substring(o8 from 0 for 2), substring(o8 from -1 for 3), left(o8, 2), right(o8, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (8,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (8,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (8,,,True,,RIGHT,False,False)
+1 | 62 | 62 | 61 | 61 | 6162 | 6162 | 
+2 | 42 | 42 | 41 | 41 | 4142 | 4142 | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 |  |  | 78 | 78 | 78 | 78 | 
+6 | 78 | 78 | 20 | 20 | 2078 | 2078 | 
+affected 0
+--- select id, position('b' in o8), position('b', o8, 2), lpad(o8, 6, '*'), rpad(o8, 6, '-'), lpad(o8, 1), rpad(o8, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | 2A2A2A2A6162 | 61622D2D2D2D | 61 |  | 
+2 | 0 | 0 | 2A2A2A2A4142 | 41422D2D2D2D | 41 |  | 
+3 | 0 | 0 | 2A2A2A2A2A2A | 2D2D2D2D2D2D | 00 |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | 2A2A2A2A2A78 | 782D2D2D2D2D | 78 |  | 
+6 | 0 | 0 | 2A2A2A2A2078 | 20782D2D2D2D | 20 |  | 
+affected 0
+--- select id, replace(o8, 'b', 'XYZ'), replace(o8, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (24,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (8,,,True,,REPLACE,False,False)
+1 | 6158595A | 6162 | 
+2 | 4142 | 4142 | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | 78 | 78 | 
+6 | 2078 | 2078 | 
+affected 0
+--- select id, o8 = 'ab', o8 = 'ab  ', o8 < 'b', o8 > 'AB', o8 like 'a%', o8 like '_b', o8 starting with 'a', o8 containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | False | True | True | False | False | True | False | 
+2 | False | False | True | False | False | False | False | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, o8 similar to 'a[bB]%', o8 like '%', o8 is distinct from 'ab', coalesce(o8, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (8,,,True,,COALESCE,False,False)
+1 | True | False | False | 6162 | 
+2 | False | False | True | 4142 | 
+3 | False | False | True |  | 
+4 | NULL | NULL | True | 3F | 
+5 | False | False | True | 78 | 
+6 | False | False | True | 2078 | 
+affected 0
+--- select max(o8), min(o8), count(distinct o8), list(o8, ';') from st
+MAX:VARCHAR (8,,,True,,MAX,False,False)
+MIN:VARCHAR (8,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+78 |  | 5 | ab;AB;;x; x | 
+affected 0
+--- select id from st order by o8, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+2 | 
+1 | 
+5 | 
+affected 0
+--- select id from st order by o8 desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select o8, count(*) from st group by o8 order by 1
+O8:VARCHAR (8,,,True,ST,O8,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+2078 | 1 | 
+4142 | 1 | 
+6162 | 1 | 
+78 | 1 | 
+affected 0
+--- select id, w, char_length(w), octet_length(w), bit_length(w), w || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+W:VARCHAR (10,,,True,ST,W,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | àb | 2 | 2 | 16 | àb| | 
+2 | ÀB | 2 | 2 | 16 | ÀB| | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | çã | 2 | 2 | 16 | çã| | 
+6 |  x | 2 | 2 | 16 |  x| | 
+affected 0
+--- select id, upper(w), lower(w), trim(w), trim(leading from w), trim(trailing from w), reverse(w) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | ÀB | àb | àb | àb | àb | bà | 
+2 | ÀB | àb | ÀB | ÀB | ÀB | BÀ | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃ | çã | çã | çã | çã | ãç | 
+6 |  X |  x | x | x |  x | x  | 
+affected 0
+--- select id, substring(w from 2), substring(w from 2 for 2), substring(w from 0 for 2), substring(w from -1 for 3), left(w, 2), right(w, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | b | b | à | à | àb | àb | 
+2 | B | B | À | À | ÀB | ÀB | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ã | ã | ç | ç | çã | çã | 
+6 | x | x |   |   |  x |  x | 
+affected 0
+--- select id, position('b' in w), position('b', w, 2), lpad(w, 6, '*'), rpad(w, 6, '-'), lpad(w, 1), rpad(w, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ****àb | àb---- | à |  | 
+2 | 0 | 0 | ****ÀB | ÀB---- | À |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | ****çã | çã---- | ç |  | 
+6 | 0 | 0 | **** x |  x---- |   |  | 
+affected 0
+--- select id, replace(w, 'b', 'XYZ'), replace(w, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | àXYZ | àb | 
+2 | ÀB | ÀB | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | çã | çã | 
+6 |  x |  x | 
+affected 0
+--- select id, overlay(w placing 'ZZ' from 2), overlay(w placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | àZZ | àZZb | 
+2 | ÀZZ | ÀZZB | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | çZZ | çZZã | 
+6 |  ZZ |  ZZx | 
+affected 0
+--- select id, w = 'ab', w = 'ab  ', w < 'b', w > 'AB', w like 'a%', w like '_b', w starting with 'a', w containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | False | True | False | True | False | True | 
+2 | False | False | False | True | False | False | False | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, w similar to 'a[bB]%', w like '%', w is distinct from 'ab', coalesce(w, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | False | True | True | àb | 
+2 | False | True | True | ÀB | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | çã | 
+6 | False | True | True |  x | 
+affected 0
+--- select max(w), min(w), count(distinct w), list(w, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+çã |  | 5 | àb;ÀB;;çã; x | 
+affected 0
+--- select id from st order by w, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+2 | 
+1 | 
+5 | 
+affected 0
+--- select id from st order by w desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select w, count(*) from st group by w order by 1
+W:VARCHAR (10,,,True,ST,W,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+ x | 1 | 
+ÀB | 1 | 
+àb | 1 | 
+çã | 1 | 
+affected 0
+--- select id, a, char_length(a), octet_length(a), bit_length(a), a || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+A:VARCHAR (10,,,True,ST,A,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | ab | 2 | 2 | 16 | ab| | 
+2 | AB | 2 | 2 | 16 | AB| | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | xy | 2 | 2 | 16 | xy| | 
+6 |  x | 2 | 2 | 16 |  x| | 
+affected 0
+--- select id, upper(a), lower(a), trim(a), trim(leading from a), trim(trailing from a), reverse(a) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | AB | ab | ab | ab | ab | ba | 
+2 | AB | ab | AB | AB | AB | BA | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | XY | xy | xy | xy | xy | yx | 
+6 |  X |  x | x | x |  x | x  | 
+affected 0
+--- select id, substring(a from 2), substring(a from 2 for 2), substring(a from 0 for 2), substring(a from -1 for 3), left(a, 2), right(a, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | b | b | a | a | ab | ab | 
+2 | B | B | A | A | AB | AB | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | y | y | x | x | xy | xy | 
+6 | x | x |   |   |  x |  x | 
+affected 0
+--- select id, position('b' in a), position('b', a, 2), lpad(a, 6, '*'), rpad(a, 6, '-'), lpad(a, 1), rpad(a, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ****ab | ab---- | a |  | 
+2 | 0 | 0 | ****AB | AB---- | A |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | ****xy | xy---- | x |  | 
+6 | 0 | 0 | **** x |  x---- |   |  | 
+affected 0
+--- select id, replace(a, 'b', 'XYZ'), replace(a, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | aXYZ | ab | 
+2 | AB | AB | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | xy | xy | 
+6 |  x |  x | 
+affected 0
+--- select id, overlay(a placing 'ZZ' from 2), overlay(a placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | aZZ | aZZb | 
+2 | AZZ | AZZB | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | xZZ | xZZy | 
+6 |  ZZ |  ZZx | 
+affected 0
+--- select id, a = 'ab', a = 'ab  ', a < 'b', a > 'AB', a like 'a%', a like '_b', a starting with 'a', a containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | True | True | True | True | True | 
+2 | False | False | True | False | False | False | False | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, a similar to 'a[bB]%', a like '%', a is distinct from 'ab', coalesce(a, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | True | True | False | ab | 
+2 | False | True | True | AB | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | xy | 
+6 | False | True | True |  x | 
+affected 0
+--- select max(a), min(a), count(distinct a), list(a, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+xy |  | 5 | ab;AB;;xy; x | 
+affected 0
+--- select id from st order by a, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+2 | 
+1 | 
+5 | 
+affected 0
+--- select id from st order by a desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select a, count(*) from st group by a order by 1
+A:VARCHAR (10,,,True,ST,A,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+ x | 1 | 
+AB | 1 | 
+ab | 1 | 
+xy | 1 | 
+affected 0
+--- select id, n, char_length(n), octet_length(n), bit_length(n), n || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+N:VARCHAR (10,,,True,ST,N,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:INTEGER (4,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+1 | ab | 2 | 2 | 16 | ab| | 
+2 | AB | 2 | 2 | 16 | AB| | 
+3 |  | 0 | 0 | 0 | | | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | xy | 2 | 2 | 16 | xy| | 
+6 |  x | 2 | 2 | 16 |  x| | 
+affected 0
+--- select id, upper(n), lower(n), trim(n), trim(leading from n), trim(trailing from n), reverse(n) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+TRIM:VARCHAR (10,,,True,,TRIM,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+1 | AB | ab | ab | ab | ab | ba | 
+2 | AB | ab | AB | AB | AB | BA | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | XY | xy | xy | xy | xy | yx | 
+6 |  X |  x | x | x |  x | x  | 
+affected 0
+--- select id, substring(n from 2), substring(n from 2 for 2), substring(n from 0 for 2), substring(n from -1 for 3), left(n, 2), right(n, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:VARCHAR (10,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+LEFT:VARCHAR (10,,,True,,LEFT,False,False)
+RIGHT:VARCHAR (10,,,True,,RIGHT,False,False)
+1 | b | b | a | a | ab | ab | 
+2 | B | B | A | A | AB | AB | 
+3 |  |  |  |  |  |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | y | y | x | x | xy | xy | 
+6 | x | x |   |   |  x |  x | 
+affected 0
+--- select id, position('b' in n), position('b', n, 2), lpad(n, 6, '*'), rpad(n, 6, '-'), lpad(n, 1), rpad(n, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:VARCHAR (6,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+LPAD:VARCHAR (1,,,True,,LPAD,False,False)
+RPAD:VARCHAR (0,,,True,,RPAD,False,False)
+1 | 2 | 2 | ****ab | ab---- | a |  | 
+2 | 0 | 0 | ****AB | AB---- | A |  | 
+3 | 0 | 0 | ****** | ------ |   |  | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | ****xy | xy---- | x |  | 
+6 | 0 | 0 | **** x |  x---- |   |  | 
+affected 0
+--- select id, replace(n, 'b', 'XYZ'), replace(n, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:VARCHAR (30,,,True,,REPLACE,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | aXYZ | ab | 
+2 | AB | AB | 
+3 |  |  | 
+4 | NULL | NULL | 
+5 | xy | xy | 
+6 |  x |  x | 
+affected 0
+--- select id, overlay(n placing 'ZZ' from 2), overlay(n placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+OVERLAY:VARCHAR (12,,,True,,OVERLAY,False,False)
+1 | aZZ | aZZb | 
+2 | AZZ | AZZB | 
+3 | ZZ | ZZ | 
+4 | NULL | NULL | 
+5 | xZZ | xZZy | 
+6 |  ZZ |  ZZx | 
+affected 0
+--- select id, n = 'ab', n = 'ab  ', n < 'b', n > 'AB', n like 'a%', n like '_b', n starting with 'a', n containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | True | True | True | True | True | 
+2 | False | False | True | False | False | False | False | True | 
+3 | False | False | True | False | False | False | False | False | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, n similar to 'a[bB]%', n like '%', n is distinct from 'ab', coalesce(n, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+1 | True | True | False | ab | 
+2 | False | True | True | AB | 
+3 | False | True | True |  | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | xy | 
+6 | False | True | True |  x | 
+affected 0
+--- select max(n), min(n), count(distinct n), list(n, ';') from st
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+xy |  | 5 | ab;AB;;xy; x | 
+affected 0
+--- select id from st order by n, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+4 | 
+3 | 
+6 | 
+2 | 
+1 | 
+5 | 
+affected 0
+--- select id from st order by n desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+5 | 
+1 | 
+2 | 
+6 | 
+3 | 
+4 | 
+affected 0
+--- select n, count(*) from st group by n order by 1
+N:VARCHAR (10,,,True,ST,N,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+ x | 1 | 
+AB | 1 | 
+ab | 1 | 
+xy | 1 | 
+affected 0
+--- select id, bt, char_length(bt), octet_length(bt), bit_length(bt), bt || '|' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+BT:BLOB SUB_TYPE 1 (2147483647,,,True,ST,BT,False,False)
+CHAR_LENGTH:BIGINT (8,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:BIGINT (8,,,True,,BIT_LENGTH,False,False)
+CONCATENATION:BLOB SUB_TYPE 1 (2147483647,,,True,,CONCATENATION,False,False)
+1 | blob text | 9 | 9 | 72 | blob text| | 
+2 |  | 0 | 0 | 0 | | | 
+3 | NULL | NULL | NULL | NULL | NULL | 
+4 | NULL | NULL | NULL | NULL | NULL | 
+5 | çãé€😀 | 5 | 13 | 104 | çãé€😀| | 
+6 |  x  | 3 | 3 | 24 |  x | | 
+affected 0
+--- select id, upper(bt), lower(bt), trim(bt), trim(leading from bt), trim(trailing from bt), reverse(bt) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+UPPER:BLOB SUB_TYPE 1 (2147483647,,,True,,UPPER,False,False)
+LOWER:BLOB SUB_TYPE 1 (2147483647,,,True,,LOWER,False,False)
+TRIM:BLOB SUB_TYPE 1 (2147483647,,,True,,TRIM,False,False)
+TRIM:BLOB SUB_TYPE 1 (2147483647,,,True,,TRIM,False,False)
+TRIM:BLOB SUB_TYPE 1 (2147483647,,,True,,TRIM,False,False)
+REVERSE:BLOB SUB_TYPE 1 (2147483647,,,True,,REVERSE,False,False)
+1 | BLOB TEXT | blob text | blob text | blob text | blob text | txet bolb | 
+2 |  |  |  |  |  |  | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ÇÃÉ€😀 | çãé€😀 | çãé€😀 | çãé€😀 | çãé€😀 | 😀€éãç | 
+6 |  X  |  x  | x | x  |  x |  x  | 
+affected 0
+--- select id, substring(bt from 2), substring(bt from 2 for 2), substring(bt from 0 for 2), substring(bt from -1 for 3), left(bt, 2), right(bt, 2) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+LEFT:BLOB SUB_TYPE 1 (2147483647,,,False,,LEFT,False,False)
+RIGHT:BLOB SUB_TYPE 1 (2147483647,,,False,,RIGHT,False,False)
+1 | lob text | lo | b | b | bl | xt | 
+2 |  |  |  |  |  |  | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | ãé€😀 | ãé | ç | ç | çã | €😀 | 
+6 | x  | x  |   |   |  x | x  | 
+affected 0
+--- select id, position('b' in bt), position('b', bt, 2), lpad(bt, 6, '*'), rpad(bt, 6, '-'), lpad(bt, 1), rpad(bt, 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+LPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,LPAD,False,False)
+RPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,RPAD,False,False)
+LPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,LPAD,False,False)
+RPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,RPAD,False,False)
+1 | 1 | 4 | blob t | blob t | b |  | 
+2 | 0 | 0 | ****** | ------ |   |  | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | 0 | 0 | *çãé€😀 | çãé€😀- | ç |  | 
+6 | 0 | 0 | *** x  |  x --- |   |  | 
+affected 0
+--- select id, replace(bt, 'b', 'XYZ'), replace(bt, '', 'x') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+REPLACE:BLOB SUB_TYPE 1 (2147483647,,,True,,REPLACE,False,False)
+REPLACE:BLOB SUB_TYPE 1 (2147483647,,,True,,REPLACE,False,False)
+1 | XYZloXYZ text | blob text | 
+2 |  |  | 
+3 | NULL | NULL | 
+4 | NULL | NULL | 
+5 | çãé€😀 | çãé€😀 | 
+6 |  x  |  x  | 
+affected 0
+--- select id, overlay(bt placing 'ZZ' from 2), overlay(bt placing 'ZZ' from 2 for 0) from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+OVERLAY:BLOB SUB_TYPE 1 (2147483647,,,True,,OVERLAY,False,False)
+OVERLAY:BLOB SUB_TYPE 1 (2147483647,,,True,,OVERLAY,False,False)
+1 | bZZb text | bZZlob text | 
+2 | ZZ | ZZ | 
+3 | NULL | NULL | 
+4 | NULL | NULL | 
+5 | çZZ€😀 | çZZãé€😀 | 
+6 |  ZZ |  ZZx  | 
+affected 0
+--- select id, bt = 'ab', bt = 'ab  ', bt < 'b', bt > 'AB', bt like 'a%', bt like '_b', bt starting with 'a', bt containing 'B' from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | False | False | True | False | False | False | True | 
+2 | False | False | True | False | False | False | False | False | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+5 | False | False | False | True | False | False | False | False | 
+6 | False | False | True | False | False | False | False | False | 
+affected 0
+--- select id, bt similar to 'a[bB]%', bt like '%', bt is distinct from 'ab', coalesce(bt, '?') from st order by id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:BLOB SUB_TYPE 1 (2147483647,,,True,,COALESCE,False,False)
+1 | False | True | True | blob text | 
+2 | False | True | True |  | 
+3 | NULL | NULL | True | ? | 
+4 | NULL | NULL | True | ? | 
+5 | False | True | True | çãé€😀 | 
+6 | False | True | True |  x  | 
+affected 0
+--- select max(bt), min(bt), count(distinct bt), list(bt, ';') from st
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+MIN:BLOB SUB_TYPE 1 (2147483647,,,True,,MIN,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+çãé€😀 |  | 4 | blob text;;çãé€😀; x  | 
+affected 0
+--- select id from st order by bt, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+3 | 
+4 | 
+1 | 
+2 | 
+5 | 
+6 | 
+affected 0
+--- select id from st order by bt desc, id
+ID:INTEGER (4,,,False,ST,ID,True,False)
+6 | 
+5 | 
+2 | 
+1 | 
+3 | 
+4 | 
+affected 0
+--- select bt, count(*) from st group by bt order by 1
+BT:BLOB SUB_TYPE 1 (2147483647,,,True,ST,BT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+blob text | 1 | 
+ | 1 | 
+çãé€😀 | 1 | 
+ x  | 1 | 
+affected 0
+--- select ascii_val('A') from rdb$database
+ASCII_VAL:SMALLINT (2,,,False,,ASCII_VAL,False,False)
+65 | 
+affected 0
+--- select ascii_val('') from rdb$database
+ASCII_VAL:SMALLINT (2,,,False,,ASCII_VAL,False,False)
+0 | 
+affected 0
+--- select ascii_val('é') from rdb$database
+ASCII_VAL:SMALLINT (2,,,False,,ASCII_VAL,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select ascii_val('ab') from rdb$database
+ASCII_VAL:SMALLINT (2,,,False,,ASCII_VAL,False,False)
+97 | 
+affected 0
+--- select ascii_val(null) from rdb$database
+ASCII_VAL:SMALLINT (2,,,True,,ASCII_VAL,False,False)
+NULL | 
+affected 0
+--- select ascii_char(65) from rdb$database
+ASCII_CHAR:CHAR (1,,,False,,ASCII_CHAR,False,False)
+A | 
+affected 0
+--- select ascii_char(0) from rdb$database
+ASCII_CHAR:CHAR (1,,,False,,ASCII_CHAR,False,False)
+  | 
+affected 0
+--- select ascii_char(255) from rdb$database
+ASCII_CHAR:CHAR (1,,,False,,ASCII_CHAR,False,False)
+� | 
+affected 0
+--- select ascii_char(256) from rdb$database
+ASCII_CHAR:CHAR (1,,,False,,ASCII_CHAR,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select ascii_char(-1) from rdb$database
+ASCII_CHAR:CHAR (1,,,False,,ASCII_CHAR,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select ascii_char(null) from rdb$database
+ASCII_CHAR:CHAR (1,,,True,,ASCII_CHAR,False,False)
+NULL | 
+affected 0
+--- select hash('abc') from rdb$database
+HASH:BIGINT (8,,,False,,HASH,False,False)
+26499 | 
+affected 0
+--- select hash('') from rdb$database
+HASH:BIGINT (8,,,False,,HASH,False,False)
+0 | 
+affected 0
+--- select hash(null) from rdb$database
+HASH:BIGINT (8,,,True,,HASH,False,False)
+NULL | 
+affected 0
+--- select hash(1) from rdb$database
+HASH:BIGINT (8,,,False,,HASH,False,False)
+49 | 
+affected 0
+--- select unicode_val('é') from rdb$database
+UNICODE_VAL:INTEGER (4,,,False,,UNICODE_VAL,False,False)
+233 | 
+affected 0
+--- select lower('ÀÉÎÕÜ') from rdb$database
+LOWER:CHAR (5,,,False,,LOWER,False,False)
+àéîõü | 
+affected 0
+--- select lower('İ') from rdb$database
+LOWER:CHAR (1,,,False,,LOWER,False,False)
+i | 
+affected 0
+--- select lower('ß') from rdb$database
+LOWER:CHAR (1,,,False,,LOWER,False,False)
+ß | 
+affected 0
+--- select upper('àéîõü') from rdb$database
+UPPER:CHAR (5,,,False,,UPPER,False,False)
+ÀÉÎÕÜ | 
+affected 0
+--- select upper('ß') from rdb$database
+UPPER:CHAR (1,,,False,,UPPER,False,False)
+ß | 
+affected 0
+--- select upper('ﬁ') from rdb$database
+UPPER:CHAR (1,,,False,,UPPER,False,False)
+ﬁ | 
+affected 0
+--- select upper('ı') from rdb$database
+UPPER:CHAR (1,,,False,,UPPER,False,False)
+I | 
+affected 0
+--- select '' = '', '' < '', '' like '', '' starting with '', '' containing '', '' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (0,,,False,,CONCATENATION,False,False)
+True | False | True | True | True |  | 
+affected 0
+--- select '' = ' ', '' < ' ', '' like ' ', '' starting with ' ', '' containing ' ', '' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+True | False | False | False | False |   | 
+affected 0
+--- select '' = 'a', '' < 'a', '' like 'a', '' starting with 'a', '' containing 'a', '' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a | 
+affected 0
+--- select '' = 'a ', '' < 'a ', '' like 'a ', '' starting with 'a ', '' containing 'a ', '' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a  | 
+affected 0
+--- select '' = ' a', '' < ' a', '' like ' a', '' starting with ' a', '' containing ' a', '' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a | 
+affected 0
+--- select '' = '%', '' < '%', '' like '%', '' starting with '%', '' containing '%', '' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | True | False | False | % | 
+affected 0
+--- select '' = '_', '' < '_', '' like '_', '' starting with '_', '' containing '_', '' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _ | 
+affected 0
+--- select '' = '\', '' < '\', '' like '\', '' starting with '\', '' containing '\', '' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \ | 
+affected 0
+--- select '' = 'é', '' < 'é', '' like 'é', '' starting with 'é', '' containing 'é', '' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | é | 
+affected 0
+--- select '' = 'É', '' < 'É', '' like 'É', '' starting with 'É', '' containing 'É', '' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | É | 
+affected 0
+--- select '' = '😀', '' < '😀', '' like '😀', '' starting with '😀', '' containing '😀', '' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | 😀 | 
+affected 0
+--- select ' ' = '', ' ' < '', ' ' like '', ' ' starting with '', ' ' containing '', ' ' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+True | False | False | True | True |   | 
+affected 0
+--- select ' ' = ' ', ' ' < ' ', ' ' like ' ', ' ' starting with ' ', ' ' containing ' ', ' ' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True |    | 
+affected 0
+--- select ' ' = 'a', ' ' < 'a', ' ' like 'a', ' ' starting with 'a', ' ' containing 'a', ' ' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a | 
+affected 0
+--- select ' ' = 'a ', ' ' < 'a ', ' ' like 'a ', ' ' starting with 'a ', ' ' containing 'a ', ' ' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a  | 
+affected 0
+--- select ' ' = ' a', ' ' < ' a', ' ' like ' a', ' ' starting with ' a', ' ' containing ' a', ' ' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |   a | 
+affected 0
+--- select ' ' = '%', ' ' < '%', ' ' like '%', ' ' starting with '%', ' ' containing '%', ' ' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | True | False | False |  % | 
+affected 0
+--- select ' ' = '_', ' ' < '_', ' ' like '_', ' ' starting with '_', ' ' containing '_', ' ' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | True | False | False |  _ | 
+affected 0
+--- select ' ' = '\', ' ' < '\', ' ' like '\', ' ' starting with '\', ' ' containing '\', ' ' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  \ | 
+affected 0
+--- select ' ' = 'é', ' ' < 'é', ' ' like 'é', ' ' starting with 'é', ' ' containing 'é', ' ' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  é | 
+affected 0
+--- select ' ' = 'É', ' ' < 'É', ' ' like 'É', ' ' starting with 'É', ' ' containing 'É', ' ' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  É | 
+affected 0
+--- select ' ' = '😀', ' ' < '😀', ' ' like '😀', ' ' starting with '😀', ' ' containing '😀', ' ' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  😀 | 
+affected 0
+--- select 'a' = '', 'a' < '', 'a' like '', 'a' starting with '', 'a' containing '', 'a' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | a | 
+affected 0
+--- select 'a' = ' ', 'a' < ' ', 'a' like ' ', 'a' starting with ' ', 'a' containing ' ', 'a' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a  | 
+affected 0
+--- select 'a' = 'a', 'a' < 'a', 'a' like 'a', 'a' starting with 'a', 'a' containing 'a', 'a' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | aa | 
+affected 0
+--- select 'a' = 'a ', 'a' < 'a ', 'a' like 'a ', 'a' starting with 'a ', 'a' containing 'a ', 'a' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+True | False | False | False | False | aa  | 
+affected 0
+--- select 'a' = ' a', 'a' < ' a', 'a' like ' a', 'a' starting with ' a', 'a' containing ' a', 'a' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a a | 
+affected 0
+--- select 'a' = '%', 'a' < '%', 'a' like '%', 'a' starting with '%', 'a' containing '%', 'a' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | a% | 
+affected 0
+--- select 'a' = '_', 'a' < '_', 'a' like '_', 'a' starting with '_', 'a' containing '_', 'a' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | a_ | 
+affected 0
+--- select 'a' = '\', 'a' < '\', 'a' like '\', 'a' starting with '\', 'a' containing '\', 'a' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a\ | 
+affected 0
+--- select 'a' = 'é', 'a' < 'é', 'a' like 'é', 'a' starting with 'é', 'a' containing 'é', 'a' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | aé | 
+affected 0
+--- select 'a' = 'É', 'a' < 'É', 'a' like 'É', 'a' starting with 'É', 'a' containing 'É', 'a' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | aÉ | 
+affected 0
+--- select 'a' = '😀', 'a' < '😀', 'a' like '😀', 'a' starting with '😀', 'a' containing '😀', 'a' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a😀 | 
+affected 0
+--- select 'a ' = '', 'a ' < '', 'a ' like '', 'a ' starting with '', 'a ' containing '', 'a ' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | a  | 
+affected 0
+--- select 'a ' = ' ', 'a ' < ' ', 'a ' like ' ', 'a ' starting with ' ', 'a ' containing ' ', 'a ' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | True | a   | 
+affected 0
+--- select 'a ' = 'a', 'a ' < 'a', 'a ' like 'a', 'a ' starting with 'a', 'a ' containing 'a', 'a ' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+True | False | False | True | True | a a | 
+affected 0
+--- select 'a ' = 'a ', 'a ' < 'a ', 'a ' like 'a ', 'a ' starting with 'a ', 'a ' containing 'a ', 'a ' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (4,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | a a  | 
+affected 0
+--- select 'a ' = ' a', 'a ' < ' a', 'a ' like ' a', 'a ' starting with ' a', 'a ' containing ' a', 'a ' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (4,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a  a | 
+affected 0
+--- select 'a ' = '%', 'a ' < '%', 'a ' like '%', 'a ' starting with '%', 'a ' containing '%', 'a ' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | a % | 
+affected 0
+--- select 'a ' = '_', 'a ' < '_', 'a ' like '_', 'a ' starting with '_', 'a ' containing '_', 'a ' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a _ | 
+affected 0
+--- select 'a ' = '\', 'a ' < '\', 'a ' like '\', 'a ' starting with '\', 'a ' containing '\', 'a ' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | a \ | 
+affected 0
+--- select 'a ' = 'é', 'a ' < 'é', 'a ' like 'é', 'a ' starting with 'é', 'a ' containing 'é', 'a ' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a é | 
+affected 0
+--- select 'a ' = 'É', 'a ' < 'É', 'a ' like 'É', 'a ' starting with 'É', 'a ' containing 'É', 'a ' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a É | 
+affected 0
+--- select 'a ' = '😀', 'a ' < '😀', 'a ' like '😀', 'a ' starting with '😀', 'a ' containing '😀', 'a ' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | a 😀 | 
+affected 0
+--- select ' a' = '', ' a' < '', ' a' like '', ' a' starting with '', ' a' containing '', ' a' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | True | True |  a | 
+affected 0
+--- select ' a' = ' ', ' a' < ' ', ' a' like ' ', ' a' starting with ' ', ' a' containing ' ', ' a' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | True | True |  a  | 
+affected 0
+--- select ' a' = 'a', ' a' < 'a', ' a' like 'a', ' a' starting with 'a', ' a' containing 'a', ' a' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | True |  aa | 
+affected 0
+--- select ' a' = 'a ', ' a' < 'a ', ' a' like 'a ', ' a' starting with 'a ', ' a' containing 'a ', ' a' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (4,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  aa  | 
+affected 0
+--- select ' a' = ' a', ' a' < ' a', ' a' like ' a', ' a' starting with ' a', ' a' containing ' a', ' a' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (4,,,False,,CONCATENATION,False,False)
+True | False | True | True | True |  a a | 
+affected 0
+--- select ' a' = '%', ' a' < '%', ' a' like '%', ' a' starting with '%', ' a' containing '%', ' a' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | True | False | False |  a% | 
+affected 0
+--- select ' a' = '_', ' a' < '_', ' a' like '_', ' a' starting with '_', ' a' containing '_', ' a' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a_ | 
+affected 0
+--- select ' a' = '\', ' a' < '\', ' a' like '\', ' a' starting with '\', ' a' containing '\', ' a' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a\ | 
+affected 0
+--- select ' a' = 'é', ' a' < 'é', ' a' like 'é', ' a' starting with 'é', ' a' containing 'é', ' a' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  aé | 
+affected 0
+--- select ' a' = 'É', ' a' < 'É', ' a' like 'É', ' a' starting with 'É', ' a' containing 'É', ' a' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  aÉ | 
+affected 0
+--- select ' a' = '😀', ' a' < '😀', ' a' like '😀', ' a' starting with '😀', ' a' containing '😀', ' a' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False |  a😀 | 
+affected 0
+--- select '%' = '', '%' < '', '%' like '', '%' starting with '', '%' containing '', '%' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | % | 
+affected 0
+--- select '%' = ' ', '%' < ' ', '%' like ' ', '%' starting with ' ', '%' containing ' ', '%' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | %  | 
+affected 0
+--- select '%' = 'a', '%' < 'a', '%' like 'a', '%' starting with 'a', '%' containing 'a', '%' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %a | 
+affected 0
+--- select '%' = 'a ', '%' < 'a ', '%' like 'a ', '%' starting with 'a ', '%' containing 'a ', '%' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %a  | 
+affected 0
+--- select '%' = ' a', '%' < ' a', '%' like ' a', '%' starting with ' a', '%' containing ' a', '%' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | % a | 
+affected 0
+--- select '%' = '%', '%' < '%', '%' like '%', '%' starting with '%', '%' containing '%', '%' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | %% | 
+affected 0
+--- select '%' = '_', '%' < '_', '%' like '_', '%' starting with '_', '%' containing '_', '%' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | True | False | False | %_ | 
+affected 0
+--- select '%' = '\', '%' < '\', '%' like '\', '%' starting with '\', '%' containing '\', '%' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %\ | 
+affected 0
+--- select '%' = 'é', '%' < 'é', '%' like 'é', '%' starting with 'é', '%' containing 'é', '%' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %é | 
+affected 0
+--- select '%' = 'É', '%' < 'É', '%' like 'É', '%' starting with 'É', '%' containing 'É', '%' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %É | 
+affected 0
+--- select '%' = '😀', '%' < '😀', '%' like '😀', '%' starting with '😀', '%' containing '😀', '%' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | %😀 | 
+affected 0
+--- select '_' = '', '_' < '', '_' like '', '_' starting with '', '_' containing '', '_' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | _ | 
+affected 0
+--- select '_' = ' ', '_' < ' ', '_' like ' ', '_' starting with ' ', '_' containing ' ', '_' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | _  | 
+affected 0
+--- select '_' = 'a', '_' < 'a', '_' like 'a', '_' starting with 'a', '_' containing 'a', '_' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _a | 
+affected 0
+--- select '_' = 'a ', '_' < 'a ', '_' like 'a ', '_' starting with 'a ', '_' containing 'a ', '_' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _a  | 
+affected 0
+--- select '_' = ' a', '_' < ' a', '_' like ' a', '_' starting with ' a', '_' containing ' a', '_' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | _ a | 
+affected 0
+--- select '_' = '%', '_' < '%', '_' like '%', '_' starting with '%', '_' containing '%', '_' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | _% | 
+affected 0
+--- select '_' = '_', '_' < '_', '_' like '_', '_' starting with '_', '_' containing '_', '_' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | __ | 
+affected 0
+--- select '_' = '\', '_' < '\', '_' like '\', '_' starting with '\', '_' containing '\', '_' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | _\ | 
+affected 0
+--- select '_' = 'é', '_' < 'é', '_' like 'é', '_' starting with 'é', '_' containing 'é', '_' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _é | 
+affected 0
+--- select '_' = 'É', '_' < 'É', '_' like 'É', '_' starting with 'É', '_' containing 'É', '_' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _É | 
+affected 0
+--- select '_' = '😀', '_' < '😀', '_' like '😀', '_' starting with '😀', '_' containing '😀', '_' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | _😀 | 
+affected 0
+--- select '\' = '', '\' < '', '\' like '', '\' starting with '', '\' containing '', '\' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | \ | 
+affected 0
+--- select '\' = ' ', '\' < ' ', '\' like ' ', '\' starting with ' ', '\' containing ' ', '\' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | \  | 
+affected 0
+--- select '\' = 'a', '\' < 'a', '\' like 'a', '\' starting with 'a', '\' containing 'a', '\' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \a | 
+affected 0
+--- select '\' = 'a ', '\' < 'a ', '\' like 'a ', '\' starting with 'a ', '\' containing 'a ', '\' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \a  | 
+affected 0
+--- select '\' = ' a', '\' < ' a', '\' like ' a', '\' starting with ' a', '\' containing ' a', '\' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | \ a | 
+affected 0
+--- select '\' = '%', '\' < '%', '\' like '%', '\' starting with '%', '\' containing '%', '\' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | \% | 
+affected 0
+--- select '\' = '_', '\' < '_', '\' like '_', '\' starting with '_', '\' containing '_', '\' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | True | False | False | \_ | 
+affected 0
+--- select '\' = '\', '\' < '\', '\' like '\', '\' starting with '\', '\' containing '\', '\' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | \\ | 
+affected 0
+--- select '\' = 'é', '\' < 'é', '\' like 'é', '\' starting with 'é', '\' containing 'é', '\' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \é | 
+affected 0
+--- select '\' = 'É', '\' < 'É', '\' like 'É', '\' starting with 'É', '\' containing 'É', '\' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \É | 
+affected 0
+--- select '\' = '😀', '\' < '😀', '\' like '😀', '\' starting with '😀', '\' containing '😀', '\' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | \😀 | 
+affected 0
+--- select 'é' = '', 'é' < '', 'é' like '', 'é' starting with '', 'é' containing '', 'é' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | é | 
+affected 0
+--- select 'é' = ' ', 'é' < ' ', 'é' like ' ', 'é' starting with ' ', 'é' containing ' ', 'é' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | é  | 
+affected 0
+--- select 'é' = 'a', 'é' < 'a', 'é' like 'a', 'é' starting with 'a', 'é' containing 'a', 'é' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | éa | 
+affected 0
+--- select 'é' = 'a ', 'é' < 'a ', 'é' like 'a ', 'é' starting with 'a ', 'é' containing 'a ', 'é' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | éa  | 
+affected 0
+--- select 'é' = ' a', 'é' < ' a', 'é' like ' a', 'é' starting with ' a', 'é' containing ' a', 'é' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | é a | 
+affected 0
+--- select 'é' = '%', 'é' < '%', 'é' like '%', 'é' starting with '%', 'é' containing '%', 'é' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | é% | 
+affected 0
+--- select 'é' = '_', 'é' < '_', 'é' like '_', 'é' starting with '_', 'é' containing '_', 'é' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | é_ | 
+affected 0
+--- select 'é' = '\', 'é' < '\', 'é' like '\', 'é' starting with '\', 'é' containing '\', 'é' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | é\ | 
+affected 0
+--- select 'é' = 'é', 'é' < 'é', 'é' like 'é', 'é' starting with 'é', 'é' containing 'é', 'é' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | éé | 
+affected 0
+--- select 'é' = 'É', 'é' < 'É', 'é' like 'É', 'é' starting with 'É', 'é' containing 'É', 'é' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | True | éÉ | 
+affected 0
+--- select 'é' = '😀', 'é' < '😀', 'é' like '😀', 'é' starting with '😀', 'é' containing '😀', 'é' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | é😀 | 
+affected 0
+--- select 'É' = '', 'É' < '', 'É' like '', 'É' starting with '', 'É' containing '', 'É' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | É | 
+affected 0
+--- select 'É' = ' ', 'É' < ' ', 'É' like ' ', 'É' starting with ' ', 'É' containing ' ', 'É' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | É  | 
+affected 0
+--- select 'É' = 'a', 'É' < 'a', 'É' like 'a', 'É' starting with 'a', 'É' containing 'a', 'É' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | Éa | 
+affected 0
+--- select 'É' = 'a ', 'É' < 'a ', 'É' like 'a ', 'É' starting with 'a ', 'É' containing 'a ', 'É' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | Éa  | 
+affected 0
+--- select 'É' = ' a', 'É' < ' a', 'É' like ' a', 'É' starting with ' a', 'É' containing ' a', 'É' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | É a | 
+affected 0
+--- select 'É' = '%', 'É' < '%', 'É' like '%', 'É' starting with '%', 'É' containing '%', 'É' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | É% | 
+affected 0
+--- select 'É' = '_', 'É' < '_', 'É' like '_', 'É' starting with '_', 'É' containing '_', 'É' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | É_ | 
+affected 0
+--- select 'É' = '\', 'É' < '\', 'É' like '\', 'É' starting with '\', 'É' containing '\', 'É' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | É\ | 
+affected 0
+--- select 'É' = 'é', 'É' < 'é', 'É' like 'é', 'É' starting with 'é', 'É' containing 'é', 'É' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | True | Éé | 
+affected 0
+--- select 'É' = 'É', 'É' < 'É', 'É' like 'É', 'É' starting with 'É', 'É' containing 'É', 'É' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | ÉÉ | 
+affected 0
+--- select 'É' = '😀', 'É' < '😀', 'É' like '😀', 'É' starting with '😀', 'É' containing '😀', 'É' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | True | False | False | False | É😀 | 
+affected 0
+--- select '😀' = '', '😀' < '', '😀' like '', '😀' starting with '', '😀' containing '', '😀' || '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (1,,,False,,CONCATENATION,False,False)
+False | False | False | True | True | 😀 | 
+affected 0
+--- select '😀' = ' ', '😀' < ' ', '😀' like ' ', '😀' starting with ' ', '😀' containing ' ', '😀' || ' ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀  | 
+affected 0
+--- select '😀' = 'a', '😀' < 'a', '😀' like 'a', '😀' starting with 'a', '😀' containing 'a', '😀' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀a | 
+affected 0
+--- select '😀' = 'a ', '😀' < 'a ', '😀' like 'a ', '😀' starting with 'a ', '😀' containing 'a ', '😀' || 'a ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀a  | 
+affected 0
+--- select '😀' = ' a', '😀' < ' a', '😀' like ' a', '😀' starting with ' a', '😀' containing ' a', '😀' || ' a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀 a | 
+affected 0
+--- select '😀' = '%', '😀' < '%', '😀' like '%', '😀' starting with '%', '😀' containing '%', '😀' || '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | 😀% | 
+affected 0
+--- select '😀' = '_', '😀' < '_', '😀' like '_', '😀' starting with '_', '😀' containing '_', '😀' || '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | True | False | False | 😀_ | 
+affected 0
+--- select '😀' = '\', '😀' < '\', '😀' like '\', '😀' starting with '\', '😀' containing '\', '😀' || '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀\ | 
+affected 0
+--- select '😀' = 'é', '😀' < 'é', '😀' like 'é', '😀' starting with 'é', '😀' containing 'é', '😀' || 'é' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀é | 
+affected 0
+--- select '😀' = 'É', '😀' < 'É', '😀' like 'É', '😀' starting with 'É', '😀' containing 'É', '😀' || 'É' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+False | False | False | False | False | 😀É | 
+affected 0
+--- select '😀' = '😀', '😀' < '😀', '😀' like '😀', '😀' starting with '😀', '😀' containing '😀', '😀' || '😀' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (2,,,False,,CONCATENATION,False,False)
+True | False | True | True | True | 😀😀 | 
+affected 0
+--- select 'abc' like 'a%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' not like 'a%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' like '%c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' not like '%c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' like '_b_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' not like '_b_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' like 'a__c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' not like 'a__c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a%c' like 'a\%c' escape '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a%c' not like 'a\%c' escape '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'a_c' like 'a#_c' escape '#' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a_c' not like 'a#_c' escape '#' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' like 'a#bc' escape '#' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'abc' not like 'a#bc' escape '#' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'abc' like 'abc' escape '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'abc' not like 'abc' escape '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'abc' like 'ab' escape 'xy' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'abc' not like 'ab' escape 'xy' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544702 '' 22025
+Invalid ESCAPE sequence
+--- select 'ABC' like 'abc' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'ABC' not like 'abc' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc ' like 'abc' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc ' not like 'abc' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' like 'abc ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' not like 'abc ' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'aé' like 'a_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'aé' not like 'a_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'a😀' like 'a_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a😀' not like 'a_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select '' like '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select '' not like '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select '' like '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select '' not like '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select null like '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+NULL | 
+affected 0
+--- select null not like '%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+NULL | 
+affected 0
+--- select 'x' like null from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+NULL | 
+affected 0
+--- select 'x' not like null from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+NULL | 
+affected 0
+--- select 'abc' like '%%%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' not like '%%%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' like 'a%%c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' not like 'a%%c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select '100%' like '100!%' escape '!' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select '100%' not like '100!%' escape '!' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' similar to 'abc' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'a.c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'abc' similar to 'a_c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'a%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to '[a-c]+' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to '[^x]*' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'aaa' similar to 'a{3}' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'aa' similar to 'a{3}' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'ab' similar to 'a|b' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'a' similar to 'a|b' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to '(ab|cd)c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'ABC' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+False | 
+affected 0
+--- select 'a+b' similar to 'a\+b' escape '\' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'a[[:alpha:]]c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'a1c' similar to 'a[[:digit:]]c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to '%(b)%' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select '' similar to '' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'ab?c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abbbc' similar to 'ab*c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to '(a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544884 '' 42000
+Invalid SIMILAR TO pattern
+--- select 'abc' similar to 'a[c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544884 '' 42000
+Invalid SIMILAR TO pattern
+--- select 'é' similar to '_' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
+affected 0
+--- select 'abc' similar to 'a[b-]c' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+ERROR 335544884 '' 42000
+Invalid SIMILAR TO pattern
+--- select cast('abc' as char(5)) || '|', cast('abc' as varchar(5)) || '|', cast('abc  ' as varchar(3)), cast('abcd ' as char(4)) from rdb$database
+CONCATENATION:VARCHAR (6,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (6,,,False,,CONCATENATION,False,False)
+CAST:VARCHAR (3,,,False,,CAST,False,False)
+CAST:CHAR (4,,,False,,CAST,False,False)
+abc  | | abc| | abc | abcd | 
+affected 0
+--- select cast('abcd' as char(3)) from rdb$database
+CAST:CHAR (3,,,False,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #3 #4 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 4
+--- select cast('ab  ' as char(2)), cast('ab  ' as varchar(2)) from rdb$database
+CAST:CHAR (2,,,False,,CAST,False,False)
+CAST:VARCHAR (2,,,False,,CAST,False,False)
+ab | ab | 
+affected 0
+--- select 'a' || null, null || null, 'a' || 1, 1 || 'a', 1.5 || 'x', 1e0 || 'x', date '2024-01-01' || '', true || '' from rdb$database
+CONCATENATION:VARCHAR (1,,,True,,CONCATENATION,False,False)
+CONCATENATION:CHAR (1,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (12,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (12,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (22,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (25,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (10,,,False,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (5,,,False,,CONCATENATION,False,False)
+NULL | NULL | a1 | 1a | 1.5x | 1.000000000000000x | 2024-01-01 | TRUE | 
+affected 0
+--- select char_length('😀'), octet_length('😀'), octet_length(_octets 'abc'), char_length(_win1252 'àb'), octet_length(_win1252 'àb') from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+1 | 4 | 3 | 3 | 3 | 
+affected 0
+--- select _utf8 'a' collate unicode_ci = 'A', 'a' = 'A' collate unicode_ci, 'á' collate unicode_ci_ai = 'A' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | True | 
+affected 0
+--- select 'b' collate unicode_ci < 'A', 'é' collate unicode < 'f', 'Z' < 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+False | True | True | 
+affected 0
+--- select trim(both 'x' from 'xxaxx'), trim(leading 'xy' from 'xyxyaxy'), trim('' from ' a '), trim(trailing ' ' from ' a ') || '|' from rdb$database
+TRIM:VARCHAR (5,,,False,,TRIM,False,False)
+TRIM:VARCHAR (7,,,False,,TRIM,False,False)
+TRIM:VARCHAR (3,,,False,,TRIM,False,False)
+CONCATENATION:VARCHAR (4,,,False,,CONCATENATION,False,False)
+a | axy |  a  |  a| | 
+affected 0
+--- select trim(null from 'a'), trim('a' from null) from rdb$database
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+TRIM:VARCHAR (1,,,True,,TRIM,False,False)
+NULL | NULL | 
+affected 0
+--- select substring('abcdef' from 3 for -1) from rdb$database
+ERROR 335544853 #-1 '' 22011
+Invalid length parameter -1 to SUBSTRING. Negative integers are not allowed.
+--- select substring('abcdef' from null), substring('abcdef' from 2 for null) from rdb$database
+SUBSTRING:VARCHAR (6,,,True,,SUBSTRING,False,False)
+SUBSTRING:VARCHAR (6,,,True,,SUBSTRING,False,False)
+NULL | NULL | 
+affected 0
+--- select substring('abc' similar 'a"b"c' escape '"') from rdb$database
+SUBSTRING:VARCHAR (3,,,True,,SUBSTRING,False,False)
+ERROR 335544884 '' 42000
+Invalid SIMILAR TO pattern
+--- select left('abc', -1) from rdb$database
+LEFT:VARCHAR (3,,,False,,LEFT,False,False)
+ERROR 335544853 #-1 '' 22011
+Invalid length parameter -1 to SUBSTRING. Negative integers are not allowed.
+--- select right('abc', -1) from rdb$database
+RIGHT:VARCHAR (3,,,False,,RIGHT,False,False)
+ERROR 335544853 #-1 '' 22011
+Invalid length parameter -1 to SUBSTRING. Negative integers are not allowed.
+--- select lpad('abc', -1) from rdb$database
+LPAD:VARCHAR (1,,,False,,LPAD,False,False)
+ERROR 335544606 335544962 #2 'LPAD' '' 42000
+expression evaluation not supported
+Argument #2 for LPAD must be zero or positive
+--- select lpad('abc', 10, ''), rpad('abc', 10, '') , lpad('', 3, 'ab'), rpad('abc', 2) from rdb$database
+LPAD:VARCHAR (10,,,False,,LPAD,False,False)
+RPAD:VARCHAR (10,,,False,,RPAD,False,False)
+LPAD:VARCHAR (3,,,False,,LPAD,False,False)
+RPAD:VARCHAR (2,,,False,,RPAD,False,False)
+abc | abc | aba | ab | 
+affected 0
+--- select replace('aaa', 'a', 'aa'), replace('abc', 'b', ''), replace('abc', null, 'x'), replace(null, 'a', 'b') from rdb$database
+REPLACE:VARCHAR (6,,,False,,REPLACE,False,False)
+REPLACE:VARCHAR (3,,,False,,REPLACE,False,False)
+REPLACE:CHAR (1,,,True,,REPLACE,False,False)
+REPLACE:CHAR (1,,,True,,REPLACE,False,False)
+aaaaaa | ac | NULL | NULL | 
+affected 0
+--- select position('' in 'abc'), position('c' in 'abc', 4), position('a', 'aaa', 2), position('x' in ''), position('a' in null) from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #52 335544382 ',' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 52
+,
+--- select position('a', 'abc', 0) from rdb$database
+POSITION:INTEGER (4,,,False,,POSITION,False,False)
+ERROR 335544606 335544963 #3 'POSITION' '' 42000
+expression evaluation not supported
+Argument #3 for POSITION must be positive
+--- select overlay('abcdef' placing '' from 3 for 2), overlay('abc' placing 'xyz' from 10) from rdb$database
+OVERLAY:VARCHAR (6,,,False,,OVERLAY,False,False)
+OVERLAY:VARCHAR (6,,,False,,OVERLAY,False,False)
+abef | abcxyz | 
+affected 0
+--- select reverse(''), reverse('😀a'), reverse(null) from rdb$database
+REVERSE:VARCHAR (0,,,False,,REVERSE,False,False)
+REVERSE:VARCHAR (2,,,False,,REVERSE,False,False)
+REVERSE:CHAR (1,,,True,,REVERSE,False,False)
+ | a😀 | NULL | 
+affected 0
+--- select upper(null), lower(null), char_length(null), octet_length(null) from rdb$database
+UPPER:CHAR (1,,,True,,UPPER,False,False)
+LOWER:CHAR (1,,,True,,LOWER,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+NULL | NULL | NULL | NULL | 
+affected 0
+--- select char_length(cast('ab' as char(10))), octet_length(cast('ab' as char(10))), char_length(cast('ab' as varchar(10))) from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+10 | 10 | 2 | 
+affected 0
+--- select 'abc' > 'abd', 'abc' > 'ab', 'ab' = 'ab   ', 'ab' < 'ab ' || 'a' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+False | True | True | True | 
+affected 0
+--- select max('a'), min(''), list(distinct 'x' || '') from rdb$database
+MAX:CHAR (1,,,True,,MAX,False,False)
+MIN:CHAR (0,,,True,,MIN,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+a |  | x | 
+affected 0
+--- select list(v10) from (select v10 from st order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+ab,ab   ,,çãé€😀, x  | 
+affected 0
+--- select list(v10, '') from st
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+abab   çãé€😀 x  | 
+affected 0
+--- select list(v10, null) from st
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | 
+affected 0
+--- select cast('x' as varchar(32765)) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544381 335544611 '' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Implementation limit exceeded
+COLUMN
+--- select cast('x' as varchar(32766)) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544381 335544611 '' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Implementation limit exceeded
+COLUMN
+--- select cast('x' as char(32767)) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544381 335544611 '' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Implementation limit exceeded
+COLUMN
+--- select cast('x' as varchar(8191) character set utf8), cast('x' as varchar(8192) character set utf8) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544381 335544611 '' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+Implementation limit exceeded
+COLUMN
+--- select _octets 'ab' = x'6162', x'6162' || x'63', cast(x'00ff' as varchar(4)), char_length(x'00ff') from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+CONCATENATION:VARCHAR (3,,,False,,CONCATENATION,False,False)
+CAST:VARCHAR (4,,,False,,CAST,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+ERROR 335544849 '' 22000
+Malformed string
+--- select x'4' from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #9 335544382 ''4'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 9
+'4'
+--- select x'g0' from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #9 335544382 ''g0'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 9
+'g0'
+--- select 'it''s', '''', '' from rdb$database
+CONSTANT:CHAR (4,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (1,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (0,,,False,,CONSTANT,False,False)
+it's | ' |  | 
+affected 0
+--- select q'{it's}', q'[a]]', q'<x>' from rdb$database
+CONSTANT:CHAR (4,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (2,,,False,,CONSTANT,False,False)
+CONSTANT:CHAR (1,,,False,,CONSTANT,False,False)
+it's | a] | x | 
+affected 0
+--- select n'abc', _none 'abc', _ascii 'abc' from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #9 335544382 ''abc'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 9
+'abc'
+--- select 'a' 'b' from rdb$database
+CONSTANT:CHAR (2,,,False,,CONSTANT,False,False)
+ab | 
+affected 0

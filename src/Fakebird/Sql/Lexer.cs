@@ -19,6 +19,9 @@ public enum Tok : byte
 
 public readonly record struct Token(Tok Kind, string Text, int Pos, int Line, int Col)
 {
+    /// <summary>Character set introducer of a string literal (_WIN1252 'x'), upper case.</summary>
+    public string? Introducer { get; init; }
+
     public bool Is(string kw) => Kind == Tok.Ident && Text == kw;
     public bool IsOp(string op) => Kind == Tok.Op && Text == op;
     public override string ToString() => Kind == Tok.Eof ? "<end>" : Text;
@@ -109,14 +112,15 @@ public sealed class Lexer
             }
             _pos++;
             while (_pos < _s.Length && (char.IsLetterOrDigit(_s[_pos]) || _s[_pos] == '_' || _s[_pos] == '$')) _pos++;
-            // character set introducer: _UTF8'text' (the charset is irrelevant for in-memory strings)
+            // character set introducer: _WIN1252'text'
             var q = _pos;
             while (c == '_' && q < _s.Length && _s[q] is ' ' or '\t') q++;
             if (c == '_' && q < _s.Length && _s[q] == '\'')
             {
+                var cs = _s[(start + 1).._pos].ToUpperInvariant();
                 _pos = q;
                 var lit = Next();
-                return lit with { Pos = start, Line = line, Col = col };
+                return lit with { Pos = start, Line = line, Col = col, Introducer = cs };
             }
             return Make(Tok.Ident, _s[start.._pos].ToUpperInvariant(), start, line, col);
         }

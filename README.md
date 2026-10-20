@@ -92,6 +92,12 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   SUM(BIGINT)) and evaluated with the same algorithms (int64 division scaling, overflow checks and
   their error codes). INT128 results are described as BIGINT (DataTypeCompatibility 3.0) and fail at
   fetch when they do not fit; literals that fit in 32 bits are evaluated as INTEGER like Firebird's BLR.
+* **Strings** follow Firebird's character sets and ICU collations: `UNICODE`, `UNICODE_CI` and
+  `UNICODE_CI_AI` compare and sort like ICU (ORDER BY uses the full-strength sort key, equality the
+  collation's strength); LIKE, STARTING, CONTAINING, SIMILAR TO, POSITION and REPLACE honour case and
+  accent insensitivity; lengths count code points; SIMILAR TO patterns are validated and translated like
+  Firebird's (including `SUBSTRING ... SIMILAR`); character set introducers relabel the literal's bytes;
+  OCTETS strings pad and trim with NUL and have no case.
 * **Rounding** matches Firebird everywhere: casts and assignments round half away from zero on the
   first dropped digit (doubles with Firebird's epsilon), ROUND returns scaled integers even for doubles
   (`ROUND(1.005e0, 2)` is 1.01), TRUNC of doubles uses `modf`, divisions truncate.

@@ -47,6 +47,12 @@ public abstract class XNode
 public sealed class ConstNode : XNode
 {
     public readonly Value Value;
+    /// <summary>
+    /// The value DSQL's describe sees for a literal (makePad/makeSubstr use literal lengths). A negated literal
+    /// keeps its positive literal's descriptor, so it sees the positive value (Firebird quirk); folded
+    /// expressions are not literals (null).
+    /// </summary>
+    public Value? Literal;
     public ConstNode(Value v, SqlType t)
     {
         Value = v;
@@ -103,6 +109,13 @@ public sealed class ArithNode(ArithOp op, XNode l, XNode r) : XNode
 
     Value ConcatTyped(in Value a, in Value b)
     {
+        // an OCTETS (or binary blob) result concatenates bytes
+        if (Type.IsBinary && !(a.IsNull || b.IsNull))
+        {
+            var x = a.Tag == VTag.Bytes ? a.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(a));
+            var y = b.Tag == VTag.Bytes ? b.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(b));
+            return Value.Bytes([.. x, .. y]);
+        }
         var r = Arith.Concat(a, b);
         if (!r.IsNull && Type.IsString && r.Tag == VTag.String && Conv.CharLength(r.AsString) > 32765)
             throw Err.StringTruncation(32765, Conv.CharLength(r.AsString));
@@ -207,7 +220,7 @@ public sealed class IsNullNode : XNode
 {
     public readonly XNode X;
     public readonly bool Not;
-    public IsNullNode(XNode x, bool not) { X = x; Not = not; Type = SqlType.Boolean; NotNull = true; }
+    public IsNullNode(XNode x, bool not) { X = x; Not = not; Type = SqlType.Boolean; }
     public override Value Eval(Ctx c) => Value.Bool(X.Eval(c).IsNull != Not);
 }
 
@@ -216,7 +229,7 @@ public sealed class IsDistinctNode : XNode
     public readonly XNode L, R;
     public readonly bool Not;
     public readonly Collation Collation;
-    public IsDistinctNode(XNode l, XNode r, bool not, Collation col) { L = l; R = r; Not = not; Collation = col; Type = SqlType.Boolean; NotNull = true; }
+    public IsDistinctNode(XNode l, XNode r, bool not, Collation col) { L = l; R = r; Not = not; Collation = col; Type = SqlType.Boolean; }
 
     public override Value Eval(Ctx c)
     {
@@ -234,7 +247,7 @@ public sealed class IsBoolNode : XNode
     public readonly XNode X;
     public readonly bool? Expected;
     public readonly bool Not;
-    public IsBoolNode(XNode x, bool? expected, bool not) { X = x; Expected = expected; Not = not; Type = SqlType.Boolean; NotNull = true; }
+    public IsBoolNode(XNode x, bool? expected, bool not) { X = x; Expected = expected; Not = not; Type = SqlType.Boolean; }
 
     public override Value Eval(Ctx c)
     {

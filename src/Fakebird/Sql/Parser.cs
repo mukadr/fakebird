@@ -420,6 +420,7 @@ public sealed partial class Parser
             if (Cur.Kind is Tok.Integer or Tok.Decimal or Tok.Float)
             {
                 var lit = NumberLiteral(negate: true);
+                if (lit is LiteralExpr le) le.Negated = true;
                 return Postfix(lit);
             }
             return new UnaryExpr(UnaryOp.Neg, Unary()) { Pos = pos };
@@ -444,6 +445,30 @@ public sealed partial class Parser
         if (Int128.TryParse(digits, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var w))
             return new LiteralExpr(Value.Wide(w, scale), TypeRules.Exact(TypeKind.Int128, scale, 0)) { Pos = pos };
         throw Err.Unsupported("DECFLOAT literal " + digits);
+    }
+
+    /// <summary>
+    /// A string literal is CHAR of its length in the connection charset (UTF8). An introducer relabels the literal's
+    /// bytes: _OCTETS gives binary, a single-byte charset reads each UTF-8 byte as one character.
+    /// </summary>
+    static Expr StringLiteralExpr(string text, string? introducer, int pos)
+    {
+        var cs = introducer == null ? Charset.Utf8 : Compile.Compiler.CharsetOf(introducer);
+        switch (cs)
+        {
+            case Charset.Octets:
+            {
+                var b = Conv.Utf8.GetBytes(text);
+                return new LiteralExpr(Value.Bytes(b), new SqlType(TypeKind.Char, b.Length, charset: Charset.Octets)) { Pos = pos };
+            }
+            case Charset.Utf8 or Charset.UnicodeFss:
+                return new LiteralExpr(Value.Str(text), SqlType.Char(Conv.CharLength(text), cs)) { Pos = pos };
+            default:
+            {
+                var relabeled = System.Text.Encoding.Latin1.GetString(Conv.Utf8.GetBytes(text));
+                return new LiteralExpr(Value.Str(relabeled), SqlType.Char(relabeled.Length, cs)) { Pos = pos };
+            }
+        }
     }
 
     Expr NumberLiteral(bool negate)
@@ -495,13 +520,20 @@ public sealed partial class Parser
             case Tok.Float:
                 return NumberLiteral(negate: false);
             case Tok.String:
-                _i++;
-                return new LiteralExpr(Value.Str(t.Text), SqlType.Char(Math.Max(1, Conv.CharLength(t.Text)))) { Pos = pos };
-            case Tok.HexString:
             {
                 _i++;
-                var bytes = Convert.FromHexString(t.Text.Length % 2 == 1 ? "0" + t.Text : t.Text);
-                return new LiteralExpr(Value.Bytes(bytes), new SqlType(TypeKind.VarChar, Math.Max(1, bytes.Length), charset: Charset.Octets)) { Pos = pos };
+                var text = t.Text;
+                // adjacent string literals are one literal ('a' 'b' is 'ab')
+                while (Cur.Kind == Tok.String && Cur.Introducer == null) text += Advance().Text;
+                return StringLiteralExpr(text, t.Introducer, pos);
+            }
+            case Tok.HexString:
+            {
+                // x'..' needs an even number of hex digits, else the string is an unknown token
+                if (t.Text.Length % 2 == 1 || !t.Text.All(Uri.IsHexDigit)) throw Err.Syntax(t.Line, t.Col + 1, "'" + t.Text + "'");
+                _i++;
+                var bytes = Convert.FromHexString(t.Text);
+                return new LiteralExpr(Value.Bytes(bytes), new SqlType(TypeKind.Char, bytes.Length, charset: Charset.Octets)) { Pos = pos };
             }
             case Tok.Param:
                 _i++;
@@ -596,8 +628,19 @@ public sealed partial class Parser
             {
                 _i++;
                 ExpectOp("(");
-                var e = Expression();
-                if (Accept("SIMILAR")) throw Err.Unsupported("SUBSTRING ... SIMILAR");
+                var save = _i;
+                var e = Additive();
+                if (Accept("SIMILAR"))
+                {
+                    // SUBSTRING(value SIMILAR pattern ESCAPE char)
+                    var pattern = Additive();
+                    Expect("ESCAPE");
+                    var escape = Additive();
+                    ExpectOp(")");
+                    return new FuncExpr("SUBSTRING_SIMILAR", [e, pattern, escape]) { Pos = pos };
+                }
+                _i = save;
+                e = Expression();
                 List<Expr> args = [e];
                 if (Accept("FROM"))
                 {
@@ -641,7 +684,8 @@ public sealed partial class Parser
                     else source = first;
                 }
                 ExpectOp(")");
-                return new FuncExpr("TRIM", [new KeywordArg(spec), chars ?? new LiteralExpr(Value.Null, SqlType.Null), source]) { Pos = pos };
+                // without trim characters TRIM removes spaces; an explicit NULL makes the result NULL
+                return new FuncExpr("TRIM", [new KeywordArg(spec), chars ?? new KeywordArg(" "), source]) { Pos = pos };
             }
             case "POSITION":
             {

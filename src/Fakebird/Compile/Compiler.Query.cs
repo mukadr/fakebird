@@ -102,7 +102,7 @@ public sealed partial class Compiler
                     args[i]!.NotNull = true;
                 }
             var bound = args.Select(a => a!).ToArray();
-            var node = new FuncNode(f.Name, def.Impl, bound, def.ResultType(bound), def.Deterministic)
+            var node = new FuncNode(f.Name == "SUBSTRING_SIMILAR" ? "SUBSTRING" : f.Name, def.Impl, bound, def.ResultType(bound), def.Deterministic)
             {
                 NotNull = !(def.Nullable?.Invoke(bound) ?? bound.Any(b => !b.NotNull)),
             };
@@ -189,7 +189,10 @@ public sealed partial class Compiler
                 if (f.Star || f.Args.Count is < 1 or > 2) throw Err.Dsql(-104, "LIST requires 1 or 2 arguments");
                 spec.Arg = Bind(f.Args[0], s, SqlType.VarChar(8191));
                 if (f.Args.Count > 1) spec.Separator = Bind(f.Args[1], s, SqlType.VarChar(8191));
-                spec.Type = spec.Arg.Type.IsBinary ? SqlType.BlobBinary : SqlType.BlobText;
+                // ListAggNode::make: a blob keeps its subtype, any string (OCTETS too) gives a text blob in its charset
+                var at = spec.Arg.Type;
+                spec.Type = at.Kind == TypeKind.Blob ? at
+                    : new SqlType(TypeKind.Blob, subType: 1, charset: at.IsString ? at.Charset : Charset.Ascii);
                 spec.Collation = spec.Arg.Type.Collation;
                 return spec;
         }
@@ -319,7 +322,9 @@ public sealed partial class Compiler
     {
         Descending = o.Descending,
         NullsFirst = o.NullsFirst ?? !o.Descending,
-        Collation = t.Collation,
+        // sort keys of the ICU collations keep case and accents (tertiary strength): 'aB' sorts before 'Ab'
+        Collation = t.Collation is Collation.CaseInsensitive or Collation.CaseAccentInsensitive ? Collation.Unicode : t.Collation,
+        IsBlob = t.Kind == TypeKind.Blob,
     };
 
     static int OutputColumnIndex(Expr e, OutCol[] cols)

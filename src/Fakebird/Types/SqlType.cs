@@ -23,7 +23,8 @@ public enum TypeKind : byte
 
 public enum Charset : byte { None, Octets, Utf8, Ascii, Win1252, Iso8859_1, UnicodeFss, Win1250, Win1251 }
 
-public enum Collation : byte { Binary, CaseInsensitive, CaseAccentInsensitive }
+/// <summary>Binary (code point order), and the ICU collations UNICODE, UNICODE_CI and UNICODE_CI_AI.</summary>
+public enum Collation : byte { Binary, CaseInsensitive, CaseAccentInsensitive, Unicode }
 
 /// <summary>
 /// A static SQL type (column, domain, expression, parameter). Exact numerics are represented as
