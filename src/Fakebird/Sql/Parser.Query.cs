@@ -100,17 +100,15 @@ public sealed partial class Parser
         if (Accept("SKIP")) qs.Limit.Skip = LimitValue();
         if (Accept("DISTINCT")) qs.Distinct = true;
         else Accept("ALL");
-        do
-        {
-            var item = new SelectItem();
-            if (AcceptOp("*")) item.Expr = new StarExpr(null);
-            else
+        // a bare * is the whole select list (Firebird's grammar: select_list is '*' or a list of items)
+        if (AcceptOp("*")) qs.Items.Add(new SelectItem { Expr = new StarExpr(null) });
+        else
+            do
             {
-                item.Expr = Expression();
+                var item = new SelectItem { Expr = Expression() };
                 item.Alias = OptAlias();
-            }
-            qs.Items.Add(item);
-        } while (AcceptOp(","));
+                qs.Items.Add(item);
+            } while (AcceptOp(","));
         if (Accept("INTO")) qs.Into = TargetList();
         Expect("FROM");
         qs.From.Add(TableReference());

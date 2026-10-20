@@ -68,9 +68,13 @@ public sealed partial class Compiler
         foreach (var t in _trackers) t.Add(stream);
     }
 
+    /// <summary>Fields referenced while binding each enclosing query specification (see SortImage).</summary>
+    readonly List<Dictionary<(int Stream, int Col), SqlType>> _fieldTrackers = new();
+
     ColNode Col(int stream, int index, SqlType type, string name = "", string? relation = null)
     {
         NoteStream(stream);
+        foreach (var t in _fieldTrackers) t.TryAdd((stream, index), type);
         return new ColNode(stream, index, type) { Name = name, Field = name, Relation = relation };
     }
 
@@ -864,7 +868,9 @@ public sealed partial class Compiler
         else if (owner.AggMode && owner.Agg != null && owner.Streams.Contains(item.Stream) && item.Stream != owner.Agg.Stream)
         {
             if (!owner.Agg.GroupedColumns.Contains((item.Stream, idx)))
-                throw Err.Dsql(-104, "Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)");
+                throw owner.AggClause == "HAVING clause"
+                    ? Err.Dsql104(FbMessages.dsql_agg_having_err, owner.AggClause)
+                    : Err.Dsql104(FbMessages.dsql_agg_column_err, owner.AggClause);
         }
         var ci = item.Cols[idx];
         if (item.Table is { IsSystem: false } table && idx < table.Columns.Count && table.Columns[idx].ComputedBy is { } computedBy)

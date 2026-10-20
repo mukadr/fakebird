@@ -42,6 +42,8 @@ public sealed class SpecQuery : QueryNode
     public RelNode Source = null!;
     public XNode[] Projection = [];
     public bool Distinct;
+    /// <summary>The fields carried in the sort records of the DISTINCT sort (see SortImage).</summary>
+    public SortField[] SortFields = [];
     public XNode? First, Skip;
 
     public override QCursor Open(Ctx c)
@@ -64,25 +66,18 @@ public sealed class SpecQuery : QueryNode
 
     sealed class Cursor(SpecQuery q, Ctx c, RowCursor src, long first, long skip) : QCursor
     {
-        HashSet<IndexKey>? _seen;
         long _returned;
         long _skipped;
-        readonly Collation[]? _cols = q.Distinct ? q.Projection.Select(p => p.Type.Collation).ToArray() : null;
+        List<Value[]>? _distinct;
+        int _next;
 
         public override bool Next()
         {
             if (_returned >= first) return false;
-            while (src.Next())
+            if (q.Distinct && _distinct == null) _distinct = Distinct();
+            while (_distinct != null ? _next < _distinct.Count : src.Next())
             {
-                var p = q.Projection;
-                var row = new Value[p.Length];
-                // Firebird evaluates the select list right to left (visible with side effects such as GEN_ID)
-                for (var i = p.Length - 1; i >= 0; i--) row[i] = p[i].Eval(c);
-                if (_cols != null)
-                {
-                    _seen ??= new();
-                    if (!_seen.Add(new IndexKey(row, _cols))) continue;
-                }
+                var row = _distinct != null ? _distinct[_next++] : Project();
                 if (_skipped < skip)
                 {
                     _skipped++;
@@ -93,6 +88,36 @@ public sealed class SpecQuery : QueryNode
                 return true;
             }
             return false;
+        }
+
+        Value[] Project()
+        {
+            var p = q.Projection;
+            var row = new Value[p.Length];
+            // Firebird evaluates the select list right to left (visible with side effects such as GEN_ID)
+            for (var i = p.Length - 1; i >= 0; i--) row[i] = p[i].Eval(c);
+            return row;
+        }
+
+        /// <summary>The distinct rows, each the last of its duplicates in sort-record order (see SortImage).</summary>
+        List<Value[]> Distinct()
+        {
+            var cols = q.Projection.Select(p => p.Type.Collation).ToArray();
+            var seen = new Dictionary<IndexKey, int>();
+            var rows = new List<(Value[] Row, byte[] Image)>();
+            while (src.Next())
+            {
+                var row = Project();
+                var image = SortImage.Build(c, q.SortFields);
+                if (!seen.TryGetValue(new IndexKey(row, cols), out var i))
+                {
+                    seen.Add(new IndexKey(row, cols), rows.Count);
+                    rows.Add((row, image));
+                }
+                else if (SortImage.Compare(image, rows[i].Image) >= 0) rows[i] = (row, image);
+            }
+            // the rows come out of the sort in key order (NULLs first)
+            return rows.Select(r => r.Row).OrderBy(r => r, SortImage.KeyOrder(q.Projection.Select(p => p.Type).ToArray())).ToList();
         }
     }
 }

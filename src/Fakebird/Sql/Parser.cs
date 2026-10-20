@@ -821,6 +821,9 @@ public sealed partial class Parser
     {
         ExpectOp("(");
         var f = new FuncExpr(name, new List<Expr>()) { Pos = pos, Package = package };
+        // aggregates have their own grammar rules: one argument (LIST: an optional delimiter), * only in COUNT
+        var aggregate = package == null && name is "COUNT" or "SUM" or "AVG" or "MIN" or "MAX" or "LIST";
+        if (aggregate && (IsOp(")") || IsOp("*") && name != "COUNT")) throw Unexpected();
         if (AcceptOp(")")) return Over(f);
         if (AcceptOp("*"))
         {
@@ -839,7 +842,12 @@ public sealed partial class Parser
             return f;
         }
         f.Args.Add(Expression());
-        while (AcceptOp(",")) f.Args.Add(Expression());
+        while (IsOp(","))
+        {
+            if (aggregate && (name != "LIST" || f.Args.Count == 2)) throw Unexpected();
+            _i++;
+            f.Args.Add(Expression());
+        }
         ExpectOp(")");
         return Over(f);
     }

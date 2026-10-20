@@ -110,6 +110,11 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   comparing a BOOLEAN with a number or date fails at run time with a conversion error of the other
   operand (the lower-priority operand of a comparison is the one converted), `''` in CASE/COALESCE gives
   CHAR(0), and MAXVALUE/MINVALUE of string literals hit Firebird's truncation error.
+* **Aggregates and grouping** follow Firebird's sort: groups and DISTINCT rows come out in key order
+  without ORDER BY; among rows with equal keys ('abc' and 'ABC' under UNICODE_CI, 'abc' and 'abc ') the
+  shown value, the order in which MIN/MAX/LIST see the rows, and the DISTINCT survivor follow the bytes of
+  Firebird's sort records; SUM/AVG DISTINCT add the values in sorted order; SUM(NULL) is CHAR(1); the
+  aggregate errors (nested, in WHERE/GROUP BY, ungrouped columns per clause) carry Firebird's codes.
 * **Parameters** are typed from their context (assignment target, other side of a comparison, CAST,
   function arguments); in the select list an operator on an untyped parameter fails like Firebird
   (`Data type unknown`, `Invalid data type for multiplication`).
@@ -133,7 +138,7 @@ INT128 / DECFLOAT types (Firebird 4), DML on views.
 
 * DDL is applied immediately (not transactional) and is never cached as a plan.
 * Statement results are materialized at execute time (errors of a SELECT are still reported on
-  the first fetch, like Firebird; WHERE conditions that depend on no table, such as an uncorrelated
+  the fetch, like Firebird: an error discards the rows of its fetch batch; WHERE conditions that depend on no table, such as an uncorrelated
   singleton subquery, fail at execute, also like Firebird).
 * NO ACTION foreign keys are verified at the end of each statement.
 * All text is treated as Unicode; columns are described to the client as UTF8.

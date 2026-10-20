@@ -1,0 +1,2388 @@
+--- select count(i), count(distinct i), min(i), max(i) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+7 | 5 | 1 | 2147483647 | 
+affected 0
+--- select sum(i), avg(i) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+4294967339 | 613566762 | 
+affected 0
+--- select sum(distinct i), avg(distinct i) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+2147483685 | 429496737 | 
+affected 0
+--- select g, count(i), min(i), max(i) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+NULL | 2 | 1 | 2147483647 | 
+1 | 2 | 10 | 20 | 
+2 | 2 | 7 | 7 | 
+3 | 1 | 2147483647 | 2147483647 | 
+affected 0
+--- select g, sum(i), avg(i) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+NULL | 1 | 1 | 
+1 | 30 | 15 | 
+2 | 14 | 7 | 
+3 | 2147483647 | 2147483647 | 
+affected 0
+--- select count(*), count(i), sum(i), avg(i), min(i), max(i) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select i, count(*) from a group by i order by 1
+I:INTEGER (4,,,True,A,I,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+1 | 1 | 
+7 | 2 | 
+10 | 1 | 
+20 | 1 | 
+2147483647 | 2 | 
+affected 0
+--- select distinct i from a order by 1
+I:INTEGER (4,,,True,A,I,False,False)
+NULL | 
+1 | 
+7 | 
+10 | 
+20 | 
+2147483647 | 
+affected 0
+--- select count(sm), count(distinct sm), min(sm), max(sm) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:SMALLINT (2,,,True,,MIN,False,False)
+MAX:SMALLINT (2,,,True,,MAX,False,False)
+7 | 4 | -3 | 32767 | 
+affected 0
+--- select sum(sm), avg(sm) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+65532 | 9361 | 
+affected 0
+--- select sum(distinct sm), avg(distinct sm) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+32767 | 8191 | 
+affected 0
+--- select g, count(sm), min(sm), max(sm) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:SMALLINT (2,,,True,,MIN,False,False)
+MAX:SMALLINT (2,,,True,,MAX,False,False)
+NULL | 2 | 32767 | 32767 | 
+1 | 2 | 1 | 2 | 
+2 | 2 | -3 | -3 | 
+3 | 1 | 1 | 1 | 
+affected 0
+--- select g, sum(sm), avg(sm) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+NULL | 32767 | 32767 | 
+1 | 3 | 1 | 
+2 | -6 | -3 | 
+3 | 1 | 1 | 
+affected 0
+--- select count(*), count(sm), sum(sm), avg(sm), min(sm), max(sm) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:SMALLINT (2,,,True,,MIN,False,False)
+MAX:SMALLINT (2,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select sm, count(*) from a group by sm order by 1
+SM:SMALLINT (2,,,True,A,SM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+-3 | 2 | 
+1 | 2 | 
+2 | 1 | 
+32767 | 2 | 
+affected 0
+--- select distinct sm from a order by 1
+SM:SMALLINT (2,,,True,A,SM,False,False)
+NULL | 
+-3 | 
+1 | 
+2 | 
+32767 | 
+affected 0
+--- select count(bi), count(distinct bi), min(bi), max(bi) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+7 | 4 | -5 | 9223372036854775807 | 
+affected 0
+--- select sum(bi), avg(bi) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(distinct bi), avg(distinct bi) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select g, count(bi), min(bi), max(bi) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+NULL | 2 | 1 | 9223372036854775807 | 
+1 | 2 | 9000000000000000000 | 9000000000000000000 | 
+2 | 2 | -5 | -5 | 
+3 | 1 | 1 | 1 | 
+affected 0
+--- select g, sum(bi), avg(bi) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select count(*), count(bi), sum(bi), avg(bi), min(bi), max(bi) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select bi, count(*) from a group by bi order by 1
+BI:BIGINT (8,,,True,A,BI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+-5 | 2 | 
+1 | 2 | 
+9000000000000000000 | 2 | 
+9223372036854775807 | 1 | 
+affected 0
+--- select distinct bi from a order by 1
+BI:BIGINT (8,,,True,A,BI,False,False)
+NULL | 
+-5 | 
+1 | 
+9000000000000000000 | 
+9223372036854775807 | 
+affected 0
+--- select count(n), count(distinct n), min(n), max(n) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:NUMERIC (4,4,2,True,,MIN,False,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+7 | 7 | -0.01 | 9999999.99 | 
+affected 0
+--- select sum(n), avg(n) from a
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+10100004.06 | 1442857.72 | 
+affected 0
+--- select sum(distinct n), avg(distinct n) from a
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+10100004.06 | 1442857.72 | 
+affected 0
+--- select g, count(n), min(n), max(n) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:NUMERIC (4,4,2,True,,MIN,False,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+NULL | 2 | 99999.99 | 9999999.99 | 
+1 | 2 | 1.25 | 2.5 | 
+2 | 2 | -0.01 | 0.01 | 
+3 | 1 | 0.33 | 0.33 | 
+affected 0
+--- select g, sum(n), avg(n) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+NULL | 99999.99 | 99999.99 | 
+1 | 3.75 | 1.87 | 
+2 | 0 | 0 | 
+3 | 0.33 | 0.33 | 
+affected 0
+--- select count(*), count(n), sum(n), avg(n), min(n), max(n) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+MIN:NUMERIC (4,4,2,True,,MIN,False,False)
+MAX:NUMERIC (4,4,2,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select n, count(*) from a group by n order by 1
+N:NUMERIC (4,9,2,True,A,N,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+-0.01 | 1 | 
+0.01 | 1 | 
+0.33 | 1 | 
+1.25 | 1 | 
+2.5 | 1 | 
+99999.99 | 1 | 
+9999999.99 | 1 | 
+affected 0
+--- select distinct n from a order by 1
+N:NUMERIC (4,9,2,True,A,N,False,False)
+NULL | 
+-0.01 | 
+0.01 | 
+0.33 | 
+1.25 | 
+2.5 | 
+99999.99 | 
+9999999.99 | 
+affected 0
+--- select count(n4), count(distinct n4), min(n4), max(n4) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:NUMERIC (8,8,4,True,,MIN,False,False)
+MAX:NUMERIC (8,8,4,True,,MAX,False,False)
+7 | 6 | 0.0001 | 99999999999999.9999 | 
+affected 0
+--- select sum(n4), avg(n4) from a
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+100000000000010.0002 | 14285714285715.7143 | 
+affected 0
+--- select sum(distinct n4), avg(distinct n4) from a
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+100000000000006.6669 | 16666666666667.7778 | 
+affected 0
+--- select g, count(n4), min(n4), max(n4) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:NUMERIC (8,8,4,True,,MIN,False,False)
+MAX:NUMERIC (8,8,4,True,,MAX,False,False)
+NULL | 2 | 0.0001 | 99999999999999.9999 | 
+1 | 2 | 1.0001 | 2.0002 | 
+2 | 2 | 3.3333 | 3.3333 | 
+3 | 1 | 0.3333 | 0.3333 | 
+affected 0
+--- select g, sum(n4), avg(n4) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+NULL | 0.0001 | 0.0001 | 
+1 | 3.0003 | 1.5001 | 
+2 | 6.6666 | 3.3333 | 
+3 | 0.3333 | 0.3333 | 
+affected 0
+--- select count(*), count(n4), sum(n4), avg(n4), min(n4), max(n4) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+MIN:NUMERIC (8,8,4,True,,MIN,False,False)
+MAX:NUMERIC (8,8,4,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select n4, count(*) from a group by n4 order by 1
+N4:NUMERIC (8,18,4,True,A,N4,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+0.0001 | 1 | 
+0.3333 | 1 | 
+1.0001 | 1 | 
+2.0002 | 1 | 
+3.3333 | 2 | 
+99999999999999.9999 | 1 | 
+affected 0
+--- select distinct n4 from a order by 1
+N4:NUMERIC (8,18,4,True,A,N4,False,False)
+NULL | 
+0.0001 | 
+0.3333 | 
+1.0001 | 
+2.0002 | 
+3.3333 | 
+99999999999999.9999 | 
+affected 0
+--- select count(d), count(distinct d), min(d), max(d) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+7 | 7 | -1E+300 | 1E+300 | 
+affected 0
+--- select sum(d), avg(d) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+0.1 | 0.014285714285714287 | 
+affected 0
+--- select sum(distinct d), avg(distinct d) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+0 | 0 | 
+affected 0
+--- select g, count(d), min(d), max(d) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+NULL | 2 | 0 | 1E-300 | 
+1 | 2 | 1.5 | 2.25 | 
+2 | 2 | -1E+300 | 1E+300 | 
+3 | 1 | 0.1 | 0.1 | 
+affected 0
+--- select g, sum(d), avg(d) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+NULL | 1E-300 | 1E-300 | 
+1 | 3.75 | 1.875 | 
+2 | 0 | 0 | 
+3 | 0.1 | 0.1 | 
+affected 0
+--- select count(*), count(d), sum(d), avg(d), min(d), max(d) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select d, count(*) from a group by d order by 1
+D:DOUBLE PRECISION (8,,,True,A,D,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+-1E+300 | 1 | 
+0 | 1 | 
+1E-300 | 1 | 
+0.1 | 1 | 
+1.5 | 1 | 
+2.25 | 1 | 
+1E+300 | 1 | 
+affected 0
+--- select distinct d from a order by 1
+D:DOUBLE PRECISION (8,,,True,A,D,False,False)
+NULL | 
+-1E+300 | 
+0 | 
+1E-300 | 
+0.1 | 
+1.5 | 
+2.25 | 
+1E+300 | 
+affected 0
+--- select count(f), count(distinct f), min(f), max(f) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:FLOAT (4,,,True,,MIN,False,False)
+MAX:FLOAT (4,,,True,,MAX,False,False)
+7 | 7 | -2.5 | 3.4E+38 | 
+affected 0
+--- select sum(f), avg(f) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+3.3999999521443642E+38 | 4.857142788777664E+37 | 
+affected 0
+--- select sum(distinct f), avg(distinct f) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+3.3999999521443642E+38 | 4.857142788777664E+37 | 
+affected 0
+--- select g, count(f), min(f), max(f) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:FLOAT (4,,,True,,MIN,False,False)
+MAX:FLOAT (4,,,True,,MAX,False,False)
+NULL | 2 | 0 | 3.4E+38 | 
+1 | 2 | 0.5 | 1.25 | 
+2 | 2 | -2.5 | 2.5 | 
+3 | 1 | 0.1 | 0.1 | 
+affected 0
+--- select g, sum(f), avg(f) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+NULL | 3.3999999521443642E+38 | 3.3999999521443642E+38 | 
+1 | 1.75 | 0.875 | 
+2 | 0 | 0 | 
+3 | 0.10000000149011612 | 0.10000000149011612 | 
+affected 0
+--- select count(*), count(f), sum(f), avg(f), min(f), max(f) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+MIN:FLOAT (4,,,True,,MIN,False,False)
+MAX:FLOAT (4,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select f, count(*) from a group by f order by 1
+F:FLOAT (4,,,True,A,F,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+-2.5 | 1 | 
+0 | 1 | 
+0.1 | 1 | 
+0.5 | 1 | 
+1.25 | 1 | 
+2.5 | 1 | 
+3.4E+38 | 1 | 
+affected 0
+--- select distinct f from a order by 1
+F:FLOAT (4,,,True,A,F,False,False)
+NULL | 
+-2.5 | 
+0 | 
+0.1 | 
+0.5 | 
+1.25 | 
+2.5 | 
+3.4E+38 | 
+affected 0
+--- select count(s), count(distinct s), min(s), max(s) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+7 | 6 |  | z | 
+affected 0
+--- select sum(s), avg(s) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct s), avg(distinct s) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(s), min(s), max(s) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+NULL | 2 |  | z | 
+1 | 2 | abc | abc | 
+2 | 2 | B | b | 
+3 | 1 | abc  | abc  | 
+affected 0
+--- select g, sum(s), avg(s) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(s), sum(s), avg(s), min(s), max(s) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select s, count(*) from a group by s order by 1
+S:VARCHAR (10,,,True,A,S,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+B | 1 | 
+abc  | 3 | 
+b | 1 | 
+z | 1 | 
+affected 0
+--- select distinct s from a order by 1
+S:VARCHAR (10,,,True,A,S,False,False)
+NULL | 
+ | 
+B | 
+abc  | 
+b | 
+z | 
+affected 0
+--- select count(c), count(distinct c), min(c), max(c) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:CHAR (5,,,True,,MIN,False,False)
+MAX:CHAR (5,,,True,,MAX,False,False)
+7 | 6 |       | z     | 
+affected 0
+--- select sum(c), avg(c) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct c), avg(distinct c) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(c), min(c), max(c) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:CHAR (5,,,True,,MIN,False,False)
+MAX:CHAR (5,,,True,,MAX,False,False)
+NULL | 2 |       | z     | 
+1 | 2 | a     | a     | 
+2 | 2 | b     | bb    | 
+3 | 1 | abc   | abc   | 
+affected 0
+--- select g, sum(c), avg(c) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(c), sum(c), avg(c), min(c), max(c) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select c, count(*) from a group by c order by 1
+C:CHAR (5,,,True,A,C,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+      | 1 | 
+a     | 2 | 
+abc   | 1 | 
+b     | 1 | 
+bb    | 1 | 
+z     | 1 | 
+affected 0
+--- select distinct c from a order by 1
+C:CHAR (5,,,True,A,C,False,False)
+NULL | 
+      | 
+a     | 
+abc   | 
+b     | 
+bb    | 
+z     | 
+affected 0
+--- select count(dt), count(distinct dt), min(dt), max(dt) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DATE (4,,,True,,MIN,False,False)
+MAX:DATE (4,,,True,,MAX,False,False)
+7 | 5 | 0001-01-01 00:00:00.0000 | 2100-01-01 00:00:00.0000 | 
+affected 0
+--- select sum(dt), avg(dt) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct dt), avg(distinct dt) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(dt), min(dt), max(dt) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DATE (4,,,True,,MIN,False,False)
+MAX:DATE (4,,,True,,MAX,False,False)
+NULL | 2 | 0001-01-01 00:00:00.0000 | 2100-01-01 00:00:00.0000 | 
+1 | 2 | 2024-01-01 00:00:00.0000 | 2024-02-01 00:00:00.0000 | 
+2 | 2 | 2023-12-31 00:00:00.0000 | 2023-12-31 00:00:00.0000 | 
+3 | 1 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0000 | 
+affected 0
+--- select g, sum(dt), avg(dt) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(dt), sum(dt), avg(dt), min(dt), max(dt) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select dt, count(*) from a group by dt order by 1
+DT:DATE (4,,,True,A,DT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+0001-01-01 00:00:00.0000 | 1 | 
+2023-12-31 00:00:00.0000 | 2 | 
+2024-01-01 00:00:00.0000 | 2 | 
+2024-02-01 00:00:00.0000 | 1 | 
+2100-01-01 00:00:00.0000 | 1 | 
+affected 0
+--- select distinct dt from a order by 1
+DT:DATE (4,,,True,A,DT,False,False)
+NULL | 
+0001-01-01 00:00:00.0000 | 
+2023-12-31 00:00:00.0000 | 
+2024-01-01 00:00:00.0000 | 
+2024-02-01 00:00:00.0000 | 
+2100-01-01 00:00:00.0000 | 
+affected 0
+--- select count(ts), count(distinct ts), min(ts), max(ts) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:TIMESTAMP (8,,,True,,MIN,False,False)
+MAX:TIMESTAMP (8,,,True,,MAX,False,False)
+7 | 6 | 0001-01-01 00:00:00.0000 | 2100-01-01 00:00:00.0000 | 
+affected 0
+--- select sum(ts), avg(ts) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct ts), avg(distinct ts) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(ts), min(ts), max(ts) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:TIMESTAMP (8,,,True,,MIN,False,False)
+MAX:TIMESTAMP (8,,,True,,MAX,False,False)
+NULL | 2 | 0001-01-01 00:00:00.0000 | 2100-01-01 00:00:00.0000 | 
+1 | 2 | 2024-01-01 10:00:00.0000 | 2024-02-01 11:00:00.0000 | 
+2 | 2 | 2023-12-31 00:00:00.0000 | 2023-12-31 23:59:59.9999 | 
+3 | 1 | 2024-01-01 10:00:00.0000 | 2024-01-01 10:00:00.0000 | 
+affected 0
+--- select g, sum(ts), avg(ts) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(ts), sum(ts), avg(ts), min(ts), max(ts) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select ts, count(*) from a group by ts order by 1
+TS:TIMESTAMP (8,,,True,A,TS,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+0001-01-01 00:00:00.0000 | 1 | 
+2023-12-31 00:00:00.0000 | 1 | 
+2023-12-31 23:59:59.9999 | 1 | 
+2024-01-01 10:00:00.0000 | 2 | 
+2024-02-01 11:00:00.0000 | 1 | 
+2100-01-01 00:00:00.0000 | 1 | 
+affected 0
+--- select distinct ts from a order by 1
+TS:TIMESTAMP (8,,,True,A,TS,False,False)
+NULL | 
+0001-01-01 00:00:00.0000 | 
+2023-12-31 00:00:00.0000 | 
+2023-12-31 23:59:59.9999 | 
+2024-01-01 10:00:00.0000 | 
+2024-02-01 11:00:00.0000 | 
+2100-01-01 00:00:00.0000 | 
+affected 0
+--- select count(t), count(distinct t), min(t), max(t) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:TIME (4,,,True,,MIN,False,False)
+MAX:TIME (4,,,True,,MAX,False,False)
+7 | 6 | 00:00:00.0000 | 23:59:59.0000 | 
+affected 0
+--- select sum(t), avg(t) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct t), avg(distinct t) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(t), min(t), max(t) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:TIME (4,,,True,,MIN,False,False)
+MAX:TIME (4,,,True,,MAX,False,False)
+NULL | 2 | 00:00:00.0001 | 12:00:00.0000 | 
+1 | 2 | 10:00:00.0000 | 11:00:00.0000 | 
+2 | 2 | 00:00:00.0000 | 23:59:59.0000 | 
+3 | 1 | 10:00:00.0000 | 10:00:00.0000 | 
+affected 0
+--- select g, sum(t), avg(t) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(t), sum(t), avg(t), min(t), max(t) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select t, count(*) from a group by t order by 1
+T:TIME (4,,,True,A,T,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+00:00:00.0000 | 1 | 
+00:00:00.0001 | 1 | 
+10:00:00.0000 | 2 | 
+11:00:00.0000 | 1 | 
+12:00:00.0000 | 1 | 
+23:59:59.0000 | 1 | 
+affected 0
+--- select distinct t from a order by 1
+T:TIME (4,,,True,A,T,False,False)
+NULL | 
+00:00:00.0000 | 
+00:00:00.0001 | 
+10:00:00.0000 | 
+11:00:00.0000 | 
+12:00:00.0000 | 
+23:59:59.0000 | 
+affected 0
+--- select count(b), count(distinct b), min(b), max(b) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BOOLEAN (1,,,True,,MIN,False,False)
+MAX:BOOLEAN (1,,,True,,MAX,False,False)
+6 | 2 | False | True | 
+affected 0
+--- select sum(b), avg(b) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct b), avg(distinct b) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(b), min(b), max(b) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BOOLEAN (1,,,True,,MIN,False,False)
+MAX:BOOLEAN (1,,,True,,MAX,False,False)
+NULL | 2 | False | True | 
+1 | 2 | False | True | 
+2 | 1 | True | True | 
+3 | 1 | False | False | 
+affected 0
+--- select g, sum(b), avg(b) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(b), sum(b), avg(b), min(b), max(b) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select b, count(*) from a group by b order by 1
+B:BOOLEAN (1,,,True,A,B,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+False | 3 | 
+True | 3 | 
+affected 0
+--- select distinct b from a order by 1
+B:BOOLEAN (1,,,True,A,B,False,False)
+NULL | 
+False | 
+True | 
+affected 0
+--- select count(bl), count(distinct bl), min(bl), max(bl) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BLOB SUB_TYPE 1 (2147483647,,,True,,MIN,False,False)
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+6 | 6 |  | two | 
+affected 0
+--- select sum(bl), avg(bl) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct bl), avg(distinct bl) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(bl), min(bl), max(bl) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BLOB SUB_TYPE 1 (2147483647,,,True,,MIN,False,False)
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+NULL | 1 |  |  | 
+1 | 2 | one | two | 
+2 | 2 | four | three | 
+3 | 1 | eight | eight | 
+affected 0
+--- select g, sum(bl), avg(bl) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(bl), sum(bl), avg(bl), min(bl), max(bl) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select bl, count(*) from a group by bl order by 1
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,A,BL,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+one | 1 | 
+two | 1 | 
+three | 1 | 
+four | 1 | 
+ | 1 | 
+eight | 1 | 
+affected 0
+--- select distinct bl from a order by 1
+BL:BLOB SUB_TYPE 1 (2147483647,,,True,A,BL,False,False)
+NULL | 
+one | 
+two | 
+three | 
+four | 
+ | 
+eight | 
+affected 0
+--- select count(ci), count(distinct ci), min(ci), max(ci) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+7 | 3 |  | x | 
+affected 0
+--- select sum(ci), avg(ci) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct ci), avg(distinct ci) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(ci), min(ci), max(ci) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+NULL | 2 |  | X | 
+1 | 2 | Abc | Abc | 
+2 | 2 | ABC | x | 
+3 | 1 | abc  | abc  | 
+affected 0
+--- select g, sum(ci), avg(ci) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(ci), sum(ci), avg(ci), min(ci), max(ci) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select ci, count(*) from a group by ci order by 1
+CI:VARCHAR (10,,,True,A,CI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+abc  | 4 | 
+x | 2 | 
+affected 0
+--- select distinct ci from a order by 1
+CI:VARCHAR (10,,,True,A,CI,False,False)
+NULL | 
+ | 
+abc  | 
+x | 
+affected 0
+--- select count(g), count(distinct g), min(g), max(g) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+6 | 3 | 1 | 3 | 
+affected 0
+--- select sum(g), avg(g) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+10 | 1 | 
+affected 0
+--- select sum(distinct g), avg(distinct g) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+6 | 2 | 
+affected 0
+--- select g, count(g), min(g), max(g) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+NULL | 0 | NULL | NULL | 
+1 | 3 | 1 | 1 | 
+2 | 2 | 2 | 2 | 
+3 | 1 | 3 | 3 | 
+affected 0
+--- select g, sum(g), avg(g) from a where id <> 7 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+NULL | NULL | NULL | 
+1 | 3 | 1 | 
+2 | 4 | 2 | 
+3 | 3 | 3 | 
+affected 0
+--- select count(*), count(g), sum(g), avg(g), min(g), max(g) from a where 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+0 | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select g, count(*) from a group by g order by 1
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select distinct g from a order by 1
+G:INTEGER (4,,,True,A,G,False,False)
+NULL | 
+1 | 
+2 | 
+3 | 
+affected 0
+--- select count(h), count(distinct h), min(h), max(h) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+MAX:VARCHAR (5,,,True,,MAX,False,False)
+6 | 3 | x | z | 
+affected 0
+--- select sum(h), avg(h) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(distinct h), avg(distinct h) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select g, count(h), min(h), max(h) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:VARCHAR (5,,,True,,MIN,False,False)
+MAX:VARCHAR (5,,,True,,MAX,False,False)
+NULL | 1 | x | x | 
+1 | 3 | x | y | 
+2 | 1 | y | y | 
+3 | 1 | z | z | 
+affected 0
+--- select g, sum(h), avg(h) from a where id <> 7 group by g order by g
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(h), sum(h), avg(h), min(h), max(h) from a where 1 = 0
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select h, count(*) from a group by h order by 1
+H:VARCHAR (5,,,True,A,H,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+x | 3 | 
+y | 2 | 
+z | 1 | 
+affected 0
+--- select distinct h from a order by 1
+H:VARCHAR (5,,,True,A,H,False,False)
+NULL | 
+x | 
+y | 
+z | 
+affected 0
+--- select sum(x) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(x) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+6148914691236517204 | 
+affected 0
+--- select sum(x) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(x) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+9223372036854775807 | 
+affected 0
+--- select sum(y) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+2147483647 | 
+affected 0
+--- select avg(y) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+715827882 | 
+affected 0
+--- select sum(y) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+4294967294 | 
+affected 0
+--- select avg(y) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+2147483647 | 
+affected 0
+--- select sum(n) from big
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+19999999999999999.97 | 
+affected 0
+--- select avg(n) from big
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+6666666666666666.65 | 
+affected 0
+--- select sum(n) from big where x > 0
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+19999999999999999.98 | 
+affected 0
+--- select avg(n) from big where x > 0
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+9999999999999999.99 | 
+affected 0
+--- select sum(x * 2) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(x * 2) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(x * 2) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(x * 2) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(y * 2) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+4294967294 | 
+affected 0
+--- select avg(y * 2) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+1431655764 | 
+affected 0
+--- select sum(y * 2) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+8589934588 | 
+affected 0
+--- select avg(y * 2) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+4294967294 | 
+affected 0
+--- select sum(y + 0) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+2147483647 | 
+affected 0
+--- select avg(y + 0) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+715827882 | 
+affected 0
+--- select sum(y + 0) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+4294967294 | 
+affected 0
+--- select avg(y + 0) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+2147483647 | 
+affected 0
+--- select sum(n * n) from big
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(n * n) from big
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(n * n) from big where x > 0
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select avg(n * n) from big where x > 0
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(cast(y as smallint)) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select avg(cast(y as smallint)) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select sum(cast(y as smallint)) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select avg(cast(y as smallint)) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select sum(x / 2) from big
+SUM:BIGINT (8,,,True,,SUM,False,False)
+9223372036854775806 | 
+affected 0
+--- select avg(x / 2) from big
+AVG:BIGINT (8,,,True,,AVG,False,False)
+3074457345618258602 | 
+affected 0
+--- select sum(x / 2) from big where x > 0
+SUM:BIGINT (8,,,True,,SUM,False,False)
+9223372036854775806 | 
+affected 0
+--- select avg(x / 2) from big where x > 0
+AVG:BIGINT (8,,,True,,AVG,False,False)
+4611686018427387903 | 
+affected 0
+--- select sum(cast(x as double precision)) from big
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1.8446744073709552E+19 | 
+affected 0
+--- select avg(cast(x as double precision)) from big
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+6.148914691236517E+18 | 
+affected 0
+--- select sum(cast(x as double precision)) from big where x > 0
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+1.8446744073709552E+19 | 
+affected 0
+--- select avg(cast(x as double precision)) from big where x > 0
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+9.223372036854776E+18 | 
+affected 0
+--- select sum(i), avg(i), min(i), max(i), count(i) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2147483691 | 429496738 | 7 | 2147483647 | 5 | 
+affected 0
+--- select sum(i + 0), avg(i + 0), min(i + 0), max(i + 0), count(i + 0) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2147483691 | 429496738 | 7 | 2147483647 | 5 | 
+affected 0
+--- select sum(i * 1), avg(i * 1), min(i * 1), max(i * 1), count(i * 1) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2147483691 | 429496738 | 7 | 2147483647 | 5 | 
+affected 0
+--- select sum(i / 2), avg(i / 2), min(i / 2), max(i / 2), count(i / 2) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1073741844 | 214748368 | 3 | 1073741823 | 5 | 
+affected 0
+--- select sum(n * 2), avg(n * 2), min(n * 2), max(n * 2), count(n * 2) from a where id not in (6, 7)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+MIN:NUMERIC (8,8,2,True,,MIN,False,False)
+MAX:NUMERIC (8,8,2,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+8.16 | 1.63 | -0.02 | 5 | 5 | 
+affected 0
+--- select sum(n / 3), avg(n / 3), min(n / 3), max(n / 3), count(n / 3) from a where id not in (6, 7)
+SUM:DECIMAL (8,8,2,True,,SUM,False,False)
+AVG:DECIMAL (8,8,2,True,,AVG,False,False)
+MIN:DECIMAL (8,8,2,True,,MIN,False,False)
+MAX:DECIMAL (8,8,2,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1.35 | 0.27 | 0 | 0.83 | 5 | 
+affected 0
+--- select sum(i * n), avg(i * n), min(i * n), max(i * n), count(i * n) from a where id not in (6, 7)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+MIN:NUMERIC (8,8,2,True,,MIN,False,False)
+MAX:NUMERIC (8,8,2,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+708669666.01 | 141733933.2 | -0.07 | 708669603.51 | 5 | 
+affected 0
+--- select sum(sm + sm), avg(sm + sm), min(sm + sm), max(sm + sm), count(sm + sm) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+-4 | 0 | -6 | 4 | 5 | 
+affected 0
+--- select sum(bi / 1), avg(bi / 1), min(bi / 1), max(bi / 1), count(bi / 1) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+ERROR 335544569 335544436 #-303 335544321 335544779 '' 42000
+Dynamic SQL Error
+SQL error code = -303
+arithmetic exception, numeric overflow, or string truncation
+Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+--- select sum(cast(i as numeric(18,3))), avg(cast(i as numeric(18,3))), min(cast(i as numeric(18,3))), max(cast(i as numeric(18,3))), count(cast(i as numeric(18,3))) from a where id not in (6, 7)
+SUM:NUMERIC (8,8,3,True,,SUM,False,False)
+AVG:NUMERIC (8,8,3,True,,AVG,False,False)
+MIN:NUMERIC (8,8,3,True,,MIN,False,False)
+MAX:NUMERIC (8,8,3,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2147483691 | 429496738.2 | 7 | 2147483647 | 5 | 
+affected 0
+--- select sum(cast(i as smallint)), avg(cast(i as smallint)), min(cast(i as smallint)), max(cast(i as smallint)), count(cast(i as smallint)) from a where id not in (6, 7)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:SMALLINT (2,,,True,,MIN,False,False)
+MAX:SMALLINT (2,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+ERROR 335544321 335544916 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- select sum(d * 2), avg(d * 2), min(d * 2), max(d * 2), count(d * 2) from a where id not in (6, 7)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+0.2 | 0.04 | -2E+300 | 2E+300 | 5 | 
+affected 0
+--- select sum(i * 1.5), avg(i * 1.5), min(i * 1.5), max(i * 1.5), count(i * 1.5) from a where id not in (6, 7)
+SUM:DECIMAL (8,8,1,True,,SUM,False,False)
+AVG:DECIMAL (8,8,1,True,,AVG,False,False)
+MIN:DECIMAL (8,8,1,True,,MIN,False,False)
+MAX:DECIMAL (8,8,1,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3221225536.5 | 644245107.3 | 10.5 | 3221225470.5 | 5 | 
+affected 0
+--- select sum(i / 1e0), avg(i / 1e0), min(i / 1e0), max(i / 1e0), count(i / 1e0) from a where id not in (6, 7)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2147483691 | 429496738.2 | 7 | 2147483647 | 5 | 
+affected 0
+--- select count(1), min(1), max(1) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+8 | 1 | 1 | 
+affected 0
+--- select sum(1), avg(1) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+8 | 1 | 
+affected 0
+--- select count(1.5), min(1.5), max(1.5) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DECIMAL (8,8,1,True,,MIN,False,False)
+MAX:DECIMAL (8,8,1,True,,MAX,False,False)
+8 | 1.5 | 1.5 | 
+affected 0
+--- select sum(1.5), avg(1.5) from a
+SUM:DECIMAL (8,8,1,True,,SUM,False,False)
+AVG:DECIMAL (8,8,1,True,,AVG,False,False)
+12 | 1.5 | 
+affected 0
+--- select count(1e0), min(1e0), max(1e0) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DOUBLE PRECISION (8,,,True,,MIN,False,False)
+MAX:DOUBLE PRECISION (8,,,True,,MAX,False,False)
+8 | 1 | 1 | 
+affected 0
+--- select sum(1e0), avg(1e0) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+8 | 1 | 
+affected 0
+--- select count(null), min(null), max(null) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:CHAR (1,,,True,,MIN,False,False)
+MAX:CHAR (1,,,True,,MAX,False,False)
+0 | NULL | NULL | 
+affected 0
+--- select sum(null), avg(null) from a
+SUM:CHAR (1,,,True,,SUM,False,False)
+AVG:CHAR (1,,,True,,AVG,False,False)
+NULL | NULL | 
+affected 0
+--- select count('a'), min('a'), max('a') from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:CHAR (1,,,True,,MIN,False,False)
+MAX:CHAR (1,,,True,,MAX,False,False)
+8 | a | a | 
+affected 0
+--- select sum('a'), avg('a') from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(true), min(true), max(true) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:BOOLEAN (1,,,True,,MIN,False,False)
+MAX:BOOLEAN (1,,,True,,MAX,False,False)
+8 | True | True | 
+affected 0
+--- select sum(true), avg(true) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(date '2024-01-01'), min(date '2024-01-01'), max(date '2024-01-01') from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:DATE (4,,,True,,MIN,False,False)
+MAX:DATE (4,,,True,,MAX,False,False)
+8 | 2024-01-01 00:00:00.0000 | 2024-01-01 00:00:00.0000 | 
+affected 0
+--- select sum(date '2024-01-01'), avg(date '2024-01-01') from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(cast(null as integer)), min(cast(null as integer)), max(cast(null as integer)) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+0 | NULL | NULL | 
+affected 0
+--- select sum(cast(null as integer)), avg(cast(null as integer)) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+NULL | NULL | 
+affected 0
+--- select count(*), sum(x), avg(x), min(x), max(x), list(s), count(distinct x) from z
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+0 | NULL | NULL | NULL | NULL | NULL | 0 | 
+affected 0
+--- select count(*) from z group by x
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+affected 0
+--- select x, count(*) from z group by x
+X:INTEGER (4,,,True,Z,X,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+affected 0
+--- select count(*) from z having count(*) = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+0 | 
+affected 0
+--- select count(*) from z having count(*) > 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+affected 0
+--- select sum(n), avg(n), max(s) from z where x = 1
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+AVG:NUMERIC (8,8,2,True,,AVG,False,False)
+MAX:VARCHAR (5,,,True,,MAX,False,False)
+NULL | NULL | NULL | 
+affected 0
+--- select (select count(*) from z), (select sum(x) from z), (select max(s) from z) from rdb$database
+COUNT:BIGINT (8,,,True,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+MAX:VARCHAR (5,,,True,,MAX,False,False)
+0 | NULL | NULL | 
+affected 0
+--- select coalesce(sum(x), 0), coalesce(max(s), '-') from z
+COALESCE:BIGINT (8,,,True,,COALESCE,False,False)
+COALESCE:VARCHAR (5,,,True,,COALESCE,False,False)
+0 | - | 
+affected 0
+--- select count(*) + 1, sum(x) + 1, max(x) * 2 from z
+ADD:BIGINT (8,,,False,,ADD,False,False)
+ADD:BIGINT (8,,,True,,ADD,False,False)
+MULTIPLY:BIGINT (8,,,True,,MULTIPLY,False,False)
+1 | NULL | NULL | 
+affected 0
+--- select ci, count(*) from a group by ci
+CI:VARCHAR (10,,,True,A,CI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+abc  | 4 | 
+x | 2 | 
+affected 0
+--- select distinct ci from a
+CI:VARCHAR (10,,,True,A,CI,False,False)
+NULL | 
+ | 
+abc  | 
+x | 
+affected 0
+--- select g, count(*) from a group by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select h, g, count(*) from a group by h, g
+H:VARCHAR (5,,,True,A,H,False,False)
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | NULL | 1 | 
+NULL | 2 | 1 | 
+x | NULL | 1 | 
+x | 1 | 2 | 
+y | 1 | 1 | 
+y | 2 | 1 | 
+z | 3 | 1 | 
+affected 0
+--- select distinct h from a
+H:VARCHAR (5,,,True,A,H,False,False)
+NULL | 
+x | 
+y | 
+z | 
+affected 0
+--- select distinct g, h from a
+G:INTEGER (4,,,True,A,G,False,False)
+H:VARCHAR (5,,,True,A,H,False,False)
+NULL | NULL | 
+NULL | x | 
+1 | x | 
+1 | y | 
+2 | NULL | 
+2 | y | 
+3 | z | 
+affected 0
+--- select b, count(*) from a group by b
+B:BOOLEAN (1,,,True,A,B,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+False | 3 | 
+True | 3 | 
+affected 0
+--- select s, count(*) from a group by s
+S:VARCHAR (10,,,True,A,S,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+B | 1 | 
+abc  | 3 | 
+b | 1 | 
+z | 1 | 
+affected 0
+--- select c, count(*) from a group by c
+C:CHAR (5,,,True,A,C,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+      | 1 | 
+a     | 2 | 
+abc   | 1 | 
+b     | 1 | 
+bb    | 1 | 
+z     | 1 | 
+affected 0
+--- select ci, min(ci), max(ci), list(ci, ';'), list(id) from a group by ci
+CI:VARCHAR (10,,,True,A,CI,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | NULL | NULL | NULL | 3 | 
+ |  |  |  | 7 | 
+abc  | Abc | Abc | Abc;abc;ABC;abc  | 1,2,4,8 | 
+X | x | x | x;X | 5,6 | 
+affected 0
+--- select g, min(ci), max(ci), list(ci, ';') from a group by g
+G:INTEGER (4,,,True,A,G,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL |  | X | ;X | 
+1 | Abc | Abc | Abc;abc | 
+2 | ABC | x | x;ABC | 
+3 | abc  | abc  | abc  | 
+affected 0
+--- select g, list(s, ';'), list(n), list(i) from a group by g
+G:INTEGER (4,,,True,A,G,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | z; | 99999.99,9999999.99 | 1,2147483647 | 
+1 | abc;abc | 1.25,2.50 | 10,20 | 
+2 | B;b | 0.01,-0.01 | 7,7 | 
+3 | abc  | 0.33 | 2147483647 | 
+affected 0
+--- select upper(ci), list(ci, ';') from a group by upper(ci)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | NULL | 
+ |  | 
+ABC  | ABC;Abc;abc;abc  | 
+X | X;x | 
+affected 0
+--- select distinct s, c from a order by 1, 2
+S:VARCHAR (10,,,True,A,S,False,False)
+C:CHAR (5,,,True,A,C,False,False)
+NULL | NULL | 
+ |       | 
+B | b     | 
+abc | a     | 
+abc  | abc   | 
+b | bb    | 
+z | z     | 
+affected 0
+--- select upper(ci), min(ci), max(ci), count(distinct ci) from a group by upper(ci) order by 1
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | NULL | NULL | 0 | 
+ |  |  | 1 | 
+ABC  | ABC | ABC | 1 | 
+X | X | X | 1 | 
+affected 0
+--- select distinct upper(ci) from a order by 1
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+NULL | 
+ | 
+ABC  | 
+X | 
+affected 0
+--- select s, count(distinct ci) from a group by s order by 1
+S:VARCHAR (10,,,True,A,S,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 0 | 
+ | 1 | 
+B | 1 | 
+abc  | 1 | 
+b | 1 | 
+z | 1 | 
+affected 0
+--- select g, count(*) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, count(*) from a group by 1 order by 1
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g as k, count(*) from a group by k order by k
+K:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g + 1, count(*) from a group by g + 1 order by 1
+ADD:BIGINT (8,,,True,,ADD,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+2 | 3 | 
+3 | 2 | 
+4 | 1 | 
+affected 0
+--- select g + 1 as k, count(*) from a group by g + 1 order by k
+K:BIGINT (8,,,True,,ADD,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+2 | 3 | 
+3 | 2 | 
+4 | 1 | 
+affected 0
+--- select g * 2, sum(i) from a group by g order by 1
+MULTIPLY:BIGINT (8,,,True,,MULTIPLY,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+NULL | 2147483648 | 
+2 | 30 | 
+4 | 14 | 
+6 | 2147483647 | 
+affected 0
+--- select h, g, count(*) from a group by h, g order by h, g
+H:VARCHAR (5,,,True,A,H,False,False)
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | NULL | 1 | 
+NULL | 2 | 1 | 
+x | NULL | 1 | 
+x | 1 | 2 | 
+y | 1 | 1 | 
+y | 2 | 1 | 
+z | 3 | 1 | 
+affected 0
+--- select h, g, count(*) from a group by g, h order by 1, 2
+H:VARCHAR (5,,,True,A,H,False,False)
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | NULL | 1 | 
+NULL | 2 | 1 | 
+x | NULL | 1 | 
+x | 1 | 2 | 
+y | 1 | 1 | 
+y | 2 | 1 | 
+z | 3 | 1 | 
+affected 0
+--- select upper(h), count(*) from a group by upper(h) order by 1
+UPPER:VARCHAR (5,,,True,,UPPER,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+X | 3 | 
+Y | 2 | 
+Z | 1 | 
+affected 0
+--- select ci, count(*) from a group by ci order by 1
+CI:VARCHAR (10,,,True,A,CI,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+abc  | 4 | 
+x | 2 | 
+affected 0
+--- select c, count(*) from a group by c order by 1
+C:CHAR (5,,,True,A,C,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+      | 1 | 
+a     | 2 | 
+abc   | 1 | 
+b     | 1 | 
+bb    | 1 | 
+z     | 1 | 
+affected 0
+--- select s, count(*) from a group by s order by 1
+S:VARCHAR (10,,,True,A,S,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+B | 1 | 
+abc  | 3 | 
+b | 1 | 
+z | 1 | 
+affected 0
+--- select upper(s), count(*) from a group by 1 order by 1
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ | 1 | 
+ABC  | 3 | 
+B | 2 | 
+Z | 1 | 
+affected 0
+--- select extract(year from dt), count(*) from a group by extract(year from dt) order by 1
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+1 | 1 | 
+2023 | 2 | 
+2024 | 3 | 
+2100 | 1 | 
+affected 0
+--- select cast(ts as date), count(*) from a group by cast(ts as date) order by 1
+CAST:DATE (4,,,True,,CAST,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+0001-01-01 00:00:00.0000 | 1 | 
+2023-12-31 00:00:00.0000 | 2 | 
+2024-01-01 00:00:00.0000 | 2 | 
+2024-02-01 00:00:00.0000 | 1 | 
+2100-01-01 00:00:00.0000 | 1 | 
+affected 0
+--- select b, count(*), sum(i) from a group by b order by b
+B:BOOLEAN (1,,,True,A,B,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+NULL | 2 | 7 | 
+False | 3 | 2147483668 | 
+True | 3 | 2147483664 | 
+affected 0
+--- select g, count(*) from a group by g having count(*) > 1 order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+affected 0
+--- select g, count(*) from a group by g having g > 1 order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, count(*) from a group by g having sum(i) > 20 order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+3 | 1 | 
+affected 0
+--- select g from a group by g having max(s) = 'abc' order by g
+G:INTEGER (4,,,True,A,G,False,False)
+1 | 
+3 | 
+affected 0
+--- select g, max(i) - min(i) from a group by g having count(distinct h) = 1 order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUBTRACT:BIGINT (8,,,True,,SUBTRACT,False,False)
+NULL | 2147483646 | 
+2 | 0 | 
+3 | 0 | 
+affected 0
+--- select count(*) from a having count(*) > 1
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+8 | 
+affected 0
+--- select count(*) from a having 1 = 0
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+affected 0
+--- select 1 from a having count(*) = 8
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select g, count(*) from a where i > 5 group by g having count(*) >= 1 order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+1 | 2 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, (select count(*) from a a2 where a2.g = a.g) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,True,,COUNT,False,False)
+NULL | 0 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, count(*), (select max(i) from a a2 where a2.g = a.g) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+NULL | 2 | NULL | 
+1 | 3 | 20 | 
+2 | 2 | 7 | 
+3 | 1 | 2147483647 | 
+affected 0
+--- select g, sum(i) * 100 / (select sum(i) from a where id <> 7 and id <> 8) from a where id <> 7 and id <> 8 group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+DIVIDE:BIGINT (8,,,True,,DIVIDE,False,False)
+NULL | 2 | 
+1 | 66 | 
+2 | 31 | 
+affected 0
+--- select x.g, x.cnt from (select g, count(*) cnt from a group by g) x order by x.g
+G:INTEGER (4,,,True,A,G,False,False)
+CNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select max(cnt), min(cnt) from (select g, count(*) cnt from a group by g)
+MAX:BIGINT (8,,,True,,MAX,False,False)
+MIN:BIGINT (8,,,True,,MIN,False,False)
+3 | 1 | 
+affected 0
+--- select count(*) from (select distinct g from a)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+4 | 
+affected 0
+--- select count(distinct g), count(distinct h), count(distinct g || h) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 3 | 4 | 
+affected 0
+--- select count(distinct c), count(distinct s), count(distinct ci) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+6 | 6 | 3 | 
+affected 0
+--- select distinct g, h from a order by g, h
+G:INTEGER (4,,,True,A,G,False,False)
+H:VARCHAR (5,,,True,A,H,False,False)
+NULL | NULL | 
+NULL | x | 
+1 | x | 
+1 | y | 
+2 | NULL | 
+2 | y | 
+3 | z | 
+affected 0
+--- select distinct c from a order by c
+C:CHAR (5,,,True,A,C,False,False)
+NULL | 
+      | 
+a     | 
+abc   | 
+b     | 
+bb    | 
+z     | 
+affected 0
+--- select distinct ci from a order by ci
+CI:VARCHAR (10,,,True,A,CI,False,False)
+NULL | 
+ | 
+abc  | 
+x | 
+affected 0
+--- select distinct b from a order by b
+B:BOOLEAN (1,,,True,A,B,False,False)
+NULL | 
+False | 
+True | 
+affected 0
+--- select distinct g, count(*) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, list(id) from (select g, id from a order by id) group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | 6,7 | 
+1 | 1,2,3 | 
+2 | 4,5 | 
+3 | 8 | 
+affected 0
+--- select list(s, '-') from (select s from a order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+abc-abc-b-B-z--abc  | 
+affected 0
+--- select list(distinct h) from a
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+x,y,z | 
+affected 0
+--- select list(c) from (select c from a where id < 4 order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+a    ,a     | 
+affected 0
+--- select list(i, ', '), list(n), list(dt), list(b) from (select * from a where id in (1, 2, 4) order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+10, 20, 7 | 1.25,2.50,-0.01 | 2024-01-01,2024-02-01,2023-12-31 | TRUE,FALSE,TRUE | 
+affected 0
+--- select list(bl) from (select bl from a where id < 3 order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+one,two | 
+affected 0
+--- select list(s, null) from a
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | 
+affected 0
+--- select list(s, s) from (select s from a where id < 3 order by id)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+abcabcabc | 
+affected 0
+--- select list(id, ', ') from (select id from a where 1 = 0)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+NULL | 
+affected 0
+--- select min(id), max(id) from a where g is null
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+6 | 7 | 
+affected 0
+--- select g, min(id), max(id) from a group by g order by g nulls last
+G:INTEGER (4,,,True,A,G,False,False)
+MIN:INTEGER (4,,,True,,MIN,False,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+1 | 1 | 3 | 
+2 | 4 | 5 | 
+3 | 8 | 8 | 
+NULL | 6 | 7 | 
+affected 0
+--- select g, count(*) from a group by g order by 2 desc, 1
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+NULL | 2 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select g, count(*) c from a group by g order by c, g
+G:INTEGER (4,,,True,A,G,False,False)
+C:BIGINT (8,,,False,,COUNT,False,False)
+3 | 1 | 
+NULL | 2 | 
+2 | 2 | 
+1 | 3 | 
+affected 0
+--- select g, count(*) from a group by g order by count(*), g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 1 | 
+NULL | 2 | 
+2 | 2 | 
+1 | 3 | 
+affected 0
+--- select g, count(*) from a group by g order by sum(i) desc nulls last, g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+3 | 1 | 
+1 | 3 | 
+2 | 2 | 
+affected 0
+--- select sum(i) from a group by g order by g
+SUM:BIGINT (8,,,True,,SUM,False,False)
+2147483648 | 
+30 | 
+14 | 
+2147483647 | 
+affected 0
+--- select avg(cast(i as double precision)) from a where id < 6
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+11 | 
+affected 0
+--- select avg(n4), sum(n4) from a
+AVG:NUMERIC (8,8,4,True,,AVG,False,False)
+SUM:NUMERIC (8,8,4,True,,SUM,False,False)
+14285714285715.7143 | 100000000000010.0002 | 
+affected 0
+--- select avg(sm), sum(sm) from a
+AVG:BIGINT (8,,,True,,AVG,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+9361 | 65532 | 
+affected 0
+--- select sum(f), avg(f), sum(d), avg(d) from a where id <> 4 and id <> 5
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:DOUBLE PRECISION (8,,,True,,AVG,False,False)
+3.3999999521443642E+38 | 6.799999904288728E+37 | 3.85 | 0.77 | 
+affected 0
+--- select sum(d) from a
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+0.1 | 
+affected 0
+--- select max(bl) from a
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+two | 
+affected 0
+--- select min(bl), max(bl) from a where id < 3
+MIN:BLOB SUB_TYPE 1 (2147483647,,,True,,MIN,False,False)
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+one | two | 
+affected 0
+--- select sum(b) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select sum(s) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select avg(dt) from a
+ERROR 335544569 335544606 336397242 'AVG' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for AVG in dialect 3 must be numeric
+--- select sum(dt), sum(t), sum(ts) from a
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select count(*), count(1), count(id), count(g) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+8 | 8 | 8 | 6 | 
+affected 0
+--- select count(all g), count(distinct g), sum(all g), sum(distinct g) from a
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+6 | 3 | 10 | 6 | 
+affected 0
+--- select count(*) from a a1 join a a2 on a1.g = a2.g
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+14 | 
+affected 0
+--- select a1.g, count(*) from a a1 left join a a2 on a1.g = a2.g and a2.id > a1.id group by a1.g order by 1
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 4 | 
+2 | 2 | 
+3 | 1 | 
+affected 0
+--- select a1.g, count(a2.id) from a a1 left join a a2 on a1.g = a2.g and a2.id > a1.id group by a1.g order by 1
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 0 | 
+1 | 3 | 
+2 | 1 | 
+3 | 0 | 
+affected 0
+--- select g, i from a group by g
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select g, count(*) from a group by 3
+ERROR 335544569 335544436 #-104 335544821 'GROUP BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the GROUP BY clause
+--- select g, count(*) from a group by 0
+ERROR 335544569 335544436 #-104 335544821 'GROUP BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the GROUP BY clause
+--- select g, count(*) from a group by count(*)
+ERROR 335544569 335544436 #-104 335544823 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Cannot use an aggregate or window function in a GROUP BY clause
+--- select g, count(*) from a group by 2
+ERROR 335544569 335544436 #-104 335544823 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Cannot use an aggregate or window function in a GROUP BY clause
+--- select i from a where count(*) > 1
+ERROR 335544569 335544436 #-104 335544822 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Cannot use an aggregate or window function in a WHERE clause, use HAVING (for aggregate only) instead
+--- select sum(count(*)) from a
+ERROR 335544569 335544436 #-104 335544826 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Nested aggregate and window functions are not allowed
+--- select sum(max(i)) from a group by g
+ERROR 335544569 335544436 #-104 335544826 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Nested aggregate and window functions are not allowed
+--- select count(*) from a having i > 1
+ERROR 335544569 335544436 #-104 335544825 'HAVING clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
+--- select g from a group by g having i > 1
+ERROR 335544569 335544436 #-104 335544825 'HAVING clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
+--- select g, count(*) from a group by g order by i
+ERROR 335544569 335544436 #-104 335544824 'ORDER BY clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the ORDER BY clause (not contained in either an aggregate function or the GROUP BY clause)
+--- select i, count(*) from a
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select *, count(*) from a
+ERROR 335544569 335544436 #-104 335544634 #1 #9 335544382 ',' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 9
+,
+--- select count(*) from a group by k
+ERROR 335544569 335544436 #-206 335544578 335544382 'K' 336397208 #1 #33 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+K
+At line 1, column 33
+--- select g k, count(*) from a group by k + 1
+ERROR 335544569 335544436 #-206 335544578 335544382 'K' 336397208 #1 #38 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+K
+At line 1, column 38
+--- select sum(*) from a
+ERROR 335544569 335544436 #-104 335544634 #1 #12 335544382 '*' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 12
+*
+--- select count(distinct *) from a
+ERROR 335544569 335544436 #-104 335544634 #1 #23 335544382 '*' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 23
+*
+--- select sum(i, n) from a
+ERROR 335544569 335544436 #-104 335544634 #1 #13 335544382 ',' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 13
+,
+--- select min() from a
+ERROR 335544569 335544436 #-104 335544634 #1 #12 335544382 ')' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 12
+)
+--- select list(i, ',', ',') from a
+ERROR 335544569 335544436 #-104 335544634 #1 #19 335544382 ',' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 19
+,
+--- select count() from a
+ERROR 335544569 335544436 #-104 335544634 #1 #14 335544382 ')' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 14
+)
+--- select count(*), * from a
+ERROR 335544569 335544436 #-104 335544634 #1 #18 335544382 '*' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 18
+*
+--- select a.*, count(*) from a
+ERROR 335544569 335544436 #-104 335544824 'select list' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
+--- select g from a order by 2
+ERROR 335544569 335544436 #-104 335544821 'ORDER BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the ORDER BY clause
+--- select g, count(*) from a group by g order by 3
+ERROR 335544569 335544436 #-104 335544821 'ORDER BY' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid column position used in the ORDER BY clause
+--- select g, count(*) from a group by g having count(*) > 1 and h = 'x'
+ERROR 335544569 335544436 #-104 335544825 'HAVING clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
+--- select g, count(*) from a group by g having g + i > 0
+ERROR 335544569 335544436 #-104 335544825 'HAVING clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
+--- select g, count(*) from a group by g order by h
+ERROR 335544569 335544436 #-104 335544824 'ORDER BY clause' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid expression in the ORDER BY clause (not contained in either an aggregate function or the GROUP BY clause)
+--- select count(*) from a group by g order by count(*) desc, max(i)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 
+2 | 
+2 | 
+1 | 
+affected 0
+--- select avg(distinct i), sum(distinct i * 2), count(distinct i + 0) from a
+AVG:BIGINT (8,,,True,,AVG,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+429496737 | 4294967370 | 5 | 
+affected 0
+--- select max(i) over () from a order by id
+MAX:INTEGER (4,,,True,,MAX,False,False)
+2147483647 | 
+2147483647 | 
+2147483647 | 
+2147483647 | 
+2147483647 | 
+2147483647 | 
+2147483647 | 
+2147483647 | 
+affected 0
+--- select g, sum(i) over (partition by g) from a order by id
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+1 | 30 | 
+1 | 30 | 
+1 | 30 | 
+2 | 14 | 
+2 | 14 | 
+NULL | 2147483648 | 
+NULL | 2147483648 | 
+3 | 2147483647 | 
+affected 0
+--- select g, sum(sum(i)) over () from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+NULL | 4294967339 | 
+1 | 4294967339 | 
+2 | 4294967339 | 
+3 | 4294967339 | 
+affected 0
+--- select i from a where i = (select max(i) from a) order by id
+I:INTEGER (4,,,True,A,I,False,False)
+2147483647 | 
+2147483647 | 
+affected 0
+--- select i from a where i > (select avg(i) from a where id < 6) order by id
+I:INTEGER (4,,,True,A,I,False,False)
+20 | 
+2147483647 | 
+2147483647 | 
+affected 0
+--- select g, count(*) from a where g = (select min(g) from a) group by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+affected 0
+--- select (select sum(i) from a a2 where a2.g = a1.g) from a a1 order by id
+SUM:BIGINT (8,,,True,,SUM,False,False)
+30 | 
+30 | 
+30 | 
+14 | 
+14 | 
+NULL | 
+NULL | 
+2147483647 | 
+affected 0
+--- select count(*) from a where exists (select 1 from a a2 group by a2.g having count(*) > 2)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+8 | 
+affected 0
+--- select g, count(*) from a group by g having count(*) = (select max(c) from (select count(*) c from a group by g)) order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+affected 0
+--- select sum(1), sum(1.5), sum(1e0), avg(1), avg(1.5), avg(2) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+SUM:DECIMAL (8,8,1,True,,SUM,False,False)
+SUM:DOUBLE PRECISION (8,,,True,,SUM,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+AVG:DECIMAL (8,8,1,True,,AVG,False,False)
+AVG:BIGINT (8,,,True,,AVG,False,False)
+8 | 12 | 8 | 1 | 1.5 | 2 | 
+affected 0
+--- select sum(-i), sum(i) * -1 from a where id < 6
+SUM:BIGINT (8,,,True,,SUM,False,False)
+MULTIPLY:BIGINT (8,,,True,,MULTIPLY,False,False)
+-44 | -44 | 
+affected 0
+--- select max(i) + min(i), max(s) || min(s), max(dt) - min(dt), max(ts) - min(ts) from a
+ADD:BIGINT (8,,,True,,ADD,False,False)
+CONCATENATION:VARCHAR (20,,,True,,CONCATENATION,False,False)
+SUBTRACT:INTEGER (4,,,True,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+2147483648 | z | 766644 | 766644 | 
+affected 0
+--- select count(*) * 1.0 / 3, sum(i) / count(i), cast(sum(i) as double precision) / count(i) from a where id < 6
+DIVIDE:DECIMAL (8,8,1,False,,DIVIDE,False,False)
+DIVIDE:BIGINT (8,,,True,,DIVIDE,False,False)
+DIVIDE:DOUBLE PRECISION (8,,,True,,DIVIDE,False,False)
+1.6 | 11 | 11 | 
+affected 0
+--- select max(case when g = 1 then i end), sum(case when g = 2 then 1 else 0 end), count(case when b then 1 end) from a
+MAX:INTEGER (4,,,True,,MAX,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+20 | 2 | 3 | 
+affected 0
+--- select sum(iif(b, 1, 0)), sum(coalesce(i, 0)), max(coalesce(s, '?')) from a
+SUM:BIGINT (8,,,True,,SUM,False,False)
+SUM:BIGINT (8,,,True,,SUM,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+3 | 4294967339 | z | 
+affected 0
+--- select first 2 g, count(*) from a group by g order by g
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+1 | 3 | 
+affected 0
+--- select g, count(*) from a group by g order by g rows 2 to 3
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+2 | 2 | 
+affected 0
+--- select g, count(*) from a group by g order by g offset 1 rows fetch next 1 rows only
+G:INTEGER (4,,,True,A,G,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 3 | 
+affected 0

@@ -46,10 +46,25 @@ public sealed class AggState
         if (_spec.Distinct)
         {
             _distinct ??= new();
-            // the sort that removes duplicates compares VARCHARs with their trailing blanks
-            var dk = v.Tag == VTag.String && _spec.Arg!.Type.Kind == TypeKind.VarChar ? Value.Str(v.AsString + "\uFFFF") : v;
+            // the sort that removes duplicates compares VARCHARs with their trailing blanks, except under an ICU
+            // collation, whose key drops them
+            var dk = v.Tag == VTag.String && _spec.Arg!.Type.Kind == TypeKind.VarChar && _spec.Collation == Collation.Binary
+                ? Value.Str(v.AsString + "\uFFFF") : v;
             if (!_distinct.Add(new IndexKey([dk], [_spec.Collation]))) return;
+            // the distinct values reach SUM/AVG in sort order, which decides how doubles round
+            if (_spec.Kind is AggKind.Sum or AggKind.Avg)
+            {
+                (_sorted ??= new()).Add(v);
+                return;
+            }
         }
+        Accumulate(v, c);
+    }
+
+    List<Value>? _sorted;
+
+    void Accumulate(Value v, Ctx c)
+    {
         switch (_spec.Kind)
         {
             case AggKind.Count:
@@ -130,6 +145,13 @@ public sealed class AggState
 
     public Value Result()
     {
+        if (_sorted != null)
+        {
+            var values = _sorted;
+            _sorted = null;
+            values.Sort((x, y) => Conv.Compare(x, y, _spec.Collation));
+            foreach (var v in values) Accumulate(v, null!);
+        }
         switch (_spec.Kind)
         {
             case AggKind.CountStar:
@@ -156,6 +178,145 @@ public sealed class AggState
     }
 }
 
+/// <summary>A field carried in Firebird's sort records: a column of an input stream that the query references.</summary>
+public readonly record struct SortField(int Stream, int Col, SqlType Type);
+
+/// <summary>
+/// Order of sort records whose keys are equal. Firebird's in-memory sort compares whole records as native (little
+/// endian) 32-bit words: after the keys come the values carried along (the NULL flags, then every referenced field of
+/// the input streams in field order, then record numbers), so rows with equal keys ('abc' and 'ABC' under
+/// UNICODE_CI, 'abc' and 'abc ') are ordered by those bytes, and rows with the same bytes keep their input order.
+/// GROUP BY feeds a group's rows to the aggregates in this order and shows its last row; DISTINCT keeps the last.
+/// </summary>
+public static class SortImage
+{
+    /// <summary>
+    /// Whether a field key's value has to be carried as data too: an ICU collation key cannot be turned back into the
+    /// text. Other text keys hold the text itself (a VARCHAR's length is stored after the record numbers).
+    /// </summary>
+    public static bool Volatile(SqlType t) => t.IsString && t.Collation != Collation.Binary;
+
+    /// <summary>The data part of the current row's sort record (SortedStream: zeroed, then flags and fields).</summary>
+    public static byte[] Build(Ctx c, SortField[] fields)
+    {
+        var size = fields.Length;
+        foreach (var f in fields) size = Align(size, f.Type) + Length(f.Type);
+        var data = new byte[(size + 3) & ~3];
+        var at = fields.Length;
+        for (var i = 0; i < fields.Length; i++)
+        {
+            var f = fields[i];
+            at = Align(at, f.Type);
+            var v = c.Rows[f.Stream]?[f.Col] ?? Value.Null;
+            if (v.IsNull) data[i] = 1;
+            else Write(data.AsSpan(at, Length(f.Type)), v, f.Type);
+            at += Length(f.Type);
+        }
+        return data;
+    }
+
+    /// <summary>Ascending sort-key order of rows of key values, NULLs first (blobs sort by their ids: input order).</summary>
+    public static IComparer<Value[]> KeyOrder(SqlType[] types) => Comparer<Value[]>.Create((a, b) =>
+    {
+        for (var i = 0; i < types.Length; i++)
+        {
+            if (a[i].IsNull || b[i].IsNull)
+            {
+                if (a[i].IsNull != b[i].IsNull) return a[i].IsNull ? -1 : 1;
+                continue;
+            }
+            if (types[i].Kind == TypeKind.Blob) continue;
+            var r = Conv.Compare(a[i], b[i], types[i].Collation);
+            if (r != 0) return r;
+        }
+        return 0;
+    });
+
+    /// <summary>Compares two records' data parts as unsigned little-endian 32-bit words.</summary>
+    public static int Compare(byte[] a, byte[] b)
+    {
+        var n = Math.Max(a.Length, b.Length);
+        for (var w = 0; w < n; w += 4)
+        {
+            uint x = Word(a, w), y = Word(b, w);
+            if (x != y) return x.CompareTo(y);
+        }
+        return 0;
+
+        static uint Word(byte[] d, int w) => w + 4 <= d.Length ? System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(d.AsSpan(w)) : 0;
+    }
+
+    static int Length(SqlType t) => t.Kind switch
+    {
+        TypeKind.SmallInt => 2,
+        TypeKind.Integer or TypeKind.Float or TypeKind.Date or TypeKind.Time => 4,
+        TypeKind.BigInt or TypeKind.Double or TypeKind.Timestamp or TypeKind.Blob => 8,
+        TypeKind.Int128 => 16,
+        TypeKind.Boolean => 1,
+        TypeKind.Char => t.Length * t.BytesPerChar,
+        TypeKind.VarChar => 2 + t.Length * t.BytesPerChar,
+        _ => 8,
+    };
+
+    // type_alignments, applied to every dtype from dtype_varying on (CHAR is not aligned)
+    static int Align(int at, SqlType t)
+    {
+        var a = t.Kind switch
+        {
+            TypeKind.Char or TypeKind.Boolean => 1,
+            TypeKind.SmallInt or TypeKind.VarChar => 2,
+            TypeKind.BigInt or TypeKind.Double or TypeKind.Int128 => 8,
+            _ => 4,
+        };
+        return (at + a - 1) / a * a;
+    }
+
+    static void Write(Span<byte> to, in Value v, SqlType t)
+    {
+        var le = System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian;
+        switch (t.Kind)
+        {
+            case TypeKind.SmallInt: System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(to, (short)v.L); break;
+            case TypeKind.Integer: System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)v.L); break;
+            case TypeKind.BigInt: le(to, v.L); break;
+            case TypeKind.Int128:
+                System.Buffers.Binary.BinaryPrimitives.WriteInt128LittleEndian(to, v.AsInt128);
+                break;
+            case TypeKind.Float: System.Buffers.Binary.BinaryPrimitives.WriteSingleLittleEndian(to, (float)Conv.ToDouble(v)); break;
+            case TypeKind.Double: System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(to, Conv.ToDouble(v)); break;
+            case TypeKind.Date:
+            case TypeKind.Time: System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)v.L); break;
+            case TypeKind.Timestamp:
+                System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(to, (int)Math.Floor((double)v.L / Value.TicksPerDay));
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(to[4..], (uint)(((v.L % Value.TicksPerDay) + Value.TicksPerDay) % Value.TicksPerDay));
+                break;
+            case TypeKind.Boolean: to[0] = (byte)(v.AsBool ? 1 : 0); break;
+            case TypeKind.Char:
+            case TypeKind.VarChar:
+            {
+                var bytes = v.Tag == VTag.Bytes ? v.AsBytes : TextBytes(v.AsString, t.Charset);
+                if (t.Kind == TypeKind.VarChar)
+                {
+                    var n = Math.Min(bytes.Length, to.Length - 2);
+                    System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(to, (ushort)n);
+                    bytes.AsSpan(0, n).CopyTo(to[2..]);
+                }
+                else
+                {
+                    // CHAR is padded to its byte length: NUL for OCTETS, blanks otherwise
+                    to.Fill(t.Charset == Charset.Octets ? (byte)0 : (byte)' ');
+                    bytes.AsSpan(0, Math.Min(bytes.Length, to.Length)).CopyTo(to);
+                }
+                break;
+            }
+        }
+    }
+
+    static byte[] TextBytes(string s, Charset cs) => cs is Charset.Utf8 or Charset.UnicodeFss or Charset.None
+        ? Conv.Utf8.GetBytes(s)
+        : System.Text.Encoding.Latin1.GetBytes(s);
+}
+
 /// <summary>GROUP BY / aggregate operator. Output stream = [group keys..., aggregate results...].</summary>
 public sealed class AggregateRel : RelNode
 {
@@ -164,7 +325,7 @@ public sealed class AggregateRel : RelNode
     public readonly Collation[] KeyCollations;
     public readonly AggSpec[] Aggs;
     public readonly int OutStream;
-    /// <summary>Streams of the input whose rows are restored from the group's first row.</summary>
+    /// <summary>Streams of the input whose rows are restored from the group's last row.</summary>
     public readonly int[] Save;
     public readonly Value[][] SaveNullRows;
 
@@ -180,10 +341,15 @@ public sealed class AggregateRel : RelNode
         Streams = [.. input.Streams, outStream];
     }
 
+    /// <summary>The fields carried in the sort records of the grouping sort (see SortImage).</summary>
+    public SortField[] SortFields = [];
+
+    static readonly IComparer<byte[]> ImageOrder = Comparer<byte[]>.Create(SortImage.Compare);
+
     public override RowCursor Open(Ctx c)
     {
         var groups = new Dictionary<IndexKey, int>();
-        var list = new List<(Value[] Keys, Value[][] Frame, AggState[] States)>();
+        var rows = new List<List<(Value[] Keys, byte[] Image, Value[][] Frame)>>();
         var ic = Input.Open(c);
         while (ic.Next())
         {
@@ -192,20 +358,29 @@ public sealed class AggregateRel : RelNode
             var key = new IndexKey(kv, KeyCollations);
             if (!groups.TryGetValue(key, out var gi))
             {
-                gi = list.Count;
+                gi = rows.Count;
                 groups[key] = gi;
-                var states = new AggState[Aggs.Length];
-                for (var i = 0; i < states.Length; i++) states[i] = new AggState(Aggs[i]);
-                list.Add((kv, Frames.Save(c, Save), states));
+                rows.Add(new());
             }
-            else if (!SameValues(list[gi].Keys, kv) && SortsAfterOrSame(kv, list[gi].Keys))
-            {
-                // equal but not identical keys ('ab' and 'ab  ', 'A' and 'a' under a _CI collation): Firebird groups
-                // sorted rows and shows the values of the group's last row in sort-key order (case/accent-sensitive)
-                list[gi] = (kv, Frames.Save(c, Save), list[gi].States);
-            }
-            foreach (var s in list[gi].States) s.Add(c);
+            rows[gi].Add((kv, Keys.Length > 0 ? SortImage.Build(c, SortFields) : [], Frames.Save(c, Save)));
         }
+        var list = new List<(Value[] Keys, Value[][] Frame, AggState[] States)>();
+        foreach (var g in rows)
+        {
+            // Firebird groups sorted rows: a group's rows reach the aggregates in sort-record order, and the group
+            // shows the values of its last row (e.g. which spelling of a _CI key)
+            var ordered = Keys.Length > 0 ? g.OrderBy(r => r.Image, ImageOrder).ToList() : g;
+            var states = new AggState[Aggs.Length];
+            for (var i = 0; i < states.Length; i++) states[i] = new AggState(Aggs[i]);
+            foreach (var r in ordered)
+            {
+                Frames.Restore(c, Save, r.Frame);
+                foreach (var st in states) st.Add(c);
+            }
+            list.Add((ordered[^1].Keys, ordered[^1].Frame, states));
+        }
+        // the groups come out of the sort in key order (NULLs first)
+        if (Keys.Length > 0) list = list.OrderBy(g => g.Keys, SortImage.KeyOrder(Keys.Select(k => k.Type).ToArray())).ToList();
         if (list.Count == 0 && Keys.Length == 0)
         {
             var states = new AggState[Aggs.Length];
@@ -213,26 +388,6 @@ public sealed class AggregateRel : RelNode
             list.Add(([], SaveNullRows, states));
         }
         return new Cursor(this, c, list);
-    }
-
-    bool SortsAfterOrSame(Value[] a, Value[] b)
-    {
-        for (var i = 0; i < a.Length; i++)
-        {
-            if (a[i].IsNull || b[i].IsNull) continue;
-            var col = KeyCollations[i] is Collation.CaseInsensitive or Collation.CaseAccentInsensitive ? Collation.Unicode : KeyCollations[i];
-            var r = Conv.Compare(a[i], b[i], col);
-            if (r != 0) return r > 0;
-        }
-        return true;
-    }
-
-    static bool SameValues(Value[] a, Value[] b)
-    {
-        for (var i = 0; i < a.Length; i++)
-            if (a[i].Tag != b[i].Tag || a[i].L != b[i].L || a[i].Tag is VTag.String && a[i].AsString != b[i].AsString)
-                return false;
-        return true;
     }
 
     sealed class Cursor(AggregateRel n, Ctx c, List<(Value[] Keys, Value[][] Frame, AggState[] States)> groups) : RowCursor

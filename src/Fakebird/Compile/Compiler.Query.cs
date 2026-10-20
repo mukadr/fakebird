@@ -131,7 +131,7 @@ public sealed partial class Compiler
     XNode BindAggregateRef(FuncExpr f, Scope s)
     {
         if (s.Agg == null || !s.AggMode)
-            throw Err.Dsql(-104, "Cannot use an aggregate or window function in a WHERE clause, use HAVING (for aggregate only) instead");
+            throw Err.Dsql104(FbMessages.dsql_agg_where_err);
         if (!s.Agg.AggByNode.TryGetValue(f, out var idx)
             && !(Canon(f, s) is { } key && s.Agg.AggIndex.TryGetValue(key, out idx)))
             throw Err.Dsql(-104, "Invalid aggregate reference");
@@ -170,7 +170,8 @@ public sealed partial class Compiler
                     var wide = t.Kind == TypeKind.Int128 || (spec.Kind == AggKind.Sum && t.Kind == TypeKind.BigInt);
                     spec.Type = TypeRules.Exact(wide ? TypeKind.Int128 : TypeKind.BigInt, t.Scale, t.SubType);
                 }
-                else if (t.IsApprox || t.Kind == TypeKind.Null) spec.Type = SqlType.Double;
+                else if (t.IsApprox) spec.Type = SqlType.Double;
+                else if (t.Kind == TypeKind.Null) spec.Type = SqlType.Char(1, Charset.None); // the NULL literal's own descriptor
                 else
                     throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err)
                         .Gds(FbMessages.dsql_agg2_wrongarg).Str(f.Name).Build();
@@ -332,7 +333,7 @@ public sealed partial class Compiler
         if (e is LiteralExpr { Value.Tag: VTag.Int } lit && lit.Value.Scale == 0)
         {
             var i = (int)lit.Value.L;
-            if (i < 1 || i > cols.Length) throw Err.Dsql(-104, "Invalid column position used in the ORDER BY clause");
+            if (i < 1 || i > cols.Length) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "ORDER BY");
             return i - 1;
         }
         if (e is ColumnRefExpr c)
@@ -516,6 +517,24 @@ public sealed partial class Compiler
 
     QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit, bool withLock = false)
     {
+        var refs = new Dictionary<(int Stream, int Col), SqlType>();
+        _fieldTrackers.Add(refs);
+        try { return CompileSpec(qs, outer, orderBy, queryLimit, withLock, refs); }
+        finally { _fieldTrackers.Remove(refs); }
+    }
+
+    /// <summary>The referenced fields of the given streams, as Firebird's sort records carry them.</summary>
+    static SortField[] SortFieldsOf(Dictionary<(int Stream, int Col), SqlType> refs, int[] streams, IEnumerable<XNode> keys)
+        => refs.Where(r => streams.Contains(r.Key.Stream))
+            .OrderBy(r => Array.IndexOf(streams, r.Key.Stream)).ThenBy(r => r.Key.Col)
+            .Select(r => new SortField(r.Key.Stream, r.Key.Col, r.Value))
+            // a field that is itself a sort key is not repeated, unless its key cannot be turned back into the value
+            .Where(f => SortImage.Volatile(f.Type) || !keys.Any(k => k is ColNode cn && cn.Stream == f.Stream && cn.Index == f.Col))
+            .ToArray();
+
+    QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit, bool withLock,
+        Dictionary<(int Stream, int Col), SqlType> refs)
+    {
         var selectListTypes = _selectListTypes;
         _selectListTypes = null;
         var atExecute = _openAtExecute;
@@ -527,7 +546,7 @@ public sealed partial class Compiler
         var pool = new List<Conj>();
         if (qs.Where != null)
         {
-            if (ContainsAggregate(qs.Where)) throw Err.Dsql(-104, "Cannot use an aggregate or window function in a WHERE clause, use HAVING (for aggregate only) instead");
+            if (ContainsAggregate(qs.Where)) throw Err.Dsql104(FbMessages.dsql_agg_where_err);
             foreach (var c in SplitAnd(qs.Where)) pool.Add(MakeConj(c, s));
         }
         BindJoinConditions(tree, s);
@@ -559,6 +578,7 @@ public sealed partial class Compiler
         if (orderBy != null) foreach (var o in orderBy) CollectAggregates(o.Expr, aggs);
         var grouped = qs.GroupBy.Count > 0 || aggs.Count > 0 || qs.Having != null;
         var saveStreams = s.Streams.ToArray();
+        AggregateRel? aggRel = null;
         if (grouped)
         {
             var ab = new AggBinding();
@@ -573,10 +593,10 @@ public sealed partial class Compiler
                 if (g is LiteralExpr { Value.Tag: VTag.Int } pos && pos.Value.Scale == 0)
                 {
                     var p = (int)pos.Value.L;
-                    if (p < 1 || p > qs.Items.Count) throw Err.Dsql(-104, "Invalid column position used in the GROUP BY clause");
+                    if (p < 1 || p > qs.Items.Count) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "GROUP BY");
                     ge = qs.Items[p - 1].Expr;
                 }
-                if (ContainsAggregate(ge)) throw Err.Dsql(-104, "Cannot use an aggregate function in a GROUP BY clause");
+                if (ContainsAggregate(ge)) throw Err.Dsql104(FbMessages.dsql_agg_group_err);
                 var kn = Bind(ge, s);
                 keys.Add(kn);
                 ab.KeyCanon.Add(Canon(ge, s) ?? Guid.NewGuid().ToString());
@@ -594,18 +614,24 @@ public sealed partial class Compiler
                     continue;
                 }
                 if (ContainsAggregate(a.Args.Count > 0 ? new FuncExpr("X", a.Args) : null))
-                    throw Err.Dsql(-104, "Nested aggregate functions are not allowed");
+                    throw Err.Dsql104(FbMessages.dsql_agg_nested_err);
                 if (key != null) ab.AggIndex[key] = ab.Aggs.Count;
                 ab.AggByNode[a] = ab.Aggs.Count;
                 ab.Aggs.Add(MakeAggSpec(a, s));
                 ab.AggExprs.Add(a);
             }
             ab.Stream = NewStream(keys.Count + ab.Aggs.Count);
-            rel = new AggregateRel(rel, keys.ToArray(), ab.Aggs.ToArray(), ab.Stream, saveStreams, NullRows(saveStreams));
+            aggRel = new AggregateRel(rel, keys.ToArray(), ab.Aggs.ToArray(), ab.Stream, saveStreams, NullRows(saveStreams));
+            rel = aggRel;
             s.Agg = ab;
             s.Streams.Add(ab.Stream);
             s.AggMode = true;
-            if (qs.Having != null) rel = new FilterRel(rel, BindBool(qs.Having, s));
+            if (qs.Having != null)
+            {
+                s.AggClause = "HAVING clause";
+                rel = new FilterRel(rel, BindBool(qs.Having, s));
+                s.AggClause = "select list";
+            }
         }
 
         // window functions
@@ -637,7 +663,7 @@ public sealed partial class Compiler
         {
             if (item.Expr is StarExpr star)
             {
-                if (grouped) throw Err.Dsql(-104, "Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)");
+                if (grouped) throw Err.Dsql104(FbMessages.dsql_agg_column_err, "select list");
                 var any = false;
                 foreach (var src in s.Items)
                 {
@@ -665,6 +691,7 @@ public sealed partial class Compiler
         // ORDER BY
         if (orderBy != null && orderBy.Count > 0)
         {
+            s.AggClause = "ORDER BY clause";
             var keys = new List<SortKey>();
             foreach (var o in orderBy)
             {
@@ -672,7 +699,7 @@ public sealed partial class Compiler
                 if (o.Expr is LiteralExpr { Value.Tag: VTag.Int } lit && lit.Value.Scale == 0)
                 {
                     var p = (int)lit.Value.L;
-                    if (p < 1 || p > proj.Count) throw Err.Dsql(-104, "Invalid column position used in the ORDER BY clause");
+                    if (p < 1 || p > proj.Count) throw Err.Dsql104(FbMessages.dsql_column_pos_err, "ORDER BY");
                     keyNode = proj[p - 1];
                 }
                 else if (o.Expr is ColumnRefExpr { Qualifier: null } cr && aliasIndex.TryGetValue(cr.Name, out var ai))
@@ -696,6 +723,8 @@ public sealed partial class Compiler
             specQuery.Skip = skip;
         }
         s.AggMode = false;
+        if (aggRel != null) aggRel.SortFields = SortFieldsOf(refs, saveStreams, aggRel.Keys);
+        else if (qs.Distinct) specQuery.SortFields = SortFieldsOf(refs, saveStreams, proj);
         if (queryLimit != null && !queryLimit.IsEmpty)
         {
             var (first, skip) = BindLimit(queryLimit, s);

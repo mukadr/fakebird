@@ -156,6 +156,14 @@ internal static class Err
     public static FbError Dsql(int sqlCode, string message, string sqlState = "42000")
         => new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(sqlCode).Gds(isc_random).Str(message).Build(sqlState);
 
+    /// <summary>A DSQL error with SQLCODE -104 and a coded message: [dsql_error, sqlerr -104, code, args...].</summary>
+    public static FbError Dsql104(int code, params string[] args)
+    {
+        var b = new StatusBuilder().Gds(isc_dsql_error).Gds(isc_sqlerr).Num(-104).Gds(code);
+        foreach (var a in args) b.Str(a);
+        return b.Build("42000");
+    }
+
     public static FbError MetaUpdate(string message)
         => new StatusBuilder().Gds(isc_no_meta_update).Gds(isc_random).Str(message).Build("42000");
 

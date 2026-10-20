@@ -839,16 +839,12 @@ internal sealed class Connection
             }
             catch (FbError e)
             {
-                // rows already sent are delivered; the error comes with this fetch or the next one
+                // like Firebird's server: the rows fetched so far go out, then the error response, which makes the
+                // client drop the whole batch
                 s.Pos = s.Rows.Count;
-                if (sent == 0)
-                {
-                    s.Open = false;
-                    Error(e);
-                    return;
-                }
-                s.FetchError = e;
-                break;
+                s.Open = false;
+                Error(e);
+                return;
             }
             s.Pos++;
             _xdr.WriteInt32(Op.FetchResponse);

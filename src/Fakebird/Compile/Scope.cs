@@ -70,6 +70,8 @@ public sealed class Scope
     /// <summary>Set while binding expressions evaluated after GROUP BY.</summary>
     public AggBinding? Agg;
     public bool AggMode;
+    /// <summary>Clause being bound in aggregate mode, named in the error for a column that is not grouped.</summary>
+    public string AggClause = "select list";
     public Dictionary<WindowExpr, XNode>? Windows;
 
     public Scope(Scope? parent) => Parent = parent;
