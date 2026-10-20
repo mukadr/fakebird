@@ -90,7 +90,7 @@ public sealed partial class Compiler
         {
             if (f.Star || f.Distinct) throw Err.Dsql(-104, "Invalid use of DISTINCT or * in " + f.Name);
             if (f.Args.Count < def.MinArgs || f.Args.Count > def.MaxArgs)
-                throw Err.Dsql(-170, $"Invalid number of arguments for function {f.Name}");
+                throw new StatusBuilder().Gds(FbMessages.funmismat).Str(f.Name).Build();
             var args = new XNode?[f.Args.Count];
             for (var i = 0; i < args.Length; i++)
                 if (f.Args[i] is not ParamExpr) args[i] = Bind(f.Args[i], s, null);

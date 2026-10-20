@@ -81,7 +81,7 @@ public static class TypeRules
             case ArithOp.Sub:
             {
                 if (a.Kind == TypeKind.Blob || b.Kind == TypeKind.Blob)
-                    throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_no_blob_array).Build();
+                    throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_no_blob_array).Build();
                 if (a.IsString || b.IsString)
                     throw DsqlError(Err.isc_expression_eval_err, FbMessages.dsql_nostring_addsub_dial3);
                 if (a.IsExact && b.IsExact)
@@ -124,7 +124,7 @@ public static class TypeRules
                 if (a.IsString || b.IsString)
                     throw DsqlError(Err.isc_expression_eval_err, mul ? FbMessages.dsql_nostring_multip_dial3 : FbMessages.dsql_nostring_div_dial3);
                 if (a.Kind == TypeKind.Blob || b.Kind == TypeKind.Blob)
-                    throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_no_blob_array).Build();
+                    throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_no_blob_array).Build();
                 if (a.IsExact && b.IsExact)
                 {
                     var scale = a.Scale + b.Scale;

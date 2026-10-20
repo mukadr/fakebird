@@ -1,0 +1,642 @@
+--- select id, t, char_length(t), octet_length(t), bit_length(t) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+T:BLOB SUB_TYPE 1 (2147483647,,,True,B,T,False,False)
+CHAR_LENGTH:BIGINT (8,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+BIT_LENGTH:BIGINT (8,,,True,,BIT_LENGTH,False,False)
+1 | hello world | 11 | 11 | 88 | 
+2 |  | 0 | 0 | 0 | 
+3 | NULL | NULL | NULL | NULL | 
+4 | Hello | 5 | 5 | 40 | 
+affected 0
+--- select id, bn, octet_length(bn), char_length(bn) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+BN:BLOB (2147483647,,,True,B,BN,False,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:BIGINT (8,,,True,,CHAR_LENGTH,False,False)
+1 | 0102 | 2 | 2 | 
+2 |  | 0 | 0 | 
+3 | NULL | NULL | NULL | 
+4 | FF | 1 | 1 | 
+affected 0
+--- select id, substring(t from 2 for 3), substring(t from 7), position('o' in t), position('o', t, 6) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+1 | ell | world | 5 | 8 | 
+2 |  |  | 0 | 0 | 
+3 | NULL | NULL | NULL | NULL | 
+4 | ell |  | 5 | 0 | 
+affected 0
+--- select id, t || '!', '>' || t, t || t, t || v, upper(t), lower(t), trim(t), reverse(t) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+CONCATENATION:BLOB SUB_TYPE 1 (2147483647,,,True,,CONCATENATION,False,False)
+CONCATENATION:BLOB SUB_TYPE 1 (2147483647,,,True,,CONCATENATION,False,False)
+CONCATENATION:BLOB SUB_TYPE 1 (2147483647,,,True,,CONCATENATION,False,False)
+CONCATENATION:BLOB SUB_TYPE 1 (2147483647,,,True,,CONCATENATION,False,False)
+UPPER:BLOB SUB_TYPE 1 (2147483647,,,True,,UPPER,False,False)
+LOWER:BLOB SUB_TYPE 1 (2147483647,,,True,,LOWER,False,False)
+TRIM:BLOB SUB_TYPE 1 (2147483647,,,True,,TRIM,False,False)
+REVERSE:BLOB SUB_TYPE 1 (2147483647,,,True,,REVERSE,False,False)
+1 | hello world! | >hello world | hello worldhello world | hello worldabc | HELLO WORLD | hello world | hello world | dlrow olleh | 
+2 | ! | > |  |  |  |  |  |  | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | Hello! | >Hello | HelloHello | HelloABC | HELLO | hello | Hello | olleH | 
+affected 0
+--- select id, replace(t, 'l', 'L'), overlay(t placing 'XX' from 2 for 3), lpad(t, 13, '*'), rpad(t, 13), left(t, 2), right(t, 2) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+REPLACE:BLOB SUB_TYPE 1 (2147483647,,,True,,REPLACE,False,False)
+OVERLAY:BLOB SUB_TYPE 1 (2147483647,,,True,,OVERLAY,False,False)
+LPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,LPAD,False,False)
+RPAD:BLOB SUB_TYPE 1 (2147483647,,,True,,RPAD,False,False)
+LEFT:BLOB SUB_TYPE 1 (2147483647,,,False,,LEFT,False,False)
+RIGHT:BLOB SUB_TYPE 1 (2147483647,,,False,,RIGHT,False,False)
+1 | heLLo worLd | hXXo world | **hello world | hello world   | he | ld | 
+2 |  | XX | ************* |               |  |  | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | HeLLo | HXXo | ********Hello | Hello         | He | lo | 
+affected 0
+--- select id, t = 'hello world', t > 'H', t like 'h%', t containing 'WORLD', t starting 'he', t similar to 'h%' from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | True | True | True | True | True | 
+2 | False | False | False | False | False | False | 
+3 | NULL | NULL | NULL | NULL | NULL | NULL | 
+4 | False | True | False | False | False | False | 
+affected 0
+--- select id, t is null, t is distinct from '', coalesce(t, 'none'), nullif(t, '') from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:BLOB SUB_TYPE 1 (2147483647,,,True,,COALESCE,False,False)
+CASE:BLOB SUB_TYPE 1 (2147483647,,,True,,CASE,False,False)
+1 | False | True | hello world | hello world | 
+2 | False | False |  | NULL | 
+3 | True | True | none | NULL | 
+4 | False | True | Hello | Hello | 
+affected 0
+--- select id, cast(t as varchar(5)) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:VARCHAR (5,,,True,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #5 #11 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 11
+--- select id, cast(t as varchar(20)), cast(t as char(12)) from b where id <> 1 order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+CAST:CHAR (12,,,True,,CAST,False,False)
+2 |  |              | 
+3 | NULL | NULL | 
+4 | Hello | Hello        | 
+affected 0
+--- select id, cast(v as blob sub_type text), cast(t as blob sub_type binary) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:BLOB SUB_TYPE 1 (2147483647,,,True,,CAST,False,False)
+CAST:BLOB (2147483647,,,True,,CAST,False,False)
+1 | abc | 68656C6C6F20776F726C64 | 
+2 |  |  | 
+3 | NULL | NULL | 
+4 | ABC | 48656C6C6F | 
+affected 0
+--- select id, cast(bn as blob sub_type text) from b where id = 1
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:BLOB SUB_TYPE 1 (2147483647,,,True,,CAST,False,False)
+1 |  | 
+affected 0
+--- select id, cast(t as integer) from b where id = 1
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:INTEGER (4,,,True,,CAST,False,False)
+ERROR 335544334 'hello world' '' 22018
+conversion error from string "hello world"
+--- select cast('12' as blob sub_type text) + 1, cast('2024-01-01' as blob sub_type text) from rdb$database
+ERROR 335544569 335544436 #-607 335544657 '' 42000
+Dynamic SQL Error
+SQL error code = -607
+Array/BLOB/DATE data types not allowed in arithmetic
+--- select id from b order by t, id
+ID:INTEGER (4,,,False,B,ID,True,False)
+3 | 
+1 | 
+2 | 
+4 | 
+affected 0
+--- select id from b order by bn desc, id
+ID:INTEGER (4,,,False,B,ID,True,False)
+4 | 
+2 | 
+1 | 
+3 | 
+affected 0
+--- select t, count(*) from b group by t order by 2, 1
+T:BLOB SUB_TYPE 1 (2147483647,,,True,B,T,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+hello world | 1 | 
+ | 1 | 
+Hello | 1 | 
+affected 0
+--- select distinct t from b order by 1
+T:BLOB SUB_TYPE 1 (2147483647,,,True,B,T,False,False)
+NULL | 
+hello world | 
+ | 
+Hello | 
+affected 0
+--- select min(t), max(t), count(t), count(distinct t), list(t, '|') from b
+MIN:BLOB SUB_TYPE 1 (2147483647,,,True,,MIN,False,False)
+MAX:BLOB SUB_TYPE 1 (2147483647,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+LIST:BLOB SUB_TYPE 1 (2147483647,,,True,,LIST,False,False)
+ | hello world | 3 | 3 | hello world||Hello | 
+affected 0
+--- select id, t from b where t = (select max(t) from b) order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+T:BLOB SUB_TYPE 1 (2147483647,,,True,B,T,False,False)
+1 | hello world | 
+affected 0
+--- select id, hash(t), hash(bn) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+HASH:BIGINT (8,,,True,,HASH,False,False)
+HASH:BIGINT (8,,,True,,HASH,False,False)
+1 | 121784628046116 | 18 | 
+2 | 0 | 0 | 
+3 | NULL | NULL | 
+4 | 5161775 | 255 | 
+affected 0
+--- select id, hex_encode(bn), base64_encode(bn), crypt_hash(t using sha256) is null from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+HEX_ENCODE:BLOB SUB_TYPE 1 (2147483647,,,True,,HEX_ENCODE,False,False)
+BASE64_ENCODE:BLOB SUB_TYPE 1 (2147483647,,,True,,BASE64_ENCODE,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | 0102 | AQI= | False | 
+2 |  |  | False | 
+3 | NULL | NULL | True | 
+4 | FF | /w== | False | 
+affected 0
+--- select base64_decode('aGVsbG8='), hex_decode('48656c6c6f'), base64_encode('hello'), hex_encode('Hi') from rdb$database
+BASE64_DECODE:VARCHAR (6,,,False,,BASE64_DECODE,False,False)
+HEX_DECODE:VARCHAR (5,,,False,,HEX_DECODE,False,False)
+BASE64_ENCODE:VARCHAR (28,,,False,,BASE64_ENCODE,False,False)
+HEX_ENCODE:VARCHAR (16,,,False,,HEX_ENCODE,False,False)
+68656C6C6F | 48656C6C6F | aGVsbG8= | 4869 | 
+affected 0
+--- select blob_append(t, '+', v) from b order by id
+BLOB_APPEND:BLOB SUB_TYPE 1 (2147483647,,,False,,BLOB_APPEND,False,False)
+hello world+abc | 
++ | 
++ | 
+Hello+ABC | 
+affected 0
+--- select blob_append(null, 'a', null, 'b'), blob_append('x') from rdb$database
+ERROR 335544439 'BLOB_APPEND' '' 39000
+function BLOB_APPEND could not be matched
+--- insert into b (id, t, bn) values (5, 'x', 'binary text')
+affected 1
+--- insert into b (id, t) values (6, repeat('ab', 20000))
+ERROR 335544569 335544436 #-804 335544586 335544382 'REPEAT' '' 42000
+Dynamic SQL Error
+SQL error code = -804
+Function unknown
+REPEAT
+--- select id, char_length(t), substring(t from 39999) from b where id = 6
+ID:INTEGER (4,,,False,B,ID,True,False)
+CHAR_LENGTH:BIGINT (8,,,True,,CHAR_LENGTH,False,False)
+SUBSTRING:BLOB SUB_TYPE 1 (2147483647,,,True,,SUBSTRING,False,False)
+affected 0
+--- update b set t = t || 'z' where id = 6
+affected 0
+--- select id, octet_length(t), right(t, 3) from b where id = 6
+ID:INTEGER (4,,,False,B,ID,True,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+RIGHT:BLOB SUB_TYPE 1 (2147483647,,,False,,RIGHT,False,False)
+affected 0
+--- select id, f, not f, f and true, f or false, f is true, f is not false, f is unknown, f = true, f <> false, f > false from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+F:BOOLEAN (1,,,True,B,F,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | False | True | True | True | True | False | True | True | True | 
+2 | False | True | False | False | False | False | False | False | False | False | 
+3 | NULL | NULL | NULL | NULL | False | True | True | NULL | NULL | NULL | 
+4 | True | False | True | True | True | True | False | True | True | True | 
+5 | NULL | NULL | NULL | NULL | False | True | True | NULL | NULL | NULL | 
+affected 0
+--- select id, cast(f as varchar(5)), cast(f as char(5)), iif(f, 'y', 'n'), case f when true then 1 when false then 0 end from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+CAST:VARCHAR (5,,,True,,CAST,False,False)
+CAST:CHAR (5,,,True,,CAST,False,False)
+CASE:CHAR (1,,,False,,CASE,False,False)
+CASE:INTEGER (4,,,True,,CASE,False,False)
+1 | TRUE | TRUE  | y | 1 | 
+2 | FALSE | FALSE | n | 0 | 
+3 | NULL | NULL | n | NULL | 
+4 | TRUE | TRUE  | y | 1 | 
+5 | NULL | NULL | n | NULL | 
+affected 0
+--- select cast('true' as boolean), cast('FALSE' as boolean), cast(' True ' as boolean), cast('unknown' as boolean) from rdb$database
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+ERROR 335544334 'unknown' '' 22018
+conversion error from string "unknown"
+--- select cast('yes' as boolean) from rdb$database
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+ERROR 335544334 'yes' '' 22018
+conversion error from string "yes"
+--- select cast(1 as boolean) from rdb$database
+CAST:BOOLEAN (1,,,False,,CAST,False,False)
+ERROR 335544334 '1' '' 22018
+conversion error from string "1"
+--- select id from b order by f, id
+ID:INTEGER (4,,,False,B,ID,True,False)
+3 | 
+5 | 
+2 | 
+1 | 
+4 | 
+affected 0
+--- select id from b order by f desc nulls last, id
+ID:INTEGER (4,,,False,B,ID,True,False)
+1 | 
+4 | 
+2 | 
+3 | 
+5 | 
+affected 0
+--- select f, count(*) from b group by f order by f
+F:BOOLEAN (1,,,True,B,F,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+False | 1 | 
+True | 2 | 
+affected 0
+--- select min(f), max(f), count(distinct f) from b
+MIN:BOOLEAN (1,,,True,,MIN,False,False)
+MAX:BOOLEAN (1,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+False | True | 2 | 
+affected 0
+--- select true, false, unknown, true and unknown, false or unknown, not unknown, unknown is null from rdb$database
+CONSTANT:BOOLEAN (1,,,False,,CONSTANT,False,False)
+CONSTANT:BOOLEAN (1,,,False,,CONSTANT,False,False)
+CONSTANT:BOOLEAN (1,,,True,,CONSTANT,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | False | NULL | NULL | NULL | NULL | True | 
+affected 0
+--- select (1 = 1) = (2 = 2), (1 = 1) is distinct from (1 = 2), coalesce(null, true), nullif(true, true) from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+COALESCE:BOOLEAN (1,,,True,,COALESCE,False,False)
+CASE:BOOLEAN (1,,,True,,CASE,False,False)
+True | True | True | NULL | 
+affected 0
+--- select sum(f) from b
+ERROR 335544569 335544606 336397242 'SUM' '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Argument for SUM in dialect 3 must be numeric
+--- select f + 1 from b
+ERROR 335544569 335544606 336397248 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for addition or subtraction in dialect 3
+--- select id, o, octet_length(o), char_length(o), hex_encode(o) from b order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+O:CHAR (4,,,True,B,O,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+HEX_ENCODE:VARCHAR (8,,,True,,HEX_ENCODE,False,False)
+1 | 41424344 | 4 | 4 | 41424344 | 
+2 | 00000000 | 4 | 4 | 00000000 | 
+3 | NULL | NULL | NULL | NULL | 
+4 | 41000000 | 4 | 4 | 41000000 | 
+5 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select id, o = x'41', o = x'41000000', o = 'A', o > x'40', o like x'41%' from b order by id
+ERROR 335544569 335544436 #-104 335544634 #1 #68 335544382 ''41%'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 68
+'41%'
+--- select x'414243', x'', x'0a0B', x'abc' from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #34 335544382 ''abc'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 34
+'abc'
+--- select x'zz' from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #9 335544382 ''zz'' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 9
+'zz'
+--- select uuid_to_char(char_to_uuid('A0BF4E45-3029-2A44-D493-4998C9B439A3')), char_to_uuid('a0bf4e45-3029-2a44-d493-4998c9b439a3') from rdb$database
+UUID_TO_CHAR:CHAR (36,,,False,,UUID_TO_CHAR,False,False)
+CHAR_TO_UUID:CHAR (16,,,False,,CHAR_TO_UUID,False,False)
+A0BF4E45-3029-2A44-D493-4998C9B439A3 | a0bf4e45-3029-2a44-d493-4998c9b439a3 | 
+affected 0
+--- select char_to_uuid('not a uuid') from rdb$database
+CHAR_TO_UUID:CHAR (16,,,False,,CHAR_TO_UUID,False,False)
+ERROR 335544606 335544948 #36 'CHAR_TO_UUID' '' 42000
+expression evaluation not supported
+Human readable UUID argument for CHAR_TO_UUID must be of exact length 36
+--- select char_length(gen_uuid()), octet_length(gen_uuid()), char_length(uuid_to_char(gen_uuid())), gen_uuid() = gen_uuid() from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+16 | 16 | 36 | False | 
+affected 0
+--- select uuid_to_char(x'000102030405060708090A0B0C0D0E0F') from rdb$database
+UUID_TO_CHAR:CHAR (36,,,False,,UUID_TO_CHAR,False,False)
+00010203-0405-0607-0809-0A0B0C0D0E0F | 
+affected 0
+--- select uuid_to_char('short') from rdb$database
+UUID_TO_CHAR:CHAR (36,,,False,,UUID_TO_CHAR,False,False)
+ERROR 335544606 335544969 #16 'UUID_TO_CHAR' '' 42000
+expression evaluation not supported
+Binary UUID argument for UUID_TO_CHAR must use 16 bytes
+--- select cast(x'41' as varchar(3)), cast('AB' as char(4) character set octets), cast(o as varchar(10) character set utf8) from b order by id
+CAST:VARCHAR (3,,,False,,CAST,False,False)
+CAST:CHAR (4,,,False,,CAST,False,False)
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+A | 41420000 | ABCD | 
+A | 41420000 |      | 
+A | 41420000 | NULL | 
+A | 41420000 | A    | 
+A | 41420000 | NULL | 
+affected 0
+--- create table "Mixed Case" ("Id" integer, "id" integer, "select" varchar(5), x_ integer, "x y" integer)
+affected 0
+--- create table t_us (_x integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #20 335544382 '_x' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 20
+_x
+--- create table t_us ($x integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #20 335544382 '$' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 20
+$
+--- insert into "Mixed Case" values (1, 2, 'kw', 4, 5)
+affected 1
+--- select "Id", "id", "select", x_, "x y" from "Mixed Case"
+Id:INTEGER (4,,,True,Mixed Case,Id,False,False)
+id:INTEGER (4,,,True,Mixed Case,id,False,False)
+select:VARCHAR (5,,,True,Mixed Case,select,False,False)
+X_:INTEGER (4,,,True,Mixed Case,X_,False,False)
+x y:INTEGER (4,,,True,Mixed Case,x y,False,False)
+1 | 2 | kw | 4 | 5 | 
+affected 0
+--- select * from "Mixed Case"
+Id:INTEGER (4,,,True,Mixed Case,Id,False,False)
+id:INTEGER (4,,,True,Mixed Case,id,False,False)
+select:VARCHAR (5,,,True,Mixed Case,select,False,False)
+X_:INTEGER (4,,,True,Mixed Case,X_,False,False)
+x y:INTEGER (4,,,True,Mixed Case,x y,False,False)
+1 | 2 | kw | 4 | 5 | 
+affected 0
+--- select id from "Mixed Case"
+ERROR 335544569 335544436 #-206 335544578 335544382 'ID' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+ID
+At line 1, column 8
+--- select "ID" from "Mixed Case"
+ERROR 335544569 335544436 #-206 335544578 335544382 'ID' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+ID
+At line 1, column 8
+--- select * from "mixed case"
+ERROR 335544569 335544436 #-204 335544580 335544382 'mixed case' 336397208 #1 #15 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Table unknown
+mixed case
+At line 1, column 15
+--- select * from mixed_case
+ERROR 335544569 335544436 #-204 335544580 335544382 'MIXED_CASE' 336397208 #1 #15 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Table unknown
+MIXED_CASE
+At line 1, column 15
+--- create table abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk (a integer)
+affected 0
+--- create table abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl (a integer)
+ERROR 335544569 335544436 #-104 336068767 336397208 #1 #14 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Name longer than database column size
+At line 1, column 14
+--- select a from abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk
+A:INTEGER (4,,,True,ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJK,A,False,False)
+affected 0
+--- create table "Ünïcödé" ("çol" integer)
+affected 0
+--- select "çol" from "Ünïcödé"
+çol:INTEGER (4,,,True,Ünïcödé,çol,False,False)
+affected 0
+--- create table t_kw (key integer, value integer, "VALUE2" integer, position integer, type integer, count integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #33 335544382 'value' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 33
+value
+--- select key, value, position, type, count from t_kw
+ERROR 335544569 335544436 #-104 335544634 #1 #28 335544382 ',' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 28
+,
+--- create table t_kw2 (window integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #21 335544382 'window' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 21
+window
+--- create table t_kw3 (return integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #21 335544382 'return' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 21
+return
+--- create table t_kw4 (offset integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #21 335544382 'offset' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 21
+offset
+--- create table t_kw5 (rows integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #21 335544382 'rows' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 21
+rows
+--- create table t_kw6 (over integer)
+ERROR 335544569 335544436 #-104 335544634 #1 #21 335544382 'over' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 21
+over
+--- create table t_kw7 ("" integer)
+ERROR 335544569 335544436 #-104 336068820 336397208 #1 #21 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Zero length identifiers are not allowed
+At line 1, column 21
+--- select 1 as "", 2 as "a b" from rdb$database
+ERROR 335544569 335544436 #-104 336068820 336397208 #1 #13 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Zero length identifiers are not allowed
+At line 1, column 13
+--- select 1 as select from rdb$database
+ERROR 335544569 335544436 #-104 335544634 #1 #13 335544382 'select' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 13
+select
+--- select 1 "Alias", 2 alias2, 3 "ALIAS3" from rdb$database
+Alias:INTEGER (4,,,False,,CONSTANT,False,False)
+ALIAS2:INTEGER (4,,,False,,CONSTANT,False,False)
+ALIAS3:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 2 | 3 | 
+affected 0
+--- select current_user, user, current_role, char_length(current_connection) > 0, current_transaction > 0 from rdb$database
+USER:VARCHAR (63,,,False,,USER,False,False)
+USER:VARCHAR (63,,,False,,USER,False,False)
+ROLE:VARCHAR (63,,,False,,ROLE,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+SYSDBA | SYSDBA | NONE | True | True | 
+affected 0
+--- select rdb$get_context('SYSTEM', 'ENGINE_VERSION'), rdb$get_context('SYSTEM', 'CURRENT_USER'), rdb$get_context('SYSTEM', 'CURRENT_ROLE'), rdb$get_context('SYSTEM', 'NETWORK_PROTOCOL') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+5.0.4 | SYSDBA | NONE | TCPv4 | 
+affected 0
+--- select rdb$get_context('SYSTEM', 'NOSUCH') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+ERROR 335544843 'NOSUCH' 'SYSTEM' '' HY000
+Context variable 'NOSUCH' is not found in namespace 'SYSTEM'
+--- select rdb$get_context('NOSUCH', 'X') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+ERROR 335544844 'NOSUCH' 'RDB$GET_CONTEXT' '' HY000
+Invalid namespace name 'NOSUCH' passed to RDB$GET_CONTEXT
+--- select rdb$set_context('USER_SESSION', 'k', 'v'), rdb$get_context('USER_SESSION', 'k'), rdb$set_context('USER_SESSION', 'k', null), rdb$get_context('USER_SESSION', 'k') from rdb$database
+RDB$SET_CONTEXT:INTEGER (4,,,False,,RDB$SET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+RDB$SET_CONTEXT:INTEGER (4,,,False,,RDB$SET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+0 | NULL | 0 | NULL | 
+affected 0
+--- select rdb$set_context('USER_TRANSACTION', 't1', 42), rdb$get_context('USER_TRANSACTION', 't1') from rdb$database
+RDB$SET_CONTEXT:INTEGER (4,,,False,,RDB$SET_CONTEXT,False,False)
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+0 | NULL | 
+affected 0
+--- select rdb$set_context('SYSTEM', 'x', 'y') from rdb$database
+RDB$SET_CONTEXT:INTEGER (4,,,False,,RDB$SET_CONTEXT,False,False)
+ERROR 335544844 'SYSTEM' 'RDB$SET_CONTEXT' '' HY000
+Invalid namespace name 'SYSTEM' passed to RDB$SET_CONTEXT
+--- select rdb$get_context('USER_SESSION', 'missing') from rdb$database
+RDB$GET_CONTEXT:VARCHAR (255,,,True,,RDB$GET_CONTEXT,False,False)
+NULL | 
+affected 0
+--- select current_date = cast('today' as date), current_date - cast('yesterday' as date), cast('tomorrow' as date) - current_date from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+SUBTRACT:INTEGER (4,,,False,,SUBTRACT,False,False)
+SUBTRACT:INTEGER (4,,,False,,SUBTRACT,False,False)
+True | 1 | 1 | 
+affected 0
+--- select current_timestamp >= current_date, localtimestamp >= current_date, current_timestamp = current_timestamp from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | True | 
+affected 0
+--- select char_length(cast(localtimestamp as varchar(30))), char_length(cast(localtime as varchar(20))) from rdb$database
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+24 | 13 | 
+affected 0
+--- select row_count from rdb$database
+ERROR 335544569 335544436 #-104 335544612 335544382 'ROW_COUNT' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown
+ROW_COUNT
+--- select sqlcode from rdb$database
+ERROR 335544569 335544436 #-104 335544612 335544382 'SQLCODE' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown
+SQLCODE
+--- select inserting from rdb$database
+ERROR 335544569 335544436 #-104 335544612 335544382 'INSERTING/UPDATING/DELETING' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown
+INSERTING/UPDATING/DELETING
+--- select new.id from rdb$database
+ERROR 335544569 335544436 #-206 335544578 335544382 'NEW.ID' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+NEW.ID
+At line 1, column 8
+--- insert into b (id, t, bn) values (?, ?, ?)
+CLIENT EXCEPTION InvalidCastException: Unable to cast object of type 'System.String' to type 'System.Byte[]'.
+--- select id, t, bn from b where id = ?
+ID:INTEGER (4,,,False,B,ID,True,False)
+T:BLOB SUB_TYPE 1 (2147483647,,,True,B,T,False,False)
+BN:BLOB (2147483647,,,True,B,BN,False,False)
+affected 0
+--- select id from b where t = ?
+ID:INTEGER (4,,,False,B,ID,True,False)
+affected 0
+--- insert into b (id, f) values (?, ?)
+affected 1
+--- insert into b (id, f) values (?, ?)
+affected 1
+--- select id, f from b where f = ? order by id
+ID:INTEGER (4,,,False,B,ID,True,False)
+F:BOOLEAN (1,,,True,B,F,False,False)
+1 | True | 
+4 | True | 
+8 | True | 
+affected 0
+--- insert into b (id, o) values (?, ?)
+CLIENT EXCEPTION InvalidCastException: Unable to cast object of type 'System.String' to type 'System.Byte[]'.
+--- select id, o from b where id = ?
+ID:INTEGER (4,,,False,B,ID,True,False)
+O:CHAR (4,,,True,B,O,False,False)
+affected 0

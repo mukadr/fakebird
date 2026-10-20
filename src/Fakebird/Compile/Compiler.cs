@@ -774,6 +774,9 @@ public sealed partial class Compiler
                 return new CtxFuncNode(c => Value.Int(c.Att.Id), SqlType.BigInt, "CURRENT_CONNECTION") { NotNull = true };
             case "CURRENT_TRANSACTION":
                 return new CtxFuncNode(c => Value.Int(c.Tx.Id), SqlType.BigInt, "CURRENT_TRANSACTION") { NotNull = true };
+            case "ROW_COUNT" or "SQLCODE" or "GDSCODE" or "SQLSTATE" when Routine == null:
+                throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.token_err)
+                    .Gds(Err.isc_random).Str(cv.Name).Build();
             case "ROW_COUNT":
                 return new CtxFuncNode(c => Value.Int(c.RowCount), SqlType.Integer, "ROW_COUNT") { NotNull = true };
             case "SQLCODE":
@@ -797,7 +800,9 @@ public sealed partial class Compiler
 
     void RequireTrigger(string name)
     {
-        if (Routine is not { IsTrigger: true }) throw Err.Dsql(-104, name + " is allowed only in triggers");
+        if (Routine is not { IsTrigger: true })
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.token_err)
+                .Gds(Err.isc_random).Str("INSERTING/UPDATING/DELETING").Build();
     }
 
     // ======================================================================== column resolution

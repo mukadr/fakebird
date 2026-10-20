@@ -122,6 +122,15 @@ public sealed class Lexer
                 var lit = Next();
                 return lit with { Pos = start, Line = line, Col = col, Introducer = cs };
             }
+            // a name cannot start with _ or $ (_X only introduces a character set before a string)
+            if (c == '$')
+            {
+                _pos = start + 1;
+                return Make(Tok.Op, "$", start, line, col);
+            }
+            if (c == '_') return Make(Tok.Op, _s[start.._pos], start, line, col);
+            // Firebird 4+ names hold at most 63 characters
+            if (_pos - start > 63) throw NameError(FbMessages.dyn_name_longer, line, col);
             return Make(Tok.Ident, _s[start.._pos].ToUpperInvariant(), start, line, col);
         }
         if (c is >= '0' and <= '9' || (c == '.' && _pos + 1 < _s.Length && char.IsDigit(_s[_pos + 1])))
@@ -175,7 +184,10 @@ public sealed class Lexer
                     _pos++;
                 }
                 _pos++;
-                return Make(Tok.QuotedIdent, sb.ToString(), start, line, col);
+                var quoted = sb.ToString();
+                if (quoted.Length == 0) throw NameError(FbMessages.dyn_zero_len_id, line, col);
+                if (quoted.EnumerateRunes().Count() > 63) throw NameError(FbMessages.dyn_name_longer, line, col);
+                return Make(Tok.QuotedIdent, quoted, start, line, col);
             }
             case '?':
                 _pos++;
@@ -246,4 +258,7 @@ public sealed class Lexer
         }
         return Make(kind, _s[start.._pos], start, line, col);
     }
+
+    static FbError NameError(int code, int line, int col)
+        => new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(code).LineCol(line, col).Build();
 }

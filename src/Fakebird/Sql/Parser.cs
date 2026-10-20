@@ -139,6 +139,7 @@ public sealed partial class Parser
         throw Unexpected();
     }
 
+
     bool IsIdentStart => Cur.Kind == Tok.QuotedIdent || (Cur.Kind == Tok.Ident && !Reserved.Contains(Cur.Text));
 
     bool IsAliasStart => Cur.Kind == Tok.QuotedIdent || (Cur.Kind == Tok.Ident && !Reserved.Contains(Cur.Text) && !AliasStop.Contains(Cur.Text));
@@ -221,26 +222,33 @@ public sealed partial class Parser
 
     // ------------------------------------------------------------------ reserved words
 
+    /// <summary>Firebird 5's reserved words (src/common/ParserTokens.h, the tokens that are not non-reserved).</summary>
     static readonly FrozenSet<string> Reserved = new[]
     {
-        "ADD", "ADMIN", "ALL", "ALTER", "AND", "ANY", "AS", "AT", "AVG", "BEGIN", "BETWEEN", "BIGINT", "BIT_LENGTH",
-        "BLOB", "BOOLEAN", "BOTH", "BY", "CASE", "CAST", "CHAR", "CHAR_LENGTH", "CHARACTER", "CHARACTER_LENGTH",
-        "CHECK", "CLOSE", "COLLATE", "COLUMN", "COMMIT", "CONNECT", "CONSTRAINT", "COUNT", "CREATE", "CROSS",
-        "CURRENT", "CURRENT_CONNECTION", "CURRENT_DATE", "CURRENT_ROLE", "CURRENT_TIME", "CURRENT_TIMESTAMP",
-        "CURRENT_TRANSACTION", "CURRENT_USER", "CURSOR", "DATE", "DAY", "DEC", "DECIMAL", "DECLARE", "DEFAULT",
-        "DELETE", "DELETING", "DETERMINISTIC", "DISCONNECT", "DISTINCT", "DOUBLE", "DROP", "ELSE", "END", "ESCAPE",
-        "EXECUTE", "EXISTS", "EXTERNAL", "EXTRACT", "FALSE", "FETCH", "FILTER", "FLOAT", "FOR", "FOREIGN", "FROM",
-        "FULL", "FUNCTION", "GDSCODE", "GLOBAL", "GRANT", "GROUP", "HAVING", "HOUR", "IN", "INDEX", "INNER",
-        "INSENSITIVE", "INSERT", "INSERTING", "INT", "INTEGER", "INTO", "IS", "JOIN", "LEADING", "LEFT", "LIKE",
-        "LONG", "LOWER", "MAX", "MERGE", "MIN", "MINUTE", "MONTH", "NATIONAL", "NATURAL", "NCHAR", "NO", "NOT",
-        "NULL", "NUMERIC", "OCTET_LENGTH", "OF", "OFFSET", "ON", "ONLY", "OPEN", "OR", "ORDER", "OUTER", "OVER",
-        "PARAMETER", "PLAN", "POSITION", "POST_EVENT", "PRECISION", "PRIMARY", "PROCEDURE", "RDB$DB_KEY",
-        "RDB$RECORD_VERSION", "REAL", "RECORD_VERSION", "RECREATE", "RECURSIVE", "REFERENCES", "RELEASE",
+        "ADD", "ADMIN", "ALL", "ALTER", "AND", "ANY", "AS", "AT", "AVG", "BEGIN", "BETWEEN", "BIGINT", "BINARY",
+        "BIT_LENGTH", "BLOB", "BOOLEAN", "BOTH", "BY", "CASE", "CAST", "CHAR", "CHAR_LENGTH", "CHARACTER",
+        "CHARACTER_LENGTH", "CHECK", "CLOSE", "COLLATE", "COLUMN", "COMMENT", "COMMIT", "CONNECT", "CONSTRAINT",
+        "CORR", "COUNT", "COVAR_POP", "COVAR_SAMP", "CREATE", "CROSS", "CURRENT", "CURRENT_CONNECTION",
+        "CURRENT_DATE", "CURRENT_ROLE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_TRANSACTION", "CURRENT_USER",
+        "CURSOR", "DATE", "DAY", "DEC", "DECFLOAT", "DECIMAL", "DECLARE", "DEFAULT", "DELETE", "DELETING",
+        "DETERMINISTIC", "DISCONNECT", "DISTINCT", "DOUBLE", "DROP", "ELSE", "END", "ESCAPE", "EXECUTE", "EXISTS",
+        "EXTERNAL", "EXTRACT", "FALSE", "FETCH", "FILTER", "FLOAT", "FOR", "FOREIGN", "FROM", "FULL", "FUNCTION",
+        "GDSCODE", "GLOBAL", "GRANT", "GROUP", "HAVING", "HOUR", "IN", "INDEX", "INNER", "INSENSITIVE", "INSERT",
+        "INSERTING", "INT", "INT128", "INTEGER", "INTO", "IS", "JOIN", "LEADING", "LEFT", "LIKE", "LATERAL", "LOCAL",
+        "LOCALTIME", "LOCALTIMESTAMP", "LONG", "LOWER", "MAX", "MERGE", "MIN", "MINUTE", "MONTH", "NATIONAL",
+        "NATURAL", "NCHAR", "NO", "NOT", "NULL", "NUMERIC", "OCTET_LENGTH", "OF", "OFFSET", "ON", "ONLY", "OPEN",
+        "OR", "ORDER", "OUTER", "OVER", "PARAMETER", "PLAN", "POSITION", "POST_EVENT", "PRECISION", "PRIMARY",
+        "PROCEDURE", "PUBLICATION", "RDB$DB_KEY", "RDB$ERROR", "RDB$GET_CONTEXT", "RDB$GET_TRANSACTION_CN",
+        "RDB$RECORD_VERSION", "RDB$RESET_CONTEXT", "RDB$ROLE_IN_USE", "RDB$SET_CONTEXT", "RDB$SYSTEM_PRIVILEGE",
+        "REAL", "RECORD_VERSION", "RECREATE", "RECURSIVE", "REFERENCES", "REGR_AVGX", "REGR_AVGY", "REGR_COUNT",
+        "REGR_INTERCEPT", "REGR_R2", "REGR_SLOPE", "REGR_SXX", "REGR_SXY", "REGR_SYY", "RELEASE", "RESETTING",
         "RETURN", "RETURNING_VALUES", "RETURNS", "REVOKE", "RIGHT", "ROLLBACK", "ROW", "ROW_COUNT", "ROWS",
-        "SAVEPOINT", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR", "SMALLINT", "SOME", "SQLCODE",
-        "SQLSTATE", "START", "SUM", "TABLE", "THEN", "TIME", "TIMESTAMP", "TO", "TRAILING", "TRIGGER", "TRIM",
-        "TRUE", "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE", "VALUES",
-        "VARCHAR", "VARIABLE", "VARYING", "VIEW", "WHEN", "WHERE", "WHILE", "WITH", "YEAR",
+        "SAVEPOINT", "SCHEMA", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR", "SMALLINT", "SOME",
+        "SQLCODE", "SQLSTATE", "START", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TABLE", "THEN", "TIME", "TIMESTAMP",
+        "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRIGGER", "TRIM", "TRUE", "UNBOUNDED", "UNION",
+        "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE", "VALUES", "VAR_POP",
+        "VAR_SAMP", "VARBINARY", "VARCHAR", "VARIABLE", "VARYING", "VIEW", "WHEN", "WHERE", "WHILE", "WINDOW",
+        "WITH", "WITHOUT", "YEAR",
     }.ToFrozenSet(StringComparer.Ordinal);
 
     /// <summary>Non-reserved words that cannot start an implicit alias in this parser.</summary>
@@ -861,6 +869,12 @@ public sealed partial class Parser
             return f;
         }
         f.Args.Add(Expression());
+        // HASH(x USING alg), CRYPT_HASH(x USING alg): the algorithm name becomes a string argument
+        if (package == null && name is "HASH" or "CRYPT_HASH" && Accept("USING"))
+        {
+            var alg = AnyIdent();
+            f.Args.Add(new LiteralExpr(Types.Value.Str(alg), Types.SqlType.VarChar(alg.Length, Types.Charset.Ascii)));
+        }
         while (IsOp(","))
         {
             if (aggregate && (name != "LIST" || f.Args.Count == 2)) throw Unexpected();

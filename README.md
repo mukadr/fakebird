@@ -91,7 +91,13 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   deleted and children being stored by uncommitted transactions (failing at once under NOWAIT, waiting
   otherwise), a timed-out lock wait is an update conflict, and the context reports the isolation
   (CONSISTENCY included) and LOCK_TIMEOUT (0 for NOWAIT) of the transaction.
-* **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...
+* **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...,
+  and Firebird 4's HEX_ENCODE/HEX_DECODE, BASE64_ENCODE/BASE64_DECODE, BLOB_APPEND, CRYPT_HASH (MD5,
+  SHA1, SHA2, SHA3) and HASH ... USING CRC32; HASH is Firebird 5's 64-bit hash; a wrong number of
+  arguments reports `function X could not be matched`.
+* **Identifiers** follow Firebird 5: its full reserved word list (WINDOW, VALUE, ...), at most 63
+  characters, no empty quoted names, `_`/`$` cannot start a name; ROW_COUNT/SQLCODE/INSERTING outside
+  PSQL are unknown tokens.
 * **Transactions**: read committed (default) and snapshot isolation, no dirty reads, statement
   atomicity, savepoints, WAIT/NOWAIT lock conflicts with deadlock detection and lock timeouts. A NOWAIT
   conflict is reported like Firebird: deadlock / update conflicts with concurrent update. READ COMMITTED

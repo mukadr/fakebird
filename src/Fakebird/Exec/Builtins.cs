@@ -182,9 +182,52 @@ public static class Builtins
         return b;
     }
 
+    /// <summary>The bytes a function sees: binary values as they are, text in its encoding.</summary>
+    static byte[] RawBytes(in Value v) => v.Tag == VTag.Bytes ? v.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(v));
+
+    /// <summary>The text an encoding produces: VARCHAR in ASCII while it fits, a text blob for blobs and beyond.</summary>
+    static SqlType EncodedType(XNode arg, Func<int, int> length)
+    {
+        if (arg.Type.Kind == TypeKind.Blob) return new SqlType(TypeKind.Blob, subType: 1, charset: Charset.Ascii);
+        if (!arg.Type.IsString) throw new StatusBuilder().Gds(FbMessages.tom_strblob).Build();
+        var len = length(arg.Type.ByteLength);
+        return len <= 32765 ? SqlType.VarChar(len, Charset.Ascii) : new SqlType(TypeKind.Blob, subType: 1, charset: Charset.Ascii);
+    }
+
+    /// <summary>The binary a decoding produces, from the argument's length in characters.</summary>
+    static SqlType DecodedType(XNode arg, Func<int, int> length)
+    {
+        if (arg.Type.Kind == TypeKind.Blob) return SqlType.BlobBinary;
+        if (!arg.Type.IsString) throw new StatusBuilder().Gds(FbMessages.tom_strblob).Build();
+        return SqlType.VarChar(length(arg.Type.Length), Charset.Octets);
+    }
+
+    /// <summary>The algorithm of HASH ... USING / CRYPT_HASH: its name and result type.</summary>
+    static (string Name, SqlType Type) HashAlgorithm(XNode arg, bool crypt)
+    {
+        var name = arg is ConstNode { Value.Tag: VTag.String } k ? k.Value.AsString.Trim() : "<not a string constant>";
+        var length = crypt
+            ? name switch { "MD5" => 16, "SHA1" => 20, "SHA256" or "SHA3_256" => 32, "SHA512" or "SHA3_512" => 64, "SHA3_384" => 48, "SHA3_224" => 28, _ => 0 }
+            : name == "CRC32" ? 4 : 0;
+        if (length == 0) throw new StatusBuilder().Gds(FbMessages.sysf_invalid_hash_algorithm).Str(name).Build();
+        return (name, crypt ? SqlType.VarChar(length, Charset.Octets) : SqlType.Integer);
+    }
+
+    static uint Crc32(byte[] data)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var b in data)
+        {
+            crc ^= b;
+            for (var k = 0; k < 8; k++) crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+        }
+        return ~crc;
+    }
+
     static string UuidToChar(byte[] b)
     {
-        if (b.Length != 16) throw Err.Random("Human readable UUID argument for UUID_TO_CHAR must be of exact length 16");
+        if (b.Length != 16)
+            throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_binuuid_wrongsize).Num(16).Str("UUID_TO_CHAR").Build();
         var hex = Convert.ToHexString(b);
         return $"{hex[..8]}-{hex[8..12]}-{hex[12..16]}-{hex[16..20]}-{hex[20..]}";
     }
@@ -192,7 +235,8 @@ public static class Builtins
     static byte[] CharToUuid(string s)
     {
         var h = s.Replace("-", "");
-        if (h.Length != 32 || s.Length != 36) throw Err.Random("Human readable UUID argument for CHAR_TO_UUID must be of exact length 36");
+        if (h.Length != 32 || s.Length != 36)
+            throw new StatusBuilder().Gds(Err.isc_expression_eval_err).Gds(FbMessages.sysf_argviolates_uuidlen).Num(36).Str("CHAR_TO_UUID").Build();
         return Convert.FromHexString(h);
     }
 
@@ -428,21 +472,22 @@ public static class Builtins
             if (s.Length > 0 && s[0] > 127) throw new StatusBuilder().Gds(Err.isc_arith_except).Gds(FbMessages.transliteration_failed).Build();
             return Value.Int(s.Length == 0 ? 0 : s[0]);
         }, HintString);
-        Def("HASH", 1, 1, a => SqlType.BigInt, (c, a, f) =>
+        Def("HASH", 1, 2, a => a.Length == 1 ? SqlType.BigInt : HashAlgorithm(a[1], crypt: false).Type, (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
-            var bytes = v.Tag == VTag.Bytes ? v.AsBytes : Conv.Utf8.GetBytes(Conv.ToStr(v));
-            // Firebird's legacy HASH (PJW/ELF hash)
-            ulong h = 0;
+            var bytes = RawBytes(v);
+            if (a.Length == 2) return Value.Int((int)Crc32(bytes)); // HASH(x USING CRC32)
+            // WeakHashContext: the 64-bit PJW/ELF hash
+            long h = 0;
             foreach (var b in bytes)
             {
                 h = (h << 4) + b;
-                var g = h & 0xF0000000;
-                if (g != 0) h ^= g >> 24;
+                var g = h & unchecked((long)0xF000000000000000);
+                if (g != 0) h ^= (long)((ulong)g >> 56);
                 h &= ~g;
             }
-            return Value.Int((long)h);
+            return Value.Int(h);
         }, HintString);
 
         // ---- math
@@ -616,6 +661,80 @@ public static class Builtins
         // ---- uuid
         Def("GEN_UUID", 0, 0, a => new SqlType(TypeKind.Char, 16, charset: Charset.Octets),
             (c, a, f) => Value.Bytes(UuidBytes(Guid.NewGuid())), deterministic: false);
+        Def("CRYPT_HASH", 2, 2, a => HashAlgorithm(a[1], crypt: true).Type, (c, a, f) =>
+        {
+            var v = a[0].Eval(c);
+            if (v.IsNull) return v;
+            var bytes = RawBytes(v);
+            var name = HashAlgorithm(a[1], crypt: true).Name;
+            return Value.Bytes(name switch
+            {
+                "MD5" => System.Security.Cryptography.MD5.HashData(bytes),
+                "SHA1" => System.Security.Cryptography.SHA1.HashData(bytes),
+                "SHA256" => System.Security.Cryptography.SHA256.HashData(bytes),
+                "SHA512" => System.Security.Cryptography.SHA512.HashData(bytes),
+                "SHA3_224" => throw Err.Unsupported("CRYPT_HASH SHA3_224"),
+                "SHA3_256" => System.Security.Cryptography.SHA3_256.HashData(bytes),
+                "SHA3_384" => System.Security.Cryptography.SHA3_384.HashData(bytes),
+                _ => System.Security.Cryptography.SHA3_512.HashData(bytes),
+            });
+        });
+        // Firebird 4: encodings of strings and blobs (makeEncodeHex/makeDecodeHex/makeEncode64/makeDecode64)
+        Def("HEX_ENCODE", 1, 1, a => EncodedType(a[0], len => len * 2), (c, a, f) =>
+        {
+            var v = a[0].Eval(c);
+            return v.IsNull ? v : S(Convert.ToHexString(RawBytes(v)));
+        }, nullable: a => !a[0].NotNull);
+        Def("HEX_DECODE", 1, 1, a => DecodedType(a[0], len =>
+        {
+            if (len % 2 != 0 || len == 0) throw new StatusBuilder().Gds(FbMessages.odd_hex_len).Num(len).Build();
+            return len / 2;
+        }), (c, a, f) =>
+        {
+            var s = Str(c, a[0]);
+            if (s == null) return Value.Null;
+            try { return Value.Bytes(Convert.FromHexString(s)); }
+            catch (FormatException) { throw new StatusBuilder().Gds(FbMessages.invalid_hex_digit).Build(); }
+        }, nullable: a => !a[0].NotNull);
+        Def("BASE64_ENCODE", 1, 1, a => EncodedType(a[0], len => (len + 2) / 3 * 4), (c, a, f) =>
+        {
+            var v = a[0].Eval(c);
+            return v.IsNull ? v : S(Convert.ToBase64String(RawBytes(v)));
+        }, nullable: a => !a[0].NotNull);
+        Def("BASE64_DECODE", 1, 1, a => DecodedType(a[0], len =>
+        {
+            if (len % 4 != 0 || len == 0) throw new StatusBuilder().Gds(FbMessages.tom_decode64len).Num(len).Build();
+            return len / 4 * 3;
+        }), (c, a, f) =>
+        {
+            var s = Str(c, a[0]);
+            if (s == null) return Value.Null;
+            try { return Value.Bytes(Convert.FromBase64String(s)); }
+            catch (FormatException) { throw new StatusBuilder().Gds(FbMessages.tom_decode64len).Num(s.Length).Build(); }
+        }, nullable: a => !a[0].NotNull);
+        // BLOB_APPEND: concatenates into a blob, skipping NULLs; typed by the first blob or string argument
+        Def("BLOB_APPEND", 2, int.MaxValue, a =>
+        {
+            foreach (var x in a)
+            {
+                if (x.Type.Kind == TypeKind.Blob) return x.Type;
+                if (x.Type.Kind == TypeKind.Null) continue;
+                if (x.Type.IsString) return x.Type.Charset == Charset.Octets ? SqlType.BlobBinary : new SqlType(TypeKind.Blob, subType: 1, charset: x.Type.Charset);
+                return new SqlType(TypeKind.Blob, subType: 1, charset: Charset.Ascii);
+            }
+            return SqlType.BlobBinary;
+        }, (c, a, f) =>
+        {
+            if (f.Type.SubType != 1)
+            {
+                var bytes = new List<byte>();
+                foreach (var x in a) { var v = x.Eval(c); if (!v.IsNull) bytes.AddRange(RawBytes(v)); }
+                return Value.Bytes(bytes.ToArray());
+            }
+            var sb = new StringBuilder();
+            foreach (var x in a) { var v = x.Eval(c); if (!v.IsNull) sb.Append(Conv.ToStr(v)); }
+            return S(sb.ToString());
+        }, nullable: a => a.All(x => !x.NotNull));
         Def("UUID_TO_CHAR", 1, 1, a => SqlType.Char(36, Charset.Ascii), (c, a, f) =>
         {
             var v = a[0].Eval(c);
@@ -647,7 +766,7 @@ public static class Builtins
             {
                 "USER_SESSION" => c.Att.SessionContext,
                 "USER_TRANSACTION" => c.Tx.Context,
-                "SYSTEM" => throw Err.Random("Cannot change read-only variable " + name),
+                "SYSTEM" => throw new StatusBuilder().Gds(Err.isc_ctx_namespace_invalid).Str("SYSTEM").Str("RDB$SET_CONTEXT").Build(),
                 _ => throw Err.CtxNamespace(ns, "RDB$SET_CONTEXT"),
             };
             var existed = dict.ContainsKey(name);
