@@ -460,8 +460,23 @@ public static class Conv
             case VTag.String when b.Tag == VTag.Bytes:
                 return CompareBytes(Utf8.GetBytes(a.AsString), b.AsBytes);
         }
-        throw Cvt.ConversionError(b);
+        // CVT2_compare moves the operand of lower priority to the other's type
+        throw Cvt.ConversionError(ComparePriority(a.Tag) < ComparePriority(b.Tag) ? a : b);
     }
+
+    /// <summary>CVT2_compare_priority: which operand's type wins a heterogeneous comparison.</summary>
+    static int ComparePriority(VTag t) => t switch
+    {
+        VTag.String or VTag.Bytes => 1,
+        VTag.Int => 10,
+        VTag.Int128 => 12,
+        VTag.Double => 14,
+        VTag.Date => 18,
+        VTag.Time => 19,
+        VTag.Timestamp => 21,
+        VTag.Bool => 26,
+        _ => 0,
+    };
 
     static SqlType TypeOfTag(VTag t) => t switch
     {

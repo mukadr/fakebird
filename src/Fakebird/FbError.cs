@@ -19,6 +19,8 @@ public sealed class FbError : Exception
     public string? UserExceptionName { get; set; }
     /// <summary>The PSQL stack trace has been appended (Firebird adds it once, where the error is raised).</summary>
     public bool TraceDone { get; init; }
+    /// <summary>Raised while opening the top-level cursor, so the client sees it at execute rather than at fetch.</summary>
+    public bool AtExecute { get; set; }
 
     public FbError(IReadOnlyList<StatusArg> status, string sqlState)
         : base(Render(status))

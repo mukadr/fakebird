@@ -49,7 +49,7 @@ public sealed partial class Compiler
                     var y = args[1].Eval(c);
                     if (!y.IsNull && Conv.Compare(x, y, col) == 0) return Value.Null;
                     return x;
-                }, [a, b], a.Type.Kind == TypeKind.Null ? b.Type : a.Type);
+                }, [a, b], a.Type.Kind == TypeKind.Null ? SqlType.Char(1, Charset.None) : a.Type); // the first argument's type, CHAR(1) for NULL
             }
             case "IIF":
             {
@@ -511,11 +511,15 @@ public sealed partial class Compiler
     /// (SELECT ?, ? FROM RDB$DATABASE). Consumed by the next top-level query specification.
     /// </summary>
     SqlType[]? _selectListTypes;
+    /// <summary>The next query spec compiled is the statement's top-level one (see PreFilterRel.AtExecute).</summary>
+    bool _openAtExecute;
 
     QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit, bool withLock = false)
     {
         var selectListTypes = _selectListTypes;
         _selectListTypes = null;
+        var atExecute = _openAtExecute;
+        _openAtExecute = false;
         var s = new Scope(outer ?? RootScope);
         var tree = BuildFrom(qs.From, s);
 
@@ -527,7 +531,11 @@ public sealed partial class Compiler
             foreach (var c in SplitAnd(qs.Where)) pool.Add(MakeConj(c, s));
         }
         BindJoinConditions(tree, s);
+        // conjuncts that reference none of this query's streams are tested once, when the query opens
+        var invariant = pool.Where(c => !c.Streams.Any(s.Streams.Contains)).ToList();
+        foreach (var c in invariant) c.Used = true;
         var rel = PlanTree(tree, pool, s);
+        if (invariant.Count > 0) rel = new PreFilterRel(rel, AndAll(invariant.Select(c => c.Node).ToList())!) { AtExecute = atExecute };
         foreach (var c in pool)
             if (!c.Used)
             {

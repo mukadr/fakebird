@@ -268,7 +268,7 @@ public sealed partial class Compiler
                         return neg;
                     }
                     case UnaryOp.Plus: return Bind(u.Operand, s, expected);
-                    default: return new NotNode(BindBool(u.Operand, s));
+                    default: return BindNot(u.Operand, s);
                 }
             case BinaryExpr b:
                 return BindBinary(b, s, expected);
@@ -395,7 +395,7 @@ public sealed partial class Compiler
     {
         var x = Bind(e, s, SqlType.Boolean);
         if (x.Type.Kind is not (TypeKind.Boolean or TypeKind.Null))
-            throw Err.Dsql(-104, "Invalid usage of boolean expression");
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.invalid_boolean_usage).Build();
         return x;
     }
 
@@ -480,6 +480,30 @@ public sealed partial class Compiler
         return "";
     }
 
+    /// <summary>
+    /// NOT, the way Firebird's DSQL rewrites it: double negations cancel, NOT is pushed through AND/OR, and a
+    /// negated quantified predicate becomes "is FALSE" (quantified predicates never yield UNKNOWN).
+    /// </summary>
+    XNode BindNot(Expr operand, Scope s)
+    {
+        switch (operand)
+        {
+            case UnaryExpr { Op: UnaryOp.Not } u:
+                return BindBool(u.Operand, s);
+            case BinaryExpr { Op: BinaryOp.And } b:
+                return new OrNode(BindNot(b.Left, s), BindNot(b.Right, s));
+            case BinaryExpr { Op: BinaryOp.Or } b:
+                return new AndNode(BindNot(b.Left, s), BindNot(b.Right, s));
+        }
+        var x = BindBool(operand, s);
+        if (x is QuantifiedNode q)
+        {
+            q.Negate = !q.Negate;
+            return q;
+        }
+        return new NotNode(x);
+    }
+
     XNode BindBinary(BinaryExpr b, Scope s, SqlType? expected)
     {
         switch (b.Op)
@@ -504,7 +528,6 @@ public sealed partial class Compiler
             case BinaryOp.Ge:
             {
                 var (l, r) = BindPair(b.Left, b.Right, s);
-                CheckComparable(l.Type, r.Type);
                 return new CmpNode(ToCmp(b.Op), l, r, MergeCollation(l.Type, r.Type));
             }
             case BinaryOp.Concat:
@@ -524,13 +547,6 @@ public sealed partial class Compiler
             default:
                 return BindArith(b, s, expected);
         }
-    }
-
-    static void CheckComparable(SqlType a, SqlType b)
-    {
-        if (a.Kind == TypeKind.Null || b.Kind == TypeKind.Null) return;
-        if (a.Kind == TypeKind.Boolean != (b.Kind == TypeKind.Boolean) && !(a.IsString || b.IsString))
-            throw Err.Dsql(-104, "Datatypes are not comparable in expression");
     }
 
     public static int DisplayLength(SqlType t) => t.Kind switch

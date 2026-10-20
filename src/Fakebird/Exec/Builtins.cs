@@ -866,7 +866,20 @@ public static class Builtins
             if (v.IsNull) return Value.Null;
             if (best.IsNull || (max ? Conv.Compare(v, best, f.Type.Collation) > 0 : Conv.Compare(v, best, f.Type.Collation) < 0)) best = v;
         }
-        return Coercion.ToType(best, f.Type);
+        var result = Coercion.ToType(best, f.Type);
+        if (f.Type.IsString && result.Tag == VTag.String)
+        {
+            // evlMaxMinValue redoes makeFromList on the runtime descriptors: a multibyte literal's descriptor holds
+            // its byte length, which converts to bytes / max-bytes-per-char characters
+            var len = a.Max(n => n is ConstNode { Literal: not null, Type.IsString: true } k
+                ? Conv.Utf8.GetByteCount(k.Value.AsString) / (k.Type.Charset == Charset.Utf8 ? 4 : k.Type.Charset == Charset.UnicodeFss ? 3 : 1)
+                : TypeRules.StringLength(n.Type));
+            var text = result.AsString;
+            var chars = text.EnumerateRunes().Count();
+            if (chars > len && text.EnumerateRunes().Skip(len).Any(r => r.Value != ' '))
+                throw Err.StringTruncation(len, chars);
+        }
+        return result;
     }
 
     /// <summary>Common result type for CASE/COALESCE/UNION branches (Firebird's makeFromList).</summary>

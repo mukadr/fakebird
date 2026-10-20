@@ -160,7 +160,7 @@ public static class TypeRules
         {
             textLen = Math.Max(StringLength(arg), result == null ? 0 : result.IsString ? textLen : StringLength(result));
             textType = ResultTextType(textType, arg);
-            result = SqlType.Char(Math.Max(1, textLen));
+            result = SqlType.Char(textLen);
         }
 
         foreach (var (t, n) in args)
@@ -221,7 +221,7 @@ public static class TypeRules
         {
             var cs = textType?.IsString == true || textType?.IsTextBlob == true ? textType.Charset : Charset.Ascii;
             var col = textType?.IsString == true ? textType.Collation : Collation.Binary;
-            var len = Math.Max(1, Math.Min(textLen, 32765 / (cs == Charset.Utf8 ? 4 : cs == Charset.UnicodeFss ? 3 : 1)));
+            var len = Math.Min(textLen, 32765 / (cs == Charset.Utf8 ? 4 : cs == Charset.UnicodeFss ? 3 : 1));
             result = anyVarying ? SqlType.VarChar(len, cs, col) : SqlType.Char(len, cs, col);
         }
         return (result, nullable);

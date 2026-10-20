@@ -97,7 +97,8 @@ public sealed class QuantifiedNode : SubqueryNode
                 if (CmpNode.Test(Op, Conv.Compare(v, w, Collation))) { r = true; break; }
             }
         }
-        if (r == null) return Value.Null;
+        // Firebird's ANY/ALL streams never leave the result UNKNOWN: they answer "is TRUE", or "is FALSE" when negated
+        if (r == null) return Value.Bool(false);
         return Value.Bool(r.Value != Negate);
     }
 

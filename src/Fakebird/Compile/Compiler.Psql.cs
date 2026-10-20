@@ -34,6 +34,7 @@ public sealed partial class Compiler
             case SelectStmt s:
             {
                 if (s.Into != null) throw Err.Dsql(-104, "INTO is allowed only in PSQL");
+                _openAtExecute = true;
                 var q = CompileSelect(s.Query, null);
                 return new SelectPrepared
                 {

@@ -278,6 +278,42 @@ public sealed class FilterRel : RelNode
     }
 }
 
+/// <summary>
+/// Firebird's PreFilteredStream: a condition independent of the input's streams, tested when the cursor opens.
+/// The input is not opened at all when it fails.
+/// </summary>
+public sealed class PreFilterRel : RelNode
+{
+    public readonly RelNode Input;
+    public readonly XNode Condition;
+    /// <summary>The top-level query's filter: it is evaluated by op_execute, so its errors are raised there.</summary>
+    public bool AtExecute;
+
+    public PreFilterRel(RelNode input, XNode cond)
+    {
+        Input = input;
+        Condition = cond;
+        Streams = input.Streams;
+    }
+
+    public override RowCursor Open(Ctx c)
+    {
+        bool pass;
+        try { pass = Condition.IsTrue(c); }
+        catch (FbError e) when (AtExecute)
+        {
+            e.AtExecute = true;
+            throw;
+        }
+        return pass ? Input.Open(c) : new EmptyCursor();
+    }
+
+    sealed class EmptyCursor : RowCursor
+    {
+        public override bool Next() => false;
+    }
+}
+
 /// <summary>SELECT ... WITH LOCK: locks the current row of a table stream as rows flow past.</summary>
 public sealed class LockRel : RelNode
 {

@@ -724,7 +724,7 @@ internal sealed class Connection
                     if (!execute2 && p.StmtType is Isc.stmt_select or Isc.stmt_select_for_upd)
                     {
                         try { result = Executor.Run(p, tx, pars); }
-                        catch (FbError e)
+                        catch (FbError e) when (!e.AtExecute)
                         {
                             if (_server.Logging) _server.Log($"[fakebird] execute failed: {e.Message.ReplaceLineEndings(" | ")}\n{s.Sql}");
                             s.FetchError = e;
