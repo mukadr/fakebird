@@ -1,0 +1,859 @@
+--- select id, dateadd(year, 1, d), dateadd(year, -1, ts), dateadd(1 year to t), dateadd(year, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select id, datediff(year, d, date '2025-03-01'), datediff(year, ts, timestamp '2024-03-01 00:00:00'), datediff(year from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select id, dateadd(month, 1, d), dateadd(month, -1, ts), dateadd(1 month to t), dateadd(month, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select id, datediff(month, d, date '2025-03-01'), datediff(month, ts, timestamp '2024-03-01 00:00:00'), datediff(month from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select id, dateadd(week, 1, d), dateadd(week, -1, ts), dateadd(1 week to t), dateadd(week, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select id, datediff(week, d, date '2025-03-01'), datediff(week, ts, timestamp '2024-03-01 00:00:00'), datediff(week from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select id, dateadd(day, 1, d), dateadd(day, -1, ts), dateadd(1 day to t), dateadd(day, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select id, datediff(day, d, date '2025-03-01'), datediff(day, ts, timestamp '2024-03-01 00:00:00'), datediff(day from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select id, dateadd(hour, 1, d), dateadd(hour, -1, ts), dateadd(1 hour to t), dateadd(hour, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select id, datediff(hour, d, date '2025-03-01'), datediff(hour, ts, timestamp '2024-03-01 00:00:00'), datediff(hour from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+1 | 8784 | 11 | -12 | 
+2 | 17743440 | 17734680 | 1 | 
+3 | -69905952 | -69914735 | -22 | 
+4 | 1095768 | 210384 | -11 | 
+5 | NULL | NULL | NULL | 
+affected 0
+--- select id, dateadd(minute, 1, d), dateadd(minute, -1, ts), dateadd(1 minute to t), dateadd(minute, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select id, datediff(minute, d, date '2025-03-01'), datediff(minute, ts, timestamp '2024-03-01 00:00:00'), datediff(minute from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+1 | 527040 | 646 | -732 | 
+2 | 1064606400 | 1064080800 | 62 | 
+3 | -4194357120 | -4194884159 | -1377 | 
+4 | 65746080 | 12623040 | -658 | 
+5 | NULL | NULL | NULL | 
+affected 0
+--- select id, dateadd(second, 1, d), dateadd(second, -1, ts), dateadd(1 second to t), dateadd(second, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select id, datediff(second, d, date '2025-03-01'), datediff(second, ts, timestamp '2024-03-01 00:00:00'), datediff(second from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+1 | 31622400 | 38745 | -43932 | 
+2 | 63876384000 | 63844848000 | 3723 | 
+3 | -251661427200 | -251693049599 | -82676 | 
+4 | 3944764800 | 757382400 | -39477 | 
+5 | NULL | NULL | NULL | 
+affected 0
+--- select id, dateadd(millisecond, 1, d), dateadd(millisecond, -1, ts), dateadd(1 millisecond to t), dateadd(millisecond, 1, ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select id, datediff(millisecond, d, date '2025-03-01'), datediff(millisecond, ts, timestamp '2024-03-01 00:00:00'), datediff(millisecond from t to time '01:02:03') from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+DATEDIFF:DECIMAL (8,8,1,True,,DATEDIFF,False,False)
+DATEDIFF:DECIMAL (8,8,1,True,,DATEDIFF,False,False)
+DATEDIFF:DECIMAL (8,8,1,True,,DATEDIFF,False,False)
+1 | 31622400000 | 38744876.6 | -43932123.4 | 
+2 | 63876384000000 | 63844848000000 | 3723000 | 
+3 | -251661427200000 | -251693049599999.9 | -82676999.9 | 
+4 | 3944764800000 | 757382399999.9 | -39477000 | 
+5 | NULL | NULL | NULL | 
+affected 0
+--- select dateadd(year, 1, time '10:00:00') from rdb$database
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select dateadd(month, 1, time '10:00:00') from rdb$database
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select dateadd(day, 1, time '10:00:00') from rdb$database
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+ERROR 335544606 335544951 'DATEADD' '' 42000
+expression evaluation not supported
+Only HOUR, MINUTE, SECOND and MILLISECOND can be added to TIME values in DATEADD
+--- select dateadd(hour, 1, date '2024-01-01'), datediff(hour, date '2024-01-01', date '2024-01-02') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+2024-01-01 00:00:00.0000 | 24 | 
+affected 0
+--- select dateadd(minute, 1, date '2024-01-01'), datediff(minute, date '2024-01-01', date '2024-01-02') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+2024-01-01 00:00:00.0000 | 1440 | 
+affected 0
+--- select dateadd(second, 1, date '2024-01-01'), datediff(second, date '2024-01-01', date '2024-01-02') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+2024-01-01 00:00:00.0000 | 86400 | 
+affected 0
+--- select dateadd(millisecond, 1, date '2024-01-01'), datediff(millisecond, date '2024-01-01', date '2024-01-02') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+2024-01-01 00:00:00.0000 | 86400000 | 
+affected 0
+--- select dateadd(month, 0, date '2024-01-31'), dateadd(day, 0, timestamp '2024-01-31 10:00:00'), dateadd(second, 0, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2024-01-31 00:00:00.0000 | 2024-01-31 10:00:00.0000 | 23:59:59.0000 | 
+affected 0
+--- select dateadd(month, 1, date '2024-01-31'), dateadd(day, 1, timestamp '2024-01-31 10:00:00'), dateadd(second, 1, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2024-02-29 00:00:00.0000 | 2024-02-01 10:00:00.0000 | 00:00:00.0000 | 
+affected 0
+--- select dateadd(month, -1, date '2024-01-31'), dateadd(day, -1, timestamp '2024-01-31 10:00:00'), dateadd(second, -1, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2023-12-31 00:00:00.0000 | 2024-01-30 10:00:00.0000 | 23:59:58.0000 | 
+affected 0
+--- select dateadd(month, 12, date '2024-01-31'), dateadd(day, 12, timestamp '2024-01-31 10:00:00'), dateadd(second, 12, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2025-01-31 00:00:00.0000 | 2024-02-12 10:00:00.0000 | 00:00:11.0000 | 
+affected 0
+--- select dateadd(month, 13, date '2024-01-31'), dateadd(day, 13, timestamp '2024-01-31 10:00:00'), dateadd(second, 13, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2025-02-28 00:00:00.0000 | 2024-02-13 10:00:00.0000 | 00:00:12.0000 | 
+affected 0
+--- select dateadd(month, 2147483647, date '2024-01-31'), dateadd(day, 2147483647, timestamp '2024-01-31 10:00:00'), dateadd(second, 2147483647, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select dateadd(month, -2147483648, date '2024-01-31'), dateadd(day, -2147483648, timestamp '2024-01-31 10:00:00'), dateadd(second, -2147483648, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select dateadd(month, 1.5, date '2024-01-31'), dateadd(day, 1.5, timestamp '2024-01-31 10:00:00'), dateadd(second, 1.5, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2024-03-31 00:00:00.0000 | 2024-02-02 10:00:00.0000 | 00:00:01.0000 | 
+affected 0
+--- select dateadd(month, -1.5, date '2024-01-31'), dateadd(day, -1.5, timestamp '2024-01-31 10:00:00'), dateadd(second, -1.5, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2023-11-30 00:00:00.0000 | 2024-01-29 10:00:00.0000 | 23:59:57.0000 | 
+affected 0
+--- select dateadd(month, 0.4, date '2024-01-31'), dateadd(day, 0.4, timestamp '2024-01-31 10:00:00'), dateadd(second, 0.4, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2024-01-31 00:00:00.0000 | 2024-01-31 10:00:00.0000 | 23:59:59.0000 | 
+affected 0
+--- select dateadd(month, null, date '2024-01-31'), dateadd(day, null, timestamp '2024-01-31 10:00:00'), dateadd(second, null, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,True,,DATEADD,False,False)
+DATEADD:TIME (4,,,True,,DATEADD,False,False)
+NULL | NULL | NULL | 
+affected 0
+--- select dateadd(month, 2.5e0, date '2024-01-31'), dateadd(day, 2.5e0, timestamp '2024-01-31 10:00:00'), dateadd(second, 2.5e0, time '23:59:59') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:TIME (4,,,False,,DATEADD,False,False)
+2024-04-30 00:00:00.0000 | 2024-02-03 10:00:00.0000 | 00:00:02.0000 | 
+affected 0
+--- select id, extract(year from d), extract(year from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 2024 | 2024 | 
+2 | 1 | 1 | 
+3 | 9999 | 9999 | 
+4 | 1900 | 2000 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(year from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(month from d), extract(month from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 2 | 2 | 
+2 | 1 | 1 | 
+3 | 12 | 12 | 
+4 | 2 | 3 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(month from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(day from d), extract(day from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 29 | 29 | 
+2 | 1 | 1 | 
+3 | 31 | 31 | 
+4 | 28 | 1 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(day from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(hour from d), extract(hour from ts) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(hour from t) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 13 | 
+2 | 0 | 
+3 | 23 | 
+4 | 12 | 
+5 | NULL | 
+affected 0
+--- select id, extract(minute from d), extract(minute from ts) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(minute from t) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 14 | 
+2 | 0 | 
+3 | 59 | 
+4 | 0 | 
+5 | NULL | 
+affected 0
+--- select id, extract(second from d), extract(second from ts) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(second from t) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:DECIMAL (4,4,4,True,,EXTRACT,False,False)
+1 | 15.1234 | 
+2 | 0 | 
+3 | 59.9999 | 
+4 | 0 | 
+5 | NULL | 
+affected 0
+--- select id, extract(millisecond from d), extract(millisecond from ts) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(millisecond from t) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:DECIMAL (4,4,1,True,,EXTRACT,False,False)
+1 | 123.4 | 
+2 | 0 | 
+3 | 999.9 | 
+4 | 0 | 
+5 | NULL | 
+affected 0
+--- select id, extract(weekday from d), extract(weekday from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 4 | 4 | 
+2 | 1 | 1 | 
+3 | 5 | 5 | 
+4 | 3 | 3 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(weekday from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(yearday from d), extract(yearday from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 59 | 59 | 
+2 | 0 | 0 | 
+3 | 364 | 364 | 
+4 | 58 | 60 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(yearday from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(week from d), extract(week from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 9 | 9 | 
+2 | 1 | 1 | 
+3 | 52 | 52 | 
+4 | 9 | 9 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(week from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select id, extract(quarter from d), extract(quarter from ts) from dtt order by id
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,True,,EXTRACT,False,False)
+1 | 1 | 1 | 
+2 | 1 | 1 | 
+3 | 4 | 4 | 
+4 | 1 | 1 | 
+5 | NULL | NULL | 
+affected 0
+--- select id, extract(quarter from t) from dtt order by id
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(week from date '2024-01-01'), extract(weekday from date '2024-01-01'), extract(yearday from date '2024-01-01'), extract(quarter from date '2024-01-01') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1 | 1 | 0 | 1 | 
+affected 0
+--- select extract(week from date '2024-12-30'), extract(weekday from date '2024-12-30'), extract(yearday from date '2024-12-30'), extract(quarter from date '2024-12-30') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1 | 1 | 364 | 4 | 
+affected 0
+--- select extract(week from date '2024-12-31'), extract(weekday from date '2024-12-31'), extract(yearday from date '2024-12-31'), extract(quarter from date '2024-12-31') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1 | 2 | 365 | 4 | 
+affected 0
+--- select extract(week from date '2021-01-03'), extract(weekday from date '2021-01-03'), extract(yearday from date '2021-01-03'), extract(quarter from date '2021-01-03') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+53 | 0 | 2 | 1 | 
+affected 0
+--- select extract(week from date '2021-01-04'), extract(weekday from date '2021-01-04'), extract(yearday from date '2021-01-04'), extract(quarter from date '2021-01-04') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+1 | 1 | 3 | 1 | 
+affected 0
+--- select extract(week from date '2020-12-31'), extract(weekday from date '2020-12-31'), extract(yearday from date '2020-12-31'), extract(quarter from date '2020-12-31') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+53 | 4 | 365 | 4 | 
+affected 0
+--- select extract(week from date '2027-01-01'), extract(weekday from date '2027-01-01'), extract(yearday from date '2027-01-01'), extract(quarter from date '2027-01-01') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+53 | 5 | 0 | 1 | 
+affected 0
+--- select extract(week from date '2026-12-28'), extract(weekday from date '2026-12-28'), extract(yearday from date '2026-12-28'), extract(quarter from date '2026-12-28') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+53 | 1 | 361 | 4 | 
+affected 0
+--- select extract(week from date '1999-01-01'), extract(weekday from date '1999-01-01'), extract(yearday from date '1999-01-01'), extract(quarter from date '1999-01-01') from rdb$database
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+53 | 5 | 0 | 1 | 
+affected 0
+--- select d + 1, d - 1, 1 + d, d + 1.9, d - 1.9, d + 0.5, d + 1e0, d + 2.9e0 from dtt order by id
+ADD:DATE (4,,,True,,ADD,False,False)
+SUBTRACT:DATE (4,,,True,,SUBTRACT,False,False)
+ADD:DATE (4,,,True,,ADD,False,False)
+ADD:DATE (4,,,True,,ADD,False,False)
+SUBTRACT:DATE (4,,,True,,SUBTRACT,False,False)
+ADD:DATE (4,,,True,,ADD,False,False)
+ADD:DATE (4,,,True,,ADD,False,False)
+ADD:DATE (4,,,True,,ADD,False,False)
+ERROR 335544810 '' 22008
+value exceeds the range for valid dates
+--- select ts + 1, ts - 1, ts + 0.5, ts - 0.25, ts + 1.000001, ts + 0.00001, ts + 1e-9 from dtt order by id
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+SUBTRACT:TIMESTAMP (8,,,True,,SUBTRACT,False,False)
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+SUBTRACT:TIMESTAMP (8,,,True,,SUBTRACT,False,False)
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select t + 1, t - 1, t + 3600, t - 86400, t + 0.5, t + 0.00005, t + 86400.5 from dtt order by id
+ADD:TIME (4,,,True,,ADD,False,False)
+SUBTRACT:TIME (4,,,True,,SUBTRACT,False,False)
+ADD:TIME (4,,,True,,ADD,False,False)
+SUBTRACT:TIME (4,,,True,,SUBTRACT,False,False)
+ADD:TIME (4,,,True,,ADD,False,False)
+ADD:TIME (4,,,True,,ADD,False,False)
+ADD:TIME (4,,,True,,ADD,False,False)
+13:14:16.1234 | 13:14:14.1234 | 14:14:15.1234 | 13:14:15.1234 | 13:14:15.6234 | 13:14:15.1235 | 13:14:15.6234 | 
+00:00:01.0000 | 23:59:59.0000 | 01:00:00.0000 | 00:00:00.0000 | 00:00:00.5000 | 00:00:00.0001 | 00:00:00.5000 | 
+00:00:00.9999 | 23:59:58.9999 | 00:59:59.9999 | 23:59:59.9999 | 00:00:00.4999 | 00:00:00.0000 | 00:00:00.4999 | 
+12:00:01.0000 | 11:59:59.0000 | 13:00:00.0000 | 12:00:00.0000 | 12:00:00.5000 | 12:00:00.0001 | 12:00:00.5000 | 
+NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select d - date '2024-01-01', ts - timestamp '2024-01-01 00:00:00', t - time '00:00:00' from dtt order by id
+SUBTRACT:INTEGER (4,,,True,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (4,4,4,True,,SUBTRACT,False,False)
+59 | 59.551563928 | 47655.1234 | 
+-738885 | -738885 | 0 | 
+2913173 | 2913173.999999999 | 86399.9999 | 
+-45232 | -8705.999999999 | 43200 | 
+NULL | NULL | NULL | 
+affected 0
+--- select date '2024-03-01' - date '2024-02-01', timestamp '2024-01-01 12:00:00' - timestamp '2024-01-01 00:00:00', time '00:00:00' - time '23:59:59' from rdb$database
+SUBTRACT:INTEGER (4,,,False,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (8,8,9,False,,SUBTRACT,False,False)
+SUBTRACT:NUMERIC (4,4,4,False,,SUBTRACT,False,False)
+29 | 0.5 | -86399 | 
+affected 0
+--- select date '2024-01-01' + time '10:11:12', time '23:59:59.9999' + date '2024-12-31' from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+2024-01-01 10:11:12.0000 | 2024-12-31 23:59:59.9999 | 
+affected 0
+--- select d + t from dtt order by id
+ADD:TIMESTAMP (8,,,True,,ADD,False,False)
+2024-02-29 13:14:15.1234 | 
+0001-01-01 00:00:00.0000 | 
+9999-12-31 23:59:59.9999 | 
+1900-02-28 12:00:00.0000 | 
+NULL | 
+affected 0
+--- select date '9999-12-31' + 1 from rdb$database
+ADD:DATE (4,,,False,,ADD,False,False)
+ERROR 335544810 '' 22008
+value exceeds the range for valid dates
+--- select date '0001-01-01' - 1 from rdb$database
+SUBTRACT:DATE (4,,,False,,SUBTRACT,False,False)
+ERROR 335544810 '' 22008
+value exceeds the range for valid dates
+--- select timestamp '9999-12-31 23:59:59.9999' + 0.0001 from rdb$database
+ADD:TIMESTAMP (8,,,False,,ADD,False,False)
+ERROR 335544913 '' 22008
+value exceeds the range for valid timestamps
+--- select dateadd(year, 1, date '9999-01-01') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+ERROR 335544810 '' 22008
+value exceeds the range for valid dates
+--- select dateadd(day, -1, date '0001-01-01') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+ERROR 335544810 '' 22008
+value exceeds the range for valid dates
+--- select dateadd(year, 1, date '2024-02-29'), dateadd(year, 4, date '2024-02-29'), dateadd(month, 1, date '2024-01-31'), dateadd(month, -1, date '2024-03-31') from rdb$database
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+2025-02-28 00:00:00.0000 | 2028-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 
+affected 0
+--- select dateadd(month, 1, timestamp '2024-01-31 23:59:59.9999'), dateadd(month, 12, date '2023-02-28') from rdb$database
+DATEADD:TIMESTAMP (8,,,False,,DATEADD,False,False)
+DATEADD:DATE (4,,,False,,DATEADD,False,False)
+2024-02-29 23:59:59.9999 | 2024-02-28 00:00:00.0000 | 
+affected 0
+--- select datediff(day, date '2024-01-01', date '2023-12-31'), datediff(year, date '2023-12-31', date '2024-01-01'), datediff(month, date '2024-01-31', date '2024-02-01') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+-1 | 1 | 1 | 
+affected 0
+--- select datediff(year, timestamp '2023-06-15 10:00:00', timestamp '2024-06-15 09:59:59'), datediff(hour, timestamp '2024-01-01 10:59:59', timestamp '2024-01-01 11:00:00') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+1 | 1 | 
+affected 0
+--- select datediff(millisecond, timestamp '2024-01-01 00:00:00', timestamp '2024-01-01 00:00:00.0015'), datediff(second, time '00:00:00.9', time '00:00:01.1') from rdb$database
+DATEDIFF:DECIMAL (8,8,1,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+1.5 | 1 | 
+affected 0
+--- select datediff(week, date '2024-01-01', date '2024-01-14'), datediff(week, date '2024-01-07', date '2024-01-08') from rdb$database
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+DATEDIFF:BIGINT (8,,,False,,DATEDIFF,False,False)
+1 | 0 | 
+affected 0
+--- select datediff(day, d, ts) from dtt order by id
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+0 | 
+0 | 
+0 | 
+36526 | 
+NULL | 
+affected 0
+--- select datediff(day, t, ts) from dtt order by id
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544956 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of TIME-<value> in DATEDIFF cannot be expressed in YEAR, MONTH, DAY or WEEK
+--- select datediff(hour, d, t) from dtt where id = 1
+DATEDIFF:BIGINT (8,,,True,,DATEDIFF,False,False)
+ERROR 335544606 335544958 'DATEDIFF' '' 42000
+expression evaluation not supported
+The result of DATE-TIME or TIME-DATE in DATEDIFF cannot be expressed in HOUR, MINUTE, SECOND and MILLISECOND
+--- select dateadd(hour, 1, d) from dtt where id = 1
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+2024-02-29 00:00:00.0000 | 
+affected 0
+--- select dateadd(1 weekday to d) from dtt where id = 1
+DATEADD:DATE (4,,,True,,DATEADD,False,False)
+ERROR 335544606 335544953 'WEEKDAY' 'DATEADD' '' 42000
+expression evaluation not supported
+Invalid part WEEKDAY to be added to a DATE/TIME/TIMESTAMP value in DATEADD
+--- select extract(hour from d) from dtt where id = 1
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(year from t) from dtt where id = 1
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select extract(year from 'x') from rdb$database
+ERROR 335544569 335544436 #-105 335544789 '' 42000
+Dynamic SQL Error
+SQL error code = -105
+Specified EXTRACT part does not exist in input datatype
+--- select cast(d as timestamp), cast(ts as date), cast(ts as time), cast(t as timestamp) = current_date + t from dtt order by id
+CAST:TIMESTAMP (8,,,True,,CAST,False,False)
+CAST:DATE (4,,,True,,CAST,False,False)
+CAST:TIME (4,,,True,,CAST,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 13:14:15.1234 | True | 
+0001-01-01 00:00:00.0000 | 0001-01-01 00:00:00.0000 | 00:00:00.0000 | True | 
+9999-12-31 00:00:00.0000 | 9999-12-31 00:00:00.0000 | 23:59:59.9999 | True | 
+1900-02-28 00:00:00.0000 | 2000-03-01 00:00:00.0000 | 00:00:00.0001 | True | 
+NULL | NULL | NULL | NULL | 
+affected 0
+--- select cast(d as varchar(10)), cast(t as varchar(13)), cast(ts as varchar(24)), cast(d as char(10)), cast(ts as char(30)) from dtt order by id
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+CAST:VARCHAR (13,,,True,,CAST,False,False)
+CAST:VARCHAR (24,,,True,,CAST,False,False)
+CAST:CHAR (10,,,True,,CAST,False,False)
+CAST:CHAR (30,,,True,,CAST,False,False)
+2024-02-29 | 13:14:15.1234 | 2024-02-29 13:14:15.1234 | 2024-02-29 | 2024-02-29 13:14:15.1234       | 
+0001-01-01 | 00:00:00.0000 | 0001-01-01 00:00:00.0000 | 0001-01-01 | 0001-01-01 00:00:00.0000       | 
+9999-12-31 | 23:59:59.9999 | 9999-12-31 23:59:59.9999 | 9999-12-31 | 9999-12-31 23:59:59.9999       | 
+1900-02-28 | 12:00:00.0000 | 2000-03-01 00:00:00.0001 | 1900-02-28 | 2000-03-01 00:00:00.0001       | 
+NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select cast(d as varchar(9)) from dtt where id = 1
+CAST:VARCHAR (9,,,True,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #9 #10 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 9, actual 10
+--- select cast(ts as varchar(23)) from dtt where id = 1
+CAST:VARCHAR (23,,,True,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #23 #24 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 23, actual 24
+--- select cast(t as varchar(12)) from dtt where id = 1
+CAST:VARCHAR (12,,,True,,CAST,False,False)
+ERROR 335544321 335544914 335545033 #12 #13 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 12, actual 13
+--- select d || '', t || '', ts || '' from dtt order by id
+CONCATENATION:VARCHAR (10,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (13,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (25,,,True,,CONCATENATION,False,False)
+2024-02-29 | 13:14:15.1234 | 2024-02-29 13:14:15.1234 | 
+0001-01-01 | 00:00:00.0000 | 0001-01-01 00:00:00.0000 | 
+9999-12-31 | 23:59:59.9999 | 9999-12-31 23:59:59.9999 | 
+1900-02-28 | 12:00:00.0000 | 2000-03-01 00:00:00.0001 | 
+NULL | NULL | NULL | 
+affected 0
+--- select d = '2024-02-29', ts > '2024-02-29', t < '14:00', d between '2024-01-01' and '2024-12-31', ts = d from dtt order by id
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | True | True | False | 
+False | False | True | False | True | 
+False | True | False | False | False | 
+False | False | True | False | False | 
+NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select d = cast(ts as date), d < ts, ts > d from dtt order by id
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+True | True | True | 
+True | False | False | 
+True | True | True | 
+False | True | True | 
+NULL | NULL | NULL | 
+affected 0
+--- select max(d), min(ts), max(t), count(distinct d) from dtt
+MAX:DATE (4,,,True,,MAX,False,False)
+MIN:TIMESTAMP (8,,,True,,MIN,False,False)
+MAX:TIME (4,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+9999-12-31 00:00:00.0000 | 0001-01-01 00:00:00.0000 | 23:59:59.9999 | 4 | 
+affected 0
+--- select id from dtt order by t desc nulls last
+ID:INTEGER (4,,,False,DTT,ID,True,False)
+3 | 
+1 | 
+4 | 
+2 | 
+5 | 
+affected 0
+--- select d - ts from dtt where id = 1
+SUBTRACT:NUMERIC (8,8,9,True,,SUBTRACT,False,False)
+ERROR 335544606 335544937 '' 42000
+expression evaluation not supported
+Invalid data type in DATE/TIME/TIMESTAMP addition or subtraction in add_datettime()
+--- select d * 2 from dtt
+ERROR 335544569 335544606 336397251 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for multiplication in dialect 3
+--- select ts / 2 from dtt
+ERROR 335544569 335544606 336397254 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for division in dialect 3
+--- select -d from dtt
+ERROR 335544569 335544606 336397256 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for negation (minus operator)
+--- select d + d from dtt
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select t + t from dtt
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select ts + t from dtt
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select date '2024-01-01' + timestamp '2024-01-01 00:00:00' from rdb$database
+ERROR 335544569 335544606 336397245 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Adding two DATE values or two TIME values is not allowed
+--- select time '10:00' - date '2024-01-01' from rdb$database
+ERROR 335544569 335544606 336397244 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+Invalid data type for subtraction involving DATE, TIME or TIMESTAMP types
+--- select 1 - date '2024-01-01' from rdb$database
+ERROR 335544569 335544606 336397246 '' 42000
+Dynamic SQL Error
+expression evaluation not supported
+DATE value cannot be subtracted from the provided data type
+--- select date '2024-02-30' from rdb$database
+ERROR 335544334 '2024-02-30' '' 22018
+conversion error from string "2024-02-30"
+--- select date '2023-02-29' from rdb$database
+ERROR 335544334 '2023-02-29' '' 22018
+conversion error from string "2023-02-29"
+--- select date '2024-13-01' from rdb$database
+ERROR 335544334 '2024-13-01' '' 22018
+conversion error from string "2024-13-01"
+--- select date '24-01-01', date '1/2/2024', date '01.02.2024', date '2024.02.01', date '1-JAN-2024', date 'JAN 1, 2024' from rdb$database
+ERROR 335544334 '24-01-01' '' 22018
+conversion error from string "24-01-01"
+--- select date '2024-1-1', date '2024-01-01  ', date '  2024-01-01', timestamp '2024-01-01 1:2:3.4', time '1:2', time '1:02:03.12345' from rdb$database
+ERROR 335544334 '1:02:03.12345' '' 22018
+conversion error from string "1:02:03.12345"
+--- select time '24:00:00' from rdb$database
+ERROR 335544334 '24:00:00' '' 22018
+conversion error from string "24:00:00"
+--- select time '23:60:00' from rdb$database
+ERROR 335544334 '23:60:00' '' 22018
+conversion error from string "23:60:00"
+--- select timestamp '2024-01-01T10:00:00' from rdb$database
+ERROR 335545214 'T10:00:00' '' 22009
+Invalid time zone region: T10:00:00
+--- select timestamp '2024-01-01 10:00:00.12345' from rdb$database
+ERROR 335544334 '2024-01-01 10:00:00.12345' '' 22018
+conversion error from string "2024-01-01 10:00:00.12345"
+--- select date 'today' from rdb$database
+ERROR 335544334 'today' '' 22018
+conversion error from string "today"
+--- select date '2024-01-01 10:00:00' from rdb$database
+ERROR 335544334 '2024-01-01 10:00:00' '' 22018
+conversion error from string "2024-01-01 10:00:00"
+--- select cast('2024-02-29 13:14:15.1234' as date), cast('13:14:15' as time), cast('2024-02-29' as timestamp) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+ERROR 335544334 '2024-02-29 13:14:15.1234' '' 22018
+conversion error from string "2024-02-29 13:14:15.1234"
+--- select cast('29.02.2024' as date), cast('02/29/2024' as date), cast('29-FEB-2024' as date), cast('FEBRUARY 29 2024' as date), cast('2024-feb-29' as date) from rdb$database
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:DATE (4,,,False,,CAST,False,False)
+CAST:DATE (4,,,False,,CAST,False,False)
+2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 
+affected 0
+--- select cast('2024-02-29 25:00' as timestamp) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+ERROR 335544334 '2024-02-29 25:00' '' 22018
+conversion error from string "2024-02-29 25:00"
+--- select cast('2024-02-29 10:00:00 extra' as timestamp) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+ERROR 335545214 'extra' '' 22009
+Invalid time zone region: extra
+--- select cast('10:00:00.' as time), cast('10:00:00.5' as time), cast('10' as time) from rdb$database
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:TIME (4,,,False,,CAST,False,False)
+CAST:TIME (4,,,False,,CAST,False,False)
+ERROR 335544334 '10' '' 22018
+conversion error from string "10"
+--- select cast(current_date as varchar(10)) = cast(cast('today' as date) as varchar(10)), cast('tomorrow' as date) - cast('yesterday' as date), current_date - cast('now' as date) from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+SUBTRACT:INTEGER (4,,,False,,SUBTRACT,False,False)
+SUBTRACT:INTEGER (4,,,False,,SUBTRACT,False,False)
+True | 2 | 0 | 
+affected 0
+--- select extract(year from current_date) = extract(year from localtimestamp), current_time is not null, char_length(cast(localtime as varchar(20))) from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+True | True | 13 | 
+affected 0
+--- select first_day(of month from date '2024-02-15'), last_day(of month from date '2024-02-15'), first_day(of year from date '2024-02-15'), last_day(of year from timestamp '2024-02-15 10:00:00') from rdb$database
+FIRST_DAY:DATE (4,,,False,,FIRST_DAY,False,False)
+LAST_DAY:DATE (4,,,False,,LAST_DAY,False,False)
+FIRST_DAY:DATE (4,,,False,,FIRST_DAY,False,False)
+LAST_DAY:TIMESTAMP (8,,,False,,LAST_DAY,False,False)
+2024-02-01 00:00:00.0000 | 2024-02-29 00:00:00.0000 | 2024-01-01 00:00:00.0000 | 2024-12-31 10:00:00.0000 | 
+affected 0
+--- select first_day(of week from date '2024-02-15'), last_day(of week from date '2024-02-15'), first_day(of quarter from date '2024-05-15'), last_day(of quarter from date '2024-05-15') from rdb$database
+FIRST_DAY:DATE (4,,,False,,FIRST_DAY,False,False)
+LAST_DAY:DATE (4,,,False,,LAST_DAY,False,False)
+FIRST_DAY:DATE (4,,,False,,FIRST_DAY,False,False)
+LAST_DAY:DATE (4,,,False,,LAST_DAY,False,False)
+2024-02-11 00:00:00.0000 | 2024-02-17 00:00:00.0000 | 2024-04-01 00:00:00.0000 | 2024-06-30 00:00:00.0000 | 
+affected 0

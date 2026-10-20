@@ -624,6 +624,18 @@ public sealed partial class Parser
                 ExpectOp(")");
                 return new FuncExpr("EXTRACT", [part, e]) { Pos = pos };
             }
+            case "FIRST_DAY" or "LAST_DAY" when PeekTok().IsOp("("):
+            {
+                var fn = Advance().Text;
+                ExpectOp("(");
+                Expect("OF");
+                var part = new KeywordArg(AnyIdent()) { Pos = pos };
+                if (part.Keyword is not ("YEAR" or "QUARTER" or "MONTH" or "WEEK")) throw Unexpected();
+                Expect("FROM");
+                var e = Expression();
+                ExpectOp(")");
+                return new FuncExpr(fn, [part, e]) { Pos = pos };
+            }
             case "SUBSTRING":
             {
                 _i++;

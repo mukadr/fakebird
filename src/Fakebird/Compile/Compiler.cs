@@ -251,6 +251,14 @@ public sealed partial class Compiler
                         if (u.Operand is ParamExpr && expected == null)
                             throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(FbMessages.dsql_invalid_type_neg).Build();
                         var x = Bind(u.Operand, s, expected);
+                        // NegateNode::make: NULL negates to INTEGER; strings, blobs and other non-numbers are rejected
+                        if (x.Type.Kind == TypeKind.Null) return new ConstNode(Value.Null, SqlType.Integer) { Name = "CONSTANT" };
+                        if (x.Type.IsString)
+                            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(FbMessages.dsql_nostring_neg_dial3).Build();
+                        if (x.Type.Kind == TypeKind.Blob)
+                            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_no_blob_array).Build();
+                        if (!x.Type.IsNumeric)
+                            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_expression_eval_err).Gds(FbMessages.dsql_invalid_type_neg).Build();
                         var neg = new NegNode(x) { Type = x.Type, Name = NegName(u), NotNull = x.NotNull, EngineType = x.EngineType };
                         if (x is ConstNode { Value.IsNull: false } k)
                         {

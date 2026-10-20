@@ -166,152 +166,12 @@ public static class Builtins
 
     // ---------------------------------------------------------------- date parts
 
-    public static Value Extract(string part, in Value v)
-    {
-        if (v.IsNull) return v;
-        long day = 0, time = 0;
-        bool hasDate = true, hasTime = true;
-        switch (v.Tag)
-        {
-            case VTag.Date: day = v.L; hasTime = false; break;
-            case VTag.Time: time = v.L; hasDate = false; break;
-            case VTag.Timestamp: (day, time) = Conv.SplitTimestamp(v.L); break;
-            case VTag.String:
-                return Extract(part, Conv.Cast(v, SqlType.Timestamp));
-            default: throw Cvt.ConversionError(v);
-        }
-        DateOnly d = hasDate ? Conv.DayToDate(day) : default;
-        switch (part)
-        {
-            case "YEAR": Need(hasDate); return Value.Int(d.Year);
-            case "MONTH": Need(hasDate); return Value.Int(d.Month);
-            case "DAY": Need(hasDate); return Value.Int(d.Day);
-            case "WEEKDAY": Need(hasDate); return Value.Int((int)d.DayOfWeek);
-            case "YEARDAY": Need(hasDate); return Value.Int(d.DayOfYear - 1);
-            case "WEEK": Need(hasDate); return Value.Int(ISOWeek.GetWeekOfYear(d.ToDateTime(TimeOnly.MinValue)));
-            case "HOUR": Need(hasTime); return Value.Int(time / (3600 * Value.TicksPerSecond));
-            case "MINUTE": Need(hasTime); return Value.Int(time / (60 * Value.TicksPerSecond) % 60);
-            case "SECOND": Need(hasTime); return Value.Int(time % (60 * Value.TicksPerSecond), 4);
-            case "MILLISECOND": Need(hasTime); return Value.Int(time % Value.TicksPerSecond, 1);
-        }
-        throw Err.Unsupported("EXTRACT(" + part + ")");
-
-        static void Need(bool ok)
-        {
-            if (!ok) throw Err.Random("Specified EXTRACT part does not exist in input datatype");
-        }
-    }
-
     public static SqlType ExtractType(string part) => part switch
     {
         "SECOND" => SqlType.ExactExpr(TypeKind.Integer, 4),
         "MILLISECOND" => SqlType.ExactExpr(TypeKind.Integer, 1),
         _ => SqlType.SmallInt,
     };
-
-    static Value DateAdd(string part, long n, in Value v)
-    {
-        switch (v.Tag)
-        {
-            case VTag.Date:
-            {
-                var d = Conv.DayToDate(v.L);
-                d = part switch
-                {
-                    "YEAR" => d.AddYears((int)n),
-                    "MONTH" => d.AddMonths((int)n),
-                    "WEEK" => d.AddDays((int)n * 7),
-                    "DAY" => d.AddDays((int)n),
-                    "WEEKDAY" or "YEARDAY" => d.AddDays((int)n),
-                    _ => throw Err.Random("Specified DATEADD part does not exist in input datatype"),
-                };
-                return Value.Date(Conv.DateToDay(d));
-            }
-            case VTag.Time:
-            {
-                long ticks = part switch
-                {
-                    "HOUR" => n * 3600 * Value.TicksPerSecond,
-                    "MINUTE" => n * 60 * Value.TicksPerSecond,
-                    "SECOND" => n * Value.TicksPerSecond,
-                    "MILLISECOND" => n * 10,
-                    _ => throw Err.Random("Specified DATEADD part does not exist in input datatype"),
-                };
-                var t = (v.L + ticks) % Value.TicksPerDay;
-                if (t < 0) t += Value.TicksPerDay;
-                return Value.Time(t);
-            }
-            case VTag.Timestamp:
-            {
-                switch (part)
-                {
-                    case "YEAR":
-                    case "MONTH":
-                    {
-                        var (day, time) = Conv.SplitTimestamp(v.L);
-                        var d = Conv.DayToDate(day);
-                        d = part == "YEAR" ? d.AddYears((int)n) : d.AddMonths((int)n);
-                        return Value.Timestamp(Conv.DateToDay(d) * Value.TicksPerDay + time);
-                    }
-                    case "WEEK": return Value.Timestamp(v.L + n * 7 * Value.TicksPerDay);
-                    case "DAY":
-                    case "WEEKDAY":
-                    case "YEARDAY": return Value.Timestamp(v.L + n * Value.TicksPerDay);
-                    case "HOUR": return Value.Timestamp(v.L + n * 3600 * Value.TicksPerSecond);
-                    case "MINUTE": return Value.Timestamp(v.L + n * 60 * Value.TicksPerSecond);
-                    case "SECOND": return Value.Timestamp(v.L + n * Value.TicksPerSecond);
-                    case "MILLISECOND": return Value.Timestamp(v.L + n * 10);
-                }
-                break;
-            }
-            case VTag.String:
-                return DateAdd(part, n, Conv.Cast(v, SqlType.Timestamp));
-        }
-        throw Cvt.ConversionError(v);
-    }
-
-    static Value DateDiff(string part, Value a, Value b)
-    {
-        if (a.Tag == VTag.String) a = Conv.Cast(a, b.Tag == VTag.Date ? SqlType.Date : b.Tag == VTag.Time ? SqlType.Time : SqlType.Timestamp);
-        if (b.Tag == VTag.String) b = Conv.Cast(b, a.Tag == VTag.Date ? SqlType.Date : a.Tag == VTag.Time ? SqlType.Time : SqlType.Timestamp);
-        long ta, tb;
-        if (a.Tag == VTag.Time || b.Tag == VTag.Time)
-        {
-            if (a.Tag != VTag.Time || b.Tag != VTag.Time) throw Cvt.ConversionError(a);
-            ta = a.L;
-            tb = b.L;
-        }
-        else
-        {
-            ta = a.Tag == VTag.Date ? a.L * Value.TicksPerDay : a.L;
-            tb = b.Tag == VTag.Date ? b.L * Value.TicksPerDay : b.L;
-        }
-        switch (part)
-        {
-            case "YEAR":
-            {
-                var da = Conv.DayToDate(Conv.SplitTimestamp(ta).day);
-                var db = Conv.DayToDate(Conv.SplitTimestamp(tb).day);
-                return Value.Int(db.Year - da.Year);
-            }
-            case "MONTH":
-            {
-                var da = Conv.DayToDate(Conv.SplitTimestamp(ta).day);
-                var db = Conv.DayToDate(Conv.SplitTimestamp(tb).day);
-                return Value.Int((db.Year - da.Year) * 12L + db.Month - da.Month);
-            }
-            case "WEEK": return Value.Int((Conv.SplitTimestamp(tb).day - Conv.SplitTimestamp(ta).day) / 7);
-            case "DAY":
-            case "WEEKDAY":
-            case "YEARDAY":
-                return Value.Int(Conv.SplitTimestamp(tb).day - Conv.SplitTimestamp(ta).day);
-            case "HOUR": return Value.Int(tb / (3600 * Value.TicksPerSecond) - ta / (3600 * Value.TicksPerSecond));
-            case "MINUTE": return Value.Int(tb / (60 * Value.TicksPerSecond) - ta / (60 * Value.TicksPerSecond));
-            case "SECOND": return Value.Int(tb / Value.TicksPerSecond - ta / Value.TicksPerSecond);
-            case "MILLISECOND": return Value.Int((tb - ta) / 10 * 10, 1);
-        }
-        throw Err.Unsupported("DATEDIFF part " + part);
-    }
 
     // ---------------------------------------------------------------- uuid
 
@@ -717,18 +577,29 @@ public static class Builtins
         }, (i, a) => SqlType.BigInt);
 
         // ---- date / time
-        Def("EXTRACT", 2, 2, a => ExtractType(((ConstNode)a[0]).Value.AsString), (c, a, f) =>
-            Extract(((ConstNode)a[0]).Value.AsString, a[1].Eval(c)), (i, a) => SqlType.Timestamp);
+        Def("EXTRACT", 2, 2, a =>
+        {
+            DateFuncs.CheckExtract(((ConstNode)a[0]).Value.AsString, a[1].Type);
+            return ExtractType(((ConstNode)a[0]).Value.AsString);
+        }, (c, a, f) => DateFuncs.Extract(((ConstNode)a[0]).Value.AsString, a[1].Eval(c)), (i, a) => SqlType.Timestamp);
+        Def("FIRST_DAY", 2, 2, a => a[1].Type.Kind == TypeKind.Timestamp ? SqlType.Timestamp : SqlType.Date, (c, a, f) =>
+        {
+            var v = a[1].Eval(c);
+            return v.IsNull ? v : DateFuncs.FirstLastDay(((ConstNode)a[0]).Value.AsString, false, v);
+        }, (i, a) => SqlType.Date);
+        Def("LAST_DAY", 2, 2, a => a[1].Type.Kind == TypeKind.Timestamp ? SqlType.Timestamp : SqlType.Date, (c, a, f) =>
+        {
+            var v = a[1].Eval(c);
+            return v.IsNull ? v : DateFuncs.FirstLastDay(((ConstNode)a[0]).Value.AsString, true, v);
+        }, (i, a) => SqlType.Date);
         Def("DATEADD", 3, 3, a => a[2].Type.IsDateTime ? a[2].Type : SqlType.Timestamp, (c, a, f) =>
         {
             var part = ((ConstNode)a[0]).Value.AsString;
             var n = a[1].Eval(c);
             var d = a[2].Eval(c);
             if (n.IsNull || d.IsNull) return Value.Null;
-            long amount;
-            if (part == "MILLISECOND" || part == "SECOND") amount = (long)Math.Truncate(Conv.ToDouble(n));
-            else amount = Conv.ToInt64(Conv.CastExact(n.Tag == VTag.Int ? n : Value.Int((long)Math.Truncate(Conv.ToDouble(n))), 0, TypeKind.BigInt));
-            return Coercion.ToType(DateAdd(part, amount, d), f.Type);
+            if (d.Tag == VTag.String) d = Conv.Cast(d, f.Type);
+            return DateFuncs.DateAdd(part, n, d);
         }, (i, a) => i == 1 ? SqlType.BigInt : SqlType.Timestamp);
         Def("DATEDIFF", 3, 3, a => ((ConstNode)a[0]).Value.AsString == "MILLISECOND"
             ? SqlType.ExactExpr(TypeKind.BigInt, 1) : SqlType.BigInt, (c, a, f) =>
@@ -737,7 +608,9 @@ public static class Builtins
             var x = a[1].Eval(c);
             var y = a[2].Eval(c);
             if (x.IsNull || y.IsNull) return Value.Null;
-            return DateDiff(part, x, y);
+            if (x.Tag == VTag.String) x = Conv.Cast(x, a[1].Type.IsDateTime ? a[1].Type : SqlType.Timestamp);
+            if (y.Tag == VTag.String) y = Conv.Cast(y, a[2].Type.IsDateTime ? a[2].Type : SqlType.Timestamp);
+            return DateFuncs.DateDiff(part, x, y);
         }, (i, a) => a[3 - i]?.Type.IsDateTime == true ? a[3 - i]!.Type : SqlType.Timestamp);
 
         // ---- uuid

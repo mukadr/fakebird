@@ -98,6 +98,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   accent insensitivity; lengths count code points; SIMILAR TO patterns are validated and translated like
   Firebird's (including `SUBSTRING ... SIMILAR`); character set introducers relabel the literal's bytes;
   OCTETS strings pad and trim with NUL and have no case.
+* **Dates and times**: DATEADD (amounts rounded, Firebird's month-end rule, TIME wrap-around),
+  DATEDIFF (calendar-field years/months, truncated time units, milliseconds with one decimal), EXTRACT
+  (ISO week, part/type checks when preparing), FIRST_DAY/LAST_DAY, date/time arithmetic with range
+  checks (`value exceeds the range for valid dates`) and Firebird's rounding of the numeric operand.
 * **Rounding** matches Firebird everywhere: casts and assignments round half away from zero on the
   first dropped digit (doubles with Firebird's epsilon), ROUND returns scaled integers even for doubles
   (`ROUND(1.005e0, 2)` is 1.01), TRUNC of doubles uses `modf`, divisions truncate.

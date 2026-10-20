@@ -203,14 +203,14 @@ public static class Arith
         {
             case VTag.Date when b.Tag == VTag.Time: return Value.Timestamp(a.L * Value.TicksPerDay + b.L);
             case VTag.Time when b.Tag == VTag.Date: return Value.Timestamp(b.L * Value.TicksPerDay + a.L);
-            case VTag.Date: return Value.Date(a.L + DaysOf(b));
-            case VTag.Timestamp: return Value.Timestamp(a.L + TicksOf(b));
+            case VTag.Date: return CheckedDate(a.L + DaysOf(b));
+            case VTag.Timestamp: return CheckedTimestamp(a.L + TicksOf(b));
             case VTag.Time: return Value.Time(WrapTime(a.L + SecondsTicks(b)));
         }
         switch (b.Tag)
         {
-            case VTag.Date: return Value.Date(b.L + DaysOf(a));
-            case VTag.Timestamp: return Value.Timestamp(b.L + TicksOf(a));
+            case VTag.Date: return CheckedDate(b.L + DaysOf(a));
+            case VTag.Timestamp: return CheckedTimestamp(b.L + TicksOf(a));
             case VTag.Time: return Value.Time(WrapTime(b.L + SecondsTicks(a)));
         }
         var x = Num(a);
@@ -226,26 +226,38 @@ public static class Arith
         if (v.Tag is not (VTag.Int or VTag.Double)) throw Cvt.ConversionError(v);
     }
 
+    static Value CheckedDate(long day)
+        => DateFuncs.ValidDay(day) ? Value.Date(day) : throw new StatusBuilder().Gds(FbMessages.date_range_exceeded).Build();
+
+    static Value CheckedTimestamp(long ts)
+        => DateFuncs.ValidDay(Conv.SplitTimestamp(ts).day) ? Value.Timestamp(ts) : throw new StatusBuilder().Gds(FbMessages.datetime_range_exceeded).Build();
+
+    /// <summary>addSqlDate: the number is a count of days (MOV_get_int64: rounded half away from zero).</summary>
     static long DaysOf(in Value v)
     {
         var n = Num(v);
         CheckNumeric(n);
-        return n.Tag == VTag.Int ? (n.Scale == 0 ? n.L : (long)Math.Truncate(Conv.ToDouble(n))) : (long)Math.Truncate(n.AsDouble);
+        var d = Conv.CastExact(n, 0, TypeKind.BigInt).L;
+        if (Math.Abs((decimal)d) > 3652058) throw new StatusBuilder().Gds(FbMessages.date_range_exceeded).Build();
+        return d;
     }
 
+    /// <summary>getDayFraction: days as a double, then llrint (round half to even) of the ticks.</summary>
     static long TicksOf(in Value v)
     {
         var n = Num(v);
         CheckNumeric(n);
-        if (n.Tag == VTag.Int && n.Scale == 0) return n.L * Value.TicksPerDay;
-        return (long)Math.Round(Conv.ToDouble(n) * Value.TicksPerDay);
+        var days = Conv.ToDouble(n);
+        if (Math.Abs(days) > 3652058) throw new StatusBuilder().Gds(FbMessages.date_range_exceeded).Build();
+        return (long)Math.Round(days * Value.TicksPerDay, MidpointRounding.ToEven);
     }
 
+    /// <summary>addSqlTime: the number is seconds (MOV_get_int64 at scale -4: rounded half away from zero).</summary>
     static long SecondsTicks(in Value v)
     {
         var n = Num(v);
         CheckNumeric(n);
-        return (long)Math.Round(Conv.ToDouble(n) * Value.TicksPerSecond);
+        return Conv.CastExact(n, 4, TypeKind.BigInt).L;
     }
 
     static long WrapTime(long t)
@@ -298,8 +310,8 @@ public static class Arith
                 throw Err.DateTimeOp();
             case VTag.Time when b.Tag == VTag.Time:
                 return Value.Int(a.L - b.L, 4);
-            case VTag.Date: return Value.Date(a.L - DaysOf(b));
-            case VTag.Timestamp: return Value.Timestamp(a.L - TicksOf(b));
+            case VTag.Date: return CheckedDate(a.L - DaysOf(b));
+            case VTag.Timestamp: return CheckedTimestamp(a.L - TicksOf(b));
             case VTag.Time: return Value.Time(WrapTime(a.L - SecondsTicks(b)));
         }
         var x = Num(a);
