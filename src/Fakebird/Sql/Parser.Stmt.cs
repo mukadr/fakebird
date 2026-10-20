@@ -65,6 +65,7 @@ public sealed partial class Parser
             }
             case "GRANT":
             case "REVOKE":
+                return SkipToEnd(t.Text);
             case "COMMENT":
                 return Comment();
             case "DECLARE":
