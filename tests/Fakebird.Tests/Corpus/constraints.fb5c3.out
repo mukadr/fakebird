@@ -1,0 +1,467 @@
+--- insert into pk1 values (1, 'a')
+affected 1
+--- insert into pk1 values (1, 'b')
+ERROR 335544665 'INTEG_2' 'PK1' 335545072 '("ID" = 1)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "PK1"
+Problematic key value is ("ID" = 1)
+--- insert into pk1 values (null, 'b')
+ERROR 335544347 '"PK1"."ID"' '*** null ***' '' 23000
+validation error for column "PK1"."ID", value "*** null ***"
+--- update pk1 set id = 2 where id = 1
+affected 1
+--- insert into pk1 values (1, 'c')
+affected 1
+--- update pk1 set id = id + 1
+affected 2
+--- update pk1 set id = 3 - id
+affected 2
+--- select id, v from pk1 order by id
+ID:INTEGER (4,,,False,PK1,ID,True,False)
+V:VARCHAR (5,,,True,PK1,V,False,False)
+0 | a | 
+1 | c | 
+affected 0
+--- insert into pk2 values (1, 'x', 1)
+affected 1
+--- insert into pk2 values (1, 'y', 1)
+affected 1
+--- insert into pk2 values (1, 'x', 2)
+ERROR 335544665 'PK2_PK' 'PK2' 335545072 '("A" = 1, "B" = 'x')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "PK2_PK" on table "PK2"
+Problematic key value is ("A" = 1, "B" = 'x')
+--- insert into pk2 values (1, 'x ', 2)
+ERROR 335544665 'PK2_PK' 'PK2' 335545072 '("A" = 1, "B" = 'x ')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "PK2_PK" on table "PK2"
+Problematic key value is ("A" = 1, "B" = 'x ')
+--- insert into pk2 values (1, null, 2)
+ERROR 335544347 '"PK2"."B"' '*** null ***' '' 23000
+validation error for column "PK2"."B", value "*** null ***"
+--- insert into uq values (1, 'a', null, null)
+affected 1
+--- insert into uq values (2, 'a', null, null)
+ERROR 335544665 'UQ_U' 'UQ' 335545072 '("U" = 'a')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "UQ_U" on table "UQ"
+Problematic key value is ("U" = 'a')
+--- insert into uq values (3, null, null, null)
+affected 1
+--- insert into uq values (4, null, null, null)
+affected 1
+--- insert into uq values (5, 'b', 1, 'X')
+affected 1
+--- insert into uq values (6, 'c', 1, 'x')
+ERROR 335544665 'INTEG_6' 'UQ' 335545072 '("U2" = 1, "W" = 'x')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_6" on table "UQ"
+Problematic key value is ("U2" = 1, "W" = 'x')
+--- insert into uq values (7, 'd', 1, null)
+affected 1
+--- insert into uq values (8, 'e', 1, null)
+ERROR 335544665 'INTEG_6' 'UQ' 335545072 '("U2" = 1, "W" = NULL)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_6" on table "UQ"
+Problematic key value is ("U2" = 1, "W" = NULL)
+--- insert into uq values (9, 'a ', null, null)
+ERROR 335544665 'UQ_U' 'UQ' 335545072 '("U" = 'a ')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "UQ_U" on table "UQ"
+Problematic key value is ("U" = 'a ')
+--- insert into ci values (1, 'Abc')
+affected 1
+--- insert into ci values (2, 'aBC')
+ERROR 335544665 'INTEG_9' 'CI' 335545072 '("K" = 'aBC')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_9" on table "CI"
+Problematic key value is ("K" = 'aBC')
+--- insert into ci values (3, 'abc ')
+ERROR 335544665 'INTEG_9' 'CI' 335545072 '("K" = 'abc ')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_9" on table "CI"
+Problematic key value is ("K" = 'abc ')
+--- insert into ci values (4, 'abd')
+affected 1
+--- update ci set k = 'ABD' where id = 1
+ERROR 335544665 'INTEG_9' 'CI' 335545072 '("K" = 'ABD')' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_9" on table "CI"
+Problematic key value is ("K" = 'ABD')
+--- update ci set k = 'ABC' where id = 1
+affected 1
+--- insert into chc values (1, 1)
+affected 1
+--- insert into chc values (2, 9)
+ERROR 335544466 'INTEG_16' 'CHC' 335544838 335545072 '("PID" = 9)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_16" on table "CHC"
+Foreign key reference target does not exist
+Problematic key value is ("PID" = 9)
+--- insert into chc values (3, null)
+affected 1
+--- insert into chn values (1, 2)
+affected 1
+--- insert into chd values (1, 3)
+affected 1
+--- insert into chd (id) values (2)
+affected 1
+--- insert into chx values (1, 'b')
+affected 1
+--- insert into chx values (2, 'z')
+ERROR 335544466 'FK_CODE' 'CHX' 335544838 335545072 '("PCODE" = 'z')' '' 23000
+violation of FOREIGN KEY constraint "FK_CODE" on table "CHX"
+Foreign key reference target does not exist
+Problematic key value is ("PCODE" = 'z')
+--- insert into chx values (3, 'b ')
+affected 1
+--- update par set id = 10 where id = 1
+ERROR 335544466 'INTEG_22' 'CHD' 335544839 335545072 '("ID" = 1)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_22" on table "CHD"
+Foreign key references are present for the record
+Problematic key value is ("ID" = 1)
+--- select id, pid from chc order by id
+ID:INTEGER (4,,,False,CHC,ID,True,False)
+PID:INTEGER (4,,,True,CHC,PID,False,False)
+1 | 1 | 
+3 | NULL | 
+affected 0
+--- update par set id = 20 where id = 2
+affected 1
+--- select id, pid from chn order by id
+ID:INTEGER (4,,,False,CHN,ID,True,False)
+PID:INTEGER (4,,,True,CHN,PID,False,False)
+1 | NULL | 
+affected 0
+--- update par set code = 'bb' where id = 20
+ERROR 335544466 'FK_CODE' 'CHX' 335544839 335545072 '("CODE" = 'b')' '' 23000
+violation of FOREIGN KEY constraint "FK_CODE" on table "CHX"
+Foreign key references are present for the record
+Problematic key value is ("CODE" = 'b')
+--- delete from par where id = 10
+affected 0
+--- select id, pid from chc order by id
+ID:INTEGER (4,,,False,CHC,ID,True,False)
+PID:INTEGER (4,,,True,CHC,PID,False,False)
+1 | 1 | 
+3 | NULL | 
+affected 0
+--- delete from par where id = 3
+affected 1
+--- select id, pid from chd order by id
+ID:INTEGER (4,,,False,CHD,ID,True,False)
+PID:INTEGER (4,,,True,CHD,PID,False,False)
+1 | 1 | 
+2 | 1 | 
+affected 0
+--- update chc set pid = 99 where id = 3
+ERROR 335544466 'INTEG_16' 'CHC' 335544838 335545072 '("PID" = 99)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_16" on table "CHC"
+Foreign key reference target does not exist
+Problematic key value is ("PID" = 99)
+--- update chx set pcode = 'q'
+ERROR 335544466 'FK_CODE' 'CHX' 335544838 335545072 '("PCODE" = 'q')' '' 23000
+violation of FOREIGN KEY constraint "FK_CODE" on table "CHX"
+Foreign key reference target does not exist
+Problematic key value is ("PCODE" = 'q')
+--- delete from par where code = 'bb'
+affected 0
+--- insert into par values (1, 'a')
+ERROR 335544665 'INTEG_11' 'PAR' 335545072 '("ID" = 1)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_11" on table "PAR"
+Problematic key value is ("ID" = 1)
+--- delete from par where id = 1
+ERROR 335544466 'INTEG_22' 'CHD' 335544839 335545072 '("ID" = 1)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_22" on table "CHD"
+Foreign key references are present for the record
+Problematic key value is ("ID" = 1)
+--- select id, pid from chd order by id
+ID:INTEGER (4,,,False,CHD,ID,True,False)
+PID:INTEGER (4,,,True,CHD,PID,False,False)
+1 | 1 | 
+2 | 1 | 
+affected 0
+--- insert into self values (1, null)
+affected 1
+--- insert into self values (2, 1)
+affected 1
+--- insert into self values (3, 2)
+affected 1
+--- insert into self values (4, 4)
+affected 1
+--- insert into self values (5, 6)
+ERROR 335544466 'INTEG_30' 'SELF' 335544838 335545072 '("PARENT" = 6)' '' 23000
+violation of FOREIGN KEY constraint "INTEG_30" on table "SELF"
+Foreign key reference target does not exist
+Problematic key value is ("PARENT" = 6)
+--- delete from self where id = 1
+affected 1
+--- select id, parent from self order by id
+ID:INTEGER (4,,,False,SELF,ID,True,False)
+PARENT:INTEGER (4,,,True,SELF,PARENT,False,False)
+4 | 4 | 
+affected 0
+--- insert into ck (id, lo, hi, p) values (1, 1, 2, 1)
+affected 1
+--- insert into ck (id, lo, hi, p) values (2, 3, 2, 1)
+ERROR 335544558 'CK_RANGE' 'CK' 335544842 'At trigger 'CHECK_6'' '' 23000
+Operation violates CHECK constraint CK_RANGE on view or table CK
+--- insert into ck (id, lo, hi, p) values (3, 1, 200, 1)
+ERROR 335544558 'INTEG_27' 'CK' 335544842 'At trigger 'CHECK_8'' '' 23000
+Operation violates CHECK constraint INTEG_27 on view or table CK
+--- insert into ck (id, lo, hi, p) values (4, null, 2, 1)
+affected 1
+--- insert into ck (id, lo, hi, p) values (5, 1, null, 1)
+affected 1
+--- insert into ck (id, p) values (6, 0)
+ERROR 335544347 '"CK"."P"' '0' '' 23000
+validation error for column "CK"."P", value "0"
+--- insert into ck (id, p) values (7, null)
+affected 1
+--- insert into ck (id, p, n) values (8, 1, null)
+ERROR 335544347 '"CK"."N"' '*** null ***' '' 23000
+validation error for column "CK"."N", value "*** null ***"
+--- insert into ck (id) values (9)
+affected 1
+--- update ck set hi = 0 where id = 1
+ERROR 335544558 'CK_RANGE' 'CK' 335544842 'At trigger 'CHECK_7'' '' 23000
+Operation violates CHECK constraint CK_RANGE on view or table CK
+--- update ck set lo = 5, hi = 6 where id = 1
+affected 1
+--- update ck set p = -1
+ERROR 335544347 '"CK"."P"' '-1' '' 23000
+validation error for column "CK"."P", value "-1"
+--- update ck set n = null where id = 9
+ERROR 335544347 '"CK"."N"' '*** null ***' '' 23000
+validation error for column "CK"."N", value "*** null ***"
+--- update ck set n = 'toolong' where id = 9
+ERROR 335544321 335544914 335545033 #5 #7 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 7
+--- select id, lo, hi, p, n from ck order by id
+ID:INTEGER (4,,,False,CK,ID,True,False)
+LO:INTEGER (4,,,True,CK,LO,False,False)
+HI:INTEGER (4,,,True,CK,HI,False,False)
+P:INTEGER (4,,,True,CK,P,False,False)
+N:VARCHAR (5,,,False,CK,N,False,False)
+1 | 5 | 6 | 1 | dflt | 
+4 | NULL | 2 | 1 | dflt | 
+5 | 1 | NULL | 1 | dflt | 
+7 | NULL | NULL | NULL | dflt | 
+9 | NULL | NULL | NULL | dflt | 
+affected 0
+--- alter table pk1 add constraint pk1_v unique (v)
+affected 0
+--- insert into pk1 values (5, 'b')
+affected 1
+--- alter table pk1 drop constraint pk1_v
+affected 0
+--- insert into pk1 values (5, 'b')
+ERROR 335544665 'INTEG_2' 'PK1' 335545072 '("ID" = 5)' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "PK1"
+Problematic key value is ("ID" = 5)
+--- alter table pk1 add constraint pk1_v unique (v)
+affected 0
+--- alter table ck add constraint ck_lo check (lo > 3)
+affected 0
+--- alter table ck add constraint ck_lo check (lo > 0)
+ERROR 335544351 336397287 'CK' 335544665 'RDB$INDEX_12' 'RDB$RELATION_CONSTRAINTS' 335545072 '("RDB$CONSTRAINT_NAME" = 'CK_LO')' '' 42000
+unsuccessful metadata update
+ALTER TABLE CK failed
+violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_12" on table "RDB$RELATION_CONSTRAINTS"
+Problematic key value is ("RDB$CONSTRAINT_NAME" = 'CK_LO')
+--- insert into ck (id, lo, p) values (10, 0, 1)
+ERROR 335544558 'CK_LO' 'CK' 335544842 'At trigger 'CHECK_11'' '' 23000
+Operation violates CHECK constraint CK_LO on view or table CK
+--- alter table ck drop constraint ck_lo
+affected 0
+--- insert into ck (id, lo, p) values (10, 0, 1)
+affected 1
+--- alter table ck drop constraint nope
+ERROR 335544351 336397287 'CK' 336068738 'NOPE' '' 42000
+unsuccessful metadata update
+ALTER TABLE CK failed
+CONSTRAINT NOPE does not exist.
+--- alter table chx add constraint fk2 foreign key (pcode) references par (code) on delete cascade
+affected 0
+--- alter table chc drop constraint integ_99
+ERROR 335544351 336397287 'CHC' 336068738 'INTEG_99' '' 42000
+unsuccessful metadata update
+ALTER TABLE CHC failed
+CONSTRAINT INTEG_99 does not exist.
+--- alter table pk1 add constraint pk1_v2 unique (id)
+ERROR 335544351 336397287 'PK1' 336068734 '' 42000
+unsuccessful metadata update
+ALTER TABLE PK1 failed
+Same set of columns cannot be used in more than one PRIMARY KEY and/or UNIQUE constraint definition
+--- alter table pk1 add primary key (v)
+ERROR 335544351 336397287 'PK1' 335544342 #3 335544548 '' 42000
+unsuccessful metadata update
+ALTER TABLE PK1 failed
+action cancelled by trigger (3) to preserve data integrity
+Attempt to define a second PRIMARY KEY for the same table
+--- alter table uq add constraint uq_u unique (u2)
+ERROR 335544351 336397287 'UQ' 336068859 'UQ_U' '' 42000
+unsuccessful metadata update
+ALTER TABLE UQ failed
+Index UQ_U already exists
+--- alter table uq alter column u type varchar(2)
+ERROR 335544351 336397287 'UQ' 335544342 #1 335544538 '' 42000
+unsuccessful metadata update
+ALTER TABLE UQ failed
+action cancelled by trigger (1) to preserve data integrity
+Cannot update index segment used by an Integrity Constraint
+--- alter table uq alter column u type varchar(9)
+ERROR 335544351 336397287 'UQ' 335544342 #1 335544538 '' 42000
+unsuccessful metadata update
+ALTER TABLE UQ failed
+action cancelled by trigger (1) to preserve data integrity
+Cannot update index segment used by an Integrity Constraint
+--- insert into uq values (20, 'abcdefg', null, null)
+ERROR 335544321 335544914 335545033 #5 #7 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 7
+--- drop table par
+ERROR 335544351 336397288 'PAR' 335544342 #1 335544530 '' 42000
+unsuccessful metadata update
+DROP TABLE PAR failed
+action cancelled by trigger (1) to preserve data integrity
+Cannot delete PRIMARY KEY being used in FOREIGN KEY definition.
+--- alter table par drop code
+ERROR 335544351 336397287 'PAR' 335544342 #1 335544530 335544842 'At trigger 'RDB$TRIGGER_23'' '' 42000
+unsuccessful metadata update
+ALTER TABLE PAR failed
+action cancelled by trigger (1) to preserve data integrity
+Cannot delete PRIMARY KEY being used in FOREIGN KEY definition.
+--- alter table par drop constraint integ_9
+ERROR 335544351 336397287 'PAR' 336068738 'INTEG_9' '' 42000
+unsuccessful metadata update
+ALTER TABLE PAR failed
+CONSTRAINT INTEG_9 does not exist.
+--- delete from chc
+affected 2
+--- delete from chn
+affected 1
+--- delete from chd
+affected 2
+--- delete from chx
+affected 2
+--- delete from par
+affected 2
+--- select count(*) from par
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+0 | 
+affected 0
+--- select trim(rdb$constraint_name), trim(rdb$constraint_type), trim(rdb$relation_name), trim(rdb$index_name) from rdb$relation_constraints where rdb$relation_name in ('PK1', 'PK2', 'UQ', 'CI', 'PAR', 'CHC', 'CHN', 'CHD', 'CHX', 'CK', 'SELF') order by 3, 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (11,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+INTEG_14 | NOT NULL | CHC | NULL | 
+INTEG_15 | PRIMARY KEY | CHC | RDB$PRIMARY7 | 
+INTEG_16 | FOREIGN KEY | CHC | RDB$FOREIGN8 | 
+INTEG_20 | NOT NULL | CHD | NULL | 
+INTEG_21 | PRIMARY KEY | CHD | RDB$PRIMARY11 | 
+INTEG_22 | FOREIGN KEY | CHD | RDB$FOREIGN12 | 
+INTEG_17 | NOT NULL | CHN | NULL | 
+INTEG_18 | PRIMARY KEY | CHN | RDB$PRIMARY9 | 
+INTEG_19 | FOREIGN KEY | CHN | RDB$FOREIGN10 | 
+FK2 | FOREIGN KEY | CHX | FK2 | 
+FK_CODE | FOREIGN KEY | CHX | FK_CODE | 
+INTEG_23 | NOT NULL | CHX | NULL | 
+INTEG_24 | PRIMARY KEY | CHX | RDB$PRIMARY13 | 
+INTEG_7 | NOT NULL | CI | NULL | 
+INTEG_8 | PRIMARY KEY | CI | RDB$PRIMARY3 | 
+INTEG_9 | UNIQUE | CI | RDB$4 | 
+CK_RANGE | CHECK | CK | NULL | 
+INTEG_25 | NOT NULL | CK | NULL | 
+INTEG_26 | PRIMARY KEY | CK | RDB$PRIMARY14 | 
+INTEG_27 | CHECK | CK | NULL | 
+INTEG_10 | NOT NULL | PAR | NULL | 
+INTEG_11 | PRIMARY KEY | PAR | RDB$PRIMARY5 | 
+INTEG_12 | NOT NULL | PAR | NULL | 
+INTEG_13 | UNIQUE | PAR | RDB$6 | 
+INTEG_1 | NOT NULL | PK1 | NULL | 
+INTEG_2 | PRIMARY KEY | PK1 | RDB$PRIMARY1 | 
+PK1_V | UNIQUE | PK1 | PK1_V | 
+INTEG_3 | NOT NULL | PK2 | NULL | 
+INTEG_4 | NOT NULL | PK2 | NULL | 
+PK2_PK | PRIMARY KEY | PK2 | PK2_PK | 
+INTEG_28 | NOT NULL | SELF | NULL | 
+INTEG_29 | PRIMARY KEY | SELF | RDB$PRIMARY15 | 
+INTEG_30 | FOREIGN KEY | SELF | RDB$FOREIGN16 | 
+INTEG_5 | NOT NULL | UQ | NULL | 
+INTEG_6 | UNIQUE | UQ | RDB$2 | 
+UQ_U | UNIQUE | UQ | UQ_U | 
+affected 0
+--- select trim(rdb$constraint_name), trim(rdb$const_name_uq), rdb$match_option, trim(rdb$update_rule), trim(rdb$delete_rule) from rdb$ref_constraints order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$MATCH_OPTION:CHAR (7,,,True,RDB$REF_CONSTRAINTS,RDB$MATCH_OPTION,False,False)
+TRIM:VARCHAR (11,,,True,,TRIM,False,False)
+TRIM:VARCHAR (11,,,True,,TRIM,False,False)
+FK2 | INTEG_13 | FULL    | RESTRICT | CASCADE | 
+FK_CODE | INTEG_13 | FULL    | RESTRICT | RESTRICT | 
+INTEG_16 | INTEG_11 | FULL    | CASCADE | CASCADE | 
+INTEG_19 | INTEG_11 | FULL    | SET NULL | SET NULL | 
+INTEG_22 | INTEG_11 | FULL    | RESTRICT | SET DEFAULT | 
+INTEG_30 | INTEG_29 | FULL    | RESTRICT | CASCADE | 
+affected 0
+--- select trim(rdb$constraint_name), trim(rdb$trigger_name) from rdb$check_constraints order by 2
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+INTEG_3 | A | 
+INTEG_4 | B | 
+INTEG_16 | CHECK_1 | 
+INTEG_30 | CHECK_10 | 
+FK2 | CHECK_13 | 
+INTEG_16 | CHECK_2 | 
+INTEG_19 | CHECK_3 | 
+INTEG_19 | CHECK_4 | 
+INTEG_22 | CHECK_5 | 
+CK_RANGE | CHECK_6 | 
+CK_RANGE | CHECK_7 | 
+INTEG_27 | CHECK_8 | 
+INTEG_27 | CHECK_9 | 
+INTEG_12 | CODE | 
+INTEG_1 | ID | 
+INTEG_5 | ID | 
+INTEG_7 | ID | 
+INTEG_10 | ID | 
+INTEG_20 | ID | 
+INTEG_23 | ID | 
+INTEG_14 | ID | 
+INTEG_25 | ID | 
+INTEG_17 | ID | 
+INTEG_28 | ID | 
+affected 0
+--- select trim(rdb$index_name), trim(rdb$relation_name), rdb$unique_flag, rdb$segment_count, trim(rdb$foreign_key) from rdb$indices where rdb$system_flag = 0 order by 1
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$UNIQUE_FLAG:SMALLINT (2,,,True,RDB$INDICES,RDB$UNIQUE_FLAG,False,False)
+RDB$SEGMENT_COUNT:SMALLINT (2,,,True,RDB$INDICES,RDB$SEGMENT_COUNT,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+FK2 | CHX | 0 | 1 | RDB$6 | 
+FK_CODE | CHX | 0 | 1 | RDB$6 | 
+PK1_V | PK1 | 1 | 1 | NULL | 
+PK2_PK | PK2 | 1 | 2 | NULL | 
+RDB$2 | UQ | 1 | 2 | NULL | 
+RDB$4 | CI | 1 | 1 | NULL | 
+RDB$6 | PAR | 1 | 1 | NULL | 
+RDB$FOREIGN10 | CHN | 0 | 1 | RDB$PRIMARY5 | 
+RDB$FOREIGN12 | CHD | 0 | 1 | RDB$PRIMARY5 | 
+RDB$FOREIGN16 | SELF | 0 | 1 | RDB$PRIMARY15 | 
+RDB$FOREIGN8 | CHC | 0 | 1 | RDB$PRIMARY5 | 
+RDB$PRIMARY1 | PK1 | 1 | 1 | NULL | 
+RDB$PRIMARY11 | CHD | 1 | 1 | NULL | 
+RDB$PRIMARY13 | CHX | 1 | 1 | NULL | 
+RDB$PRIMARY14 | CK | 1 | 1 | NULL | 
+RDB$PRIMARY15 | SELF | 1 | 1 | NULL | 
+RDB$PRIMARY3 | CI | 1 | 1 | NULL | 
+RDB$PRIMARY5 | PAR | 1 | 1 | NULL | 
+RDB$PRIMARY7 | CHC | 1 | 1 | NULL | 
+RDB$PRIMARY9 | CHN | 1 | 1 | NULL | 
+UQ_U | UQ | 1 | 1 | NULL | 
+affected 0
+--- select trim(rdb$index_name), trim(rdb$field_name), rdb$field_position from rdb$index_segments where rdb$index_name not starting with 'RDB$' order by 1, 3
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$FIELD_POSITION:SMALLINT (2,,,True,RDB$INDEX_SEGMENTS,RDB$FIELD_POSITION,False,False)
+FK2 | PCODE | 0 | 
+FK_CODE | PCODE | 0 | 
+PK1_V | V | 0 | 
+PK2_PK | A | 0 | 
+PK2_PK | B | 1 | 
+UQ_U | U | 0 | 
+affected 0

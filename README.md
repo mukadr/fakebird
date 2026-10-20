@@ -121,6 +121,12 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   shown value, the order in which MIN/MAX/LIST see the rows, and the DISTINCT survivor follow the bytes of
   Firebird's sort records; SUM/AVG DISTINCT add the values in sorted order; SUM(NULL) is CHAR(1); the
   aggregate errors (nested, in WHERE/GROUP BY, ungrouped columns per clause) carry Firebird's codes.
+* **Constraints** behave like Firebird's: a UNIQUE key with some NULL segments still conflicts (only
+  all-NULL keys may repeat), adding a CHECK does not check the rows already there, ON DELETE SET DEFAULT
+  fails when the default is the deleted key, a named constraint names its index, generated index names
+  (RDB$PRIMARYn, RDB$FOREIGNn, RDB$n) share one counter, RDB$CHECK_CONSTRAINTS lists the NOT NULL,
+  CHECK and referential-action rows, and the DDL errors (second primary key, duplicate key columns,
+  referenced keys, constraint columns changing type, unknown constraints) carry Firebird's codes.
 * **Joins and subqueries**: USING/NATURAL columns are COALESCE(left, right) when unqualified (and in
   `*`), the null-extended side of an outer join is described as nullable, ON conditions only see the
   sources joined so far, and ambiguity, alias-conflict, USING, derived-table column list and column count
@@ -151,7 +157,9 @@ INT128 / DECFLOAT types (Firebird 4), DML on views.
 
 ## Differences from a real server
 
-* DDL is applied immediately (not transactional) and is never cached as a plan.
+* DDL is applied immediately (not transactional) and is never cached as a plan. Firebird applies it at
+  commit: there a new CHECK or FOREIGN KEY is not enforced until the transaction commits, and a FOREIGN
+  KEY or UNIQUE added over violating rows fails at commit, while Fakebird fails the statement.
 * Statement results are materialized at execute time (errors of a SELECT are still reported on
   the fetch, like Firebird: an error discards the rows of its fetch batch; WHERE conditions that depend on no table, such as an uncorrelated
   singleton subquery, fail at execute, also like Firebird).

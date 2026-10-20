@@ -71,6 +71,8 @@ public sealed class Constraint
     public string? CheckSource;
     /// <summary>The system triggers that enforce the CHECK on insert and on update (named in its errors).</summary>
     public string? InsertTrigger, UpdateTrigger;
+    /// <summary>FOREIGN KEY: the system triggers of its ON UPDATE / ON DELETE actions.</summary>
+    public List<string> ActionTriggers = new();
     public Constraint Clone() => (Constraint)MemberwiseClone();
 }
 

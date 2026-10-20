@@ -159,8 +159,9 @@ public static class Dml
         foreach (var (name, ix) in rt.Uniques)
         {
             if (oldRow != null && SameKey(ix, row, oldRow)) continue;
+            // Firebird: NULL segments compare equal, unless the whole key is NULL
             var key = ix.KeyOf(row);
-            if (key.HasNull) continue;
+            if (key.AllNull) continue;
             var list = ix.Lookup(key);
             if (list == null) continue;
             foreach (var s in list)
@@ -351,6 +352,9 @@ public static class Dml
                     var nr = (Value[])current.Clone();
                     foreach (var col in r.ChildColumns)
                         nr[col] = childRt.Defaults[col] == null ? Value.Null : CastColumn(r.Child, col, childRt.Defaults[col]!.Eval(c));
+                    // a default that is the vanishing parent key still references it
+                    if (r.ChildIndex.RowHasKey(nr, key))
+                        throw Err.ForeignKeyPresent(r.Constraint.Name, r.Child.Name, KeyText(parentRt.Table, r.ParentColumns, oldParent));
                     Update(c, childRt, slot, current, nr);
                     break;
                 }

@@ -62,6 +62,16 @@ public readonly struct IndexKey : IEquatable<IndexKey>
         _hash = h.ToHashCode();
     }
 
+    /// <summary>Every segment NULL: the only key a unique index lets appear more than once.</summary>
+    public bool AllNull
+    {
+        get
+        {
+            foreach (var v in Values) if (!v.IsNull) return false;
+            return true;
+        }
+    }
+
     public bool HasNull
     {
         get

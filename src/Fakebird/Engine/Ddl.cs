@@ -225,7 +225,8 @@ public static class Ddl
     {
         if (name != null)
         {
-            if (db.Constraints.ContainsKey(name)) throw Err.MetaUpdate($"Constraint {name} already exists");
+            if (db.Constraints.ContainsKey(name))
+                throw Err.Unique("RDB$INDEX_12", "RDB$RELATION_CONSTRAINTS", $"(\"RDB$CONSTRAINT_NAME\" = '{name}')");
             return name;
         }
         string n;
@@ -250,7 +251,7 @@ public static class Ddl
     {
         if (requested != null)
         {
-            if (db.Indexes.ContainsKey(requested)) throw Err.MetaUpdate($"Index {requested} already exists");
+            if (db.Indexes.ContainsKey(requested)) throw new StatusBuilder().Gds(FbMessages.dyn_dup_index).Str(requested).Build();
             return requested;
         }
         string n;
@@ -287,8 +288,16 @@ public static class Ddl
             case ConstraintKind.Unique:
             {
                 var isPk = def.Kind == ConstraintKind.PrimaryKey;
-                if (isPk && t.PrimaryKey != null) throw Err.MetaUpdate($"Attempt to define a second PRIMARY KEY for the same table {t.Name}");
+                if (isPk && t.PrimaryKey != null)
+                    throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(3).Gds(FbMessages.primary_key_exists).Build();
                 var cols = Cols(t, def.Columns);
+                foreach (var other in new[] { t.PrimaryKey }.Concat(t.Uniques))
+                    if (other != null && db.Constraints[other].Columns.Order().SequenceEqual(cols.Order()))
+                        throw new StatusBuilder().Gds(FbMessages.dyn_126).Build();
+                // a named constraint gives its name to its index (checked before the constraint's name)
+                def.IndexName ??= def.Name;
+                if (def.IndexName != null && db.Indexes.ContainsKey(def.IndexName))
+                    throw new StatusBuilder().Gds(FbMessages.dyn_dup_index).Str(def.IndexName).Build();
                 var name = ConstraintName(db, def);
                 if (isPk)
                     foreach (var ci in cols)
@@ -311,6 +320,7 @@ public static class Ddl
             case ConstraintKind.ForeignKey:
             {
                 var cols = Cols(t, def.Columns);
+                def.IndexName ??= def.Name;
                 var parent = def.RefTable == t.Name ? t : db.Tables.TryGetValue(def.RefTable!, out var p) ? p : throw Err.TableUnknown(def.RefTable!);
                 int[] refCols;
                 Constraint? target = null;
@@ -342,8 +352,8 @@ public static class Ddl
                 };
                 db.Constraints[name] = fk;
                 // each referential action is a system trigger in Firebird: it takes a CHECK_n name
-                if (def.OnUpdate != RefAction.NoAction) db.NewCheckTriggerName();
-                if (def.OnDelete != RefAction.NoAction) db.NewCheckTriggerName();
+                if (def.OnUpdate != RefAction.NoAction) fk.ActionTriggers.Add(db.NewCheckTriggerName());
+                if (def.OnDelete != RefAction.NoAction) fk.ActionTriggers.Add(db.NewCheckTriggerName());
                 t.ForeignKeys.Add(name);
                 parent.ReferencedBy.Add(name);
                 if (validate)
@@ -381,16 +391,8 @@ public static class Ddl
                     Name = t.Name, Stream = st, Table = t,
                     Cols = t.Columns.Select(cc => new ColInfo { Name = cc.Name, Type = cc.Type, Relation = t.Name, Field = cc.Name }).ToList(),
                 });
-                var node = comp.BindBool(def.Check!, s);
-                if (validate)
-                {
-                    var re = new RowExpr { Node = node, Streams = comp.StreamCount };
-                    foreach (var row in VisibleRows(t, c))
-                    {
-                        var v = re.Eval(c, row);
-                        if (!v.IsNull && !v.AsBool) throw Err.Check(name, t.Name);
-                    }
-                }
+                // the expression must bind; like Firebird, the rows already in the table are not checked
+                comp.BindBool(def.Check!, s);
                 db.Constraints[name] = con;
                 t.Checks.Add(name);
                 break;
@@ -426,7 +428,7 @@ public static class Ddl
         foreach (var row in VisibleRows(t, c))
         {
             var key = ix.KeyOf(row);
-            if (key.HasNull) continue;
+            if (key.AllNull) continue;
             if (!seen.Add(key))
             {
                 db.Indexes.Remove(ix.Name);
@@ -447,7 +449,7 @@ public static class Ddl
                 {
                     var fk = db.Constraints[refName];
                     if (fk.RefConstraint == name && fk.Table != t.Name)
-                        throw Err.MetaUpdate($"Cannot drop constraint {name}: it is referenced by FOREIGN KEY {refName} in table {fk.Table}");
+                        throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.primary_key_ref).Build();
                 }
                 foreach (var refName in t.ReferencedBy.ToArray())
                     if (db.Constraints[refName].RefConstraint == name) RemoveConstraint(db, t, refName);
@@ -572,6 +574,10 @@ public static class Ddl
                 {
                     var ci = t.FindColumn(drop.Name);
                     if (ci < 0) throw Err.ColumnUnknown(t.Name + "." + drop.Name);
+                    // a key column referenced by another table's foreign key: the system trigger on RDB$RELATION_FIELDS
+                    if (db.Constraints.Values.Any(k => k.Type == ConstraintType.ForeignKey && k.RefTable == t.Name && k.Table != t.Name && k.RefColumns!.Contains(ci)))
+                        throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.primary_key_ref)
+                            .Gds(Err.isc_stack_trace).Str("At trigger 'RDB$TRIGGER_23'").Build();
                     foreach (var con in db.Constraints.Values.ToArray())
                     {
                         var uses = (con.Table == t.Name && con.Columns.Contains(ci)) ||
@@ -595,7 +601,8 @@ public static class Ddl
                     AddConstraint(db, t, ac.Constraint, c, validate: true);
                     break;
                 case DropConstraintAction dc:
-                    if (!db.Constraints.TryGetValue(dc.Name, out var dcon) || dcon.Table != t.Name) throw Missing("Constraint", dc.Name);
+                    if (!db.Constraints.TryGetValue(dc.Name, out var dcon) || dcon.Table != t.Name)
+                        throw new StatusBuilder().Gds(FbMessages.dyn_130).Str(dc.Name).Build();
                     RemoveConstraint(db, t, dc.Name);
                     break;
                 case AlterColumnAction ac:
@@ -642,6 +649,9 @@ public static class Ddl
         }
         if (ac.NewType != null)
         {
+            if (db.Constraints.Values.Any(k => k.IndexName != null && (k.Table == t.Name && k.Columns.Contains(ci)
+                    || k.Type == ConstraintType.ForeignKey && k.RefTable == t.Name && k.RefColumns!.Contains(ci))))
+                throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.integ_index_seg_mod).Build();
             var newType = Comp(db).ResolveType(ac.NewType, out var dom);
             foreach (var row in VisibleRows(t, c)) Conv.Cast(row[ci], newType);
             col.Type = newType;
@@ -1023,7 +1033,7 @@ public static class Ddl
                 {
                     var fk = db.Constraints[r];
                     if (fk.Table != t.Name)
-                        throw Err.MetaUpdate($"cannot delete: object {t.Name} is in use (FOREIGN KEY {r} on table {fk.Table})");
+                        throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.primary_key_ref).Build();
                 }
                 foreach (var v in db.Views.Values)
                     if (ViewReferences(v.Query, t.Name))

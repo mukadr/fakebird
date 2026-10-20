@@ -245,7 +245,14 @@ internal static class SystemTables
         }).ToList());
 
         Add(db, "RDB$CHECK_CONSTRAINTS", [("RDB$CONSTRAINT_NAME", Name), ("RDB$TRIGGER_NAME", Name)],
-            d => d.Constraints.Values.Where(c => c.Type == ConstraintType.Check).Select(c => new[] { N(c.Name), N("CHECK_" + c.Name) }).ToList());
+            // NOT NULL constraints name their column; CHECKs and foreign key actions their system triggers
+            d => d.Tables.Values.Where(t => !t.IsSystem).SelectMany(t => t.Columns.Where(c => c.NotNullConstraint != null)
+                    .Select(c => new[] { N(c.NotNullConstraint!), N(c.Name) }))
+                .Concat(d.Constraints.Values.Where(c => c.Type == ConstraintType.Check)
+                    .SelectMany(c => new[] { c.InsertTrigger, c.UpdateTrigger }.Select(tr => new[] { N(c.Name), N(tr) })))
+                .Concat(d.Constraints.Values.Where(c => c.Type == ConstraintType.ForeignKey)
+                    .SelectMany(c => c.ActionTriggers.Select(tr => new[] { N(c.Name), N(tr) })))
+                .ToList());
 
         Add(db, "RDB$EXCEPTIONS",
         [

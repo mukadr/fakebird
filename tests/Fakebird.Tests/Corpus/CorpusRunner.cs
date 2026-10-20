@@ -132,9 +132,21 @@ public static partial class CorpusRunner
             void End(bool commit)
             {
                 if (!conns.TryGetValue(current, out var c) || c.Tx == null) return;
-                if (commit) c.Tx.Commit(); else c.Tx.Rollback();
-                c.Tx.Dispose();
-                conns[current] = (c.Cn, null);
+                try
+                {
+                    if (commit) c.Tx.Commit(); else c.Tx.Rollback();
+                }
+                catch (FbException)
+                {
+                    // a failed commit leaves the transaction open: end it so the next step starts afresh
+                    try { c.Tx.Rollback(); } catch (FbException) { }
+                    throw;
+                }
+                finally
+                {
+                    c.Tx.Dispose();
+                    conns[current] = (c.Cn, null);
+                }
             }
 
             foreach (var step in file.Steps)
