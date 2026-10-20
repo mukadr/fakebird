@@ -42,6 +42,9 @@ public readonly struct Value
     public static Value Int(long v, int scale = 0) => new(VTag.Int, v, null, (byte)scale);
     public static Value Bool(bool b) => b ? True : False;
     public static Value Dbl(double d) => new(VTag.Double, BitConverter.DoubleToInt64Bits(d), null, 0);
+    /// <summary>A FLOAT value (single precision, carried as a double; Scale 1 marks it for text conversion).</summary>
+    public static Value Flt(float f) => new(VTag.Double, BitConverter.DoubleToInt64Bits(f), null, 1);
+    public bool IsFloat => Tag == VTag.Double && Scale == 1;
     public static Value Str(string s) => new(VTag.String, 0, s, 0);
     public static Value Bytes(byte[] b) => new(VTag.Bytes, 0, b, 0);
     public static Value Date(long day) => new(VTag.Date, day, null, 0);

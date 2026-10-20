@@ -462,7 +462,8 @@ public sealed partial class Parser
                 return new LiteralExpr(v, SqlType.ExactExpr(TypeKind.BigInt, v.Scale)) { Pos = t.Pos };
             }
             default:
-                return new LiteralExpr(Value.Dbl(double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture)), SqlType.Double) { Pos = t.Pos };
+                // the engine converts approximate literals from their text like any string (CVT_get_double)
+                return new LiteralExpr(Value.Dbl(Cvt.StringToDouble(text)), SqlType.Double) { Pos = t.Pos };
         }
     }
 
@@ -537,13 +538,14 @@ public sealed partial class Parser
             case "UNKNOWN": _i++; return new LiteralExpr(Value.Null, SqlType.Boolean) { Pos = pos };
             case "DATE" when PeekTok().Kind == Tok.String:
                 _i++;
-                return new LiteralExpr(Conv.Cast(Value.Str(StringLiteral()), SqlType.Date), SqlType.Date) { Pos = pos };
+                // literals do not accept NOW/TODAY/TOMORROW/YESTERDAY (allow_special = false)
+                return new LiteralExpr(Value.Date(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Date, allowSpecial: false)), SqlType.Date) { Pos = pos };
             case "TIME" when PeekTok().Kind == Tok.String:
                 _i++;
-                return new LiteralExpr(Conv.Cast(Value.Str(StringLiteral()), SqlType.Time), SqlType.Time) { Pos = pos };
+                return new LiteralExpr(Value.Time(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Time, allowSpecial: false)), SqlType.Time) { Pos = pos };
             case "TIMESTAMP" when PeekTok().Kind == Tok.String:
                 _i++;
-                return new LiteralExpr(Conv.Cast(Value.Str(StringLiteral()), SqlType.Timestamp), SqlType.Timestamp) { Pos = pos };
+                return new LiteralExpr(Value.Timestamp(Cvt.StringToDateTime(StringLiteral(), Cvt.Expect.Timestamp, allowSpecial: false)), SqlType.Timestamp) { Pos = pos };
             case "CASE": return CaseExpression();
             case "CAST":
             {

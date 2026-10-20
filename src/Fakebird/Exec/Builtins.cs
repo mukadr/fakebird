@@ -154,7 +154,7 @@ public static class Builtins
             case VTag.Timestamp: (day, time) = Conv.SplitTimestamp(v.L); break;
             case VTag.String:
                 return Extract(part, Conv.Cast(v, SqlType.Timestamp));
-            default: throw Err.Conversion(Conv.ToStr(v));
+            default: throw Cvt.ConversionError(v);
         }
         DateOnly d = hasDate ? Conv.DayToDate(day) : default;
         switch (part)
@@ -243,7 +243,7 @@ public static class Builtins
             case VTag.String:
                 return DateAdd(part, n, Conv.Cast(v, SqlType.Timestamp));
         }
-        throw Err.Conversion(Conv.ToStr(v));
+        throw Cvt.ConversionError(v);
     }
 
     static Value DateDiff(string part, Value a, Value b)
@@ -253,7 +253,7 @@ public static class Builtins
         long ta, tb;
         if (a.Tag == VTag.Time || b.Tag == VTag.Time)
         {
-            if (a.Tag != VTag.Time || b.Tag != VTag.Time) throw Err.Conversion(Conv.ToStr(a));
+            if (a.Tag != VTag.Time || b.Tag != VTag.Time) throw Cvt.ConversionError(a);
             ta = a.L;
             tb = b.L;
         }

@@ -51,7 +51,7 @@ public static class Arith
 
     static void CheckNumeric(in Value v)
     {
-        if (v.Tag is not (VTag.Int or VTag.Double)) throw Err.Conversion(Conv.ToStr(v));
+        if (v.Tag is not (VTag.Int or VTag.Double)) throw Cvt.ConversionError(v);
     }
 
     static long DaysOf(in Value v)

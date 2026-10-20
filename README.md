@@ -83,6 +83,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   metadata update / CREATE TABLE T failed / ..."), `At line L, column C` positions, and PSQL stack
   traces (`At procedure 'P' line: 3, col: 5`), so the client builds the same messages and SQLSTATEs, and
   `catch (FbException)` logic and PSQL `WHEN SQLCODE/GDSCODE/SQLSTATE` handlers behave the same.
+* **Conversions** are ported from Firebird's: text to numbers (hex `0x..` literals, digits accumulated
+  in the target's size, half-away rounding), doubles to text (`%g` with as many digits as fit the
+  target), dates and times from text (all of Firebird's formats, two-digit years, month names, time
+  zone suffixes), and the text of conversion errors.
 * **Describe information** follows Firebird 5's rules: result types of expressions (NUMERIC vs DECIMAL,
   storage size and scale of arithmetic, CASE/COALESCE/UNION common types, built-in functions), NULLABLE
   flags, and the names, relations and field names clients see.

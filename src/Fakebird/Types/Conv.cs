@@ -62,9 +62,8 @@ public static class Conv
     {
         VTag.Int => v.Scale == 0 ? v.L : v.L / Value.Pow10Double[v.Scale],
         VTag.Double => v.AsDouble,
-        VTag.String => ParseDouble(v.AsString),
-        VTag.Bool => throw Err.Conversion(v.AsBool ? "TRUE" : "FALSE"),
-        _ => throw Err.Conversion(ToStr(v)),
+        VTag.String => Cvt.StringToDouble(v.AsString),
+        _ => throw Cvt.ConversionError(v),
     };
 
     public static long ToInt64(in Value v)
@@ -79,11 +78,7 @@ public static class Conv
         return (int)r.L;
     }
 
-    static double ParseDouble(string s)
-    {
-        if (double.TryParse(s.AsSpan().Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d;
-        throw Err.Conversion(s);
-    }
+    static double ParseDouble(string s) => Cvt.StringToDouble(s);
 
     /// <summary>Parses a numeric string into an exact value (keeping its scale) or a double for exponent notation.</summary>
     public static Value ParseNumber(string s)
@@ -120,7 +115,7 @@ public static class Conv
     static Value CastToExactAuto(in Value v) => v.Tag switch
     {
         VTag.String => ParseNumber(v.AsString),
-        _ => throw Err.Conversion(ToStr(v)),
+        _ => throw Cvt.ConversionError(v),
     };
 
     /// <summary>Rescales an exact value; rounding half away from zero when reducing scale.</summary>
@@ -158,21 +153,13 @@ public static class Conv
                 r = Rescale(v.L, v.Scale, scale);
                 break;
             case VTag.Double:
-            {
-                var d = v.AsDouble * Value.Pow10Double[scale];
-                if (double.IsNaN(d) || d >= 9.2233720368547758E18 || d <= -9.2233720368547758E18) throw Err.NumericOverflow();
-                r = (long)Math.Round(d, MidpointRounding.AwayFromZero);
+                r = Cvt.DoubleToExact(v.AsDouble, scale, kind, v.IsFloat);
                 break;
-            }
             case VTag.String:
-            {
-                var p = ParseNumber(v.AsString);
-                return CastExact(p, scale, kind);
-            }
-            case VTag.Bool:
-                throw Err.Conversion(v.AsBool ? "TRUE" : "FALSE");
+                r = Cvt.StringToExact(v.AsString, scale, kind);
+                break;
             default:
-                throw Err.Conversion(ToStr(v));
+                throw Cvt.ConversionError(v);
         }
         CheckRange(r, kind);
         return Value.Int(r, scale);
@@ -185,7 +172,7 @@ public static class Conv
         VTag.Null => "",
         VTag.String => v.AsString,
         VTag.Int => FormatExact(v.L, v.Scale),
-        VTag.Double => FormatDouble(v.AsDouble),
+        VTag.Double => Cvt.FloatToText(v.AsDouble, v.IsFloat),
         VTag.Bool => v.AsBool ? "TRUE" : "FALSE",
         VTag.Date => FormatDate(v.L),
         VTag.Time => FormatTime(v.L),
@@ -204,19 +191,7 @@ public static class Conv
         return neg ? "-" + res : res;
     }
 
-    public static string FormatDouble(double d)
-    {
-        if (d == 0) return "0.000000000000000";
-        if (double.IsNaN(d) || double.IsInfinity(d)) return d.ToString(CultureInfo.InvariantCulture);
-        var abs = Math.Abs(d);
-        var exp = (int)Math.Floor(Math.Log10(abs));
-        if (exp is >= -4 and < 16)
-        {
-            var decimals = Math.Clamp(15 - exp, 0, 15 + 4);
-            return d.ToString("F" + decimals, CultureInfo.InvariantCulture);
-        }
-        return d.ToString("0.000000000000000e+000", CultureInfo.InvariantCulture);
-    }
+    public static string FormatDouble(double d) => Cvt.FloatToText(d, isFloat: false);
 
     public static string FormatDate(long day)
     {
@@ -239,102 +214,6 @@ public static class Conv
         return FormatDate(day) + " " + FormatTime(time);
     }
 
-    // ------------------------------------------------------------------ date parsing
-
-    static readonly string[] Months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-
-    /// <summary>Parses a Firebird date/time literal string. Returns a timestamp in ticks.</summary>
-    public static long ParseTimestamp(string s, out bool hasTime)
-    {
-        hasTime = false;
-        var t = s.Trim();
-        var upper = t.ToUpperInvariant();
-        switch (upper)
-        {
-            case "NOW": hasTime = true; return Now().L;
-            case "TODAY": return DateToDay(DateOnly.FromDateTime(DateTime.Now)) * Value.TicksPerDay;
-            case "TOMORROW": return (DateToDay(DateOnly.FromDateTime(DateTime.Now)) + 1) * Value.TicksPerDay;
-            case "YESTERDAY": return (DateToDay(DateOnly.FromDateTime(DateTime.Now)) - 1) * Value.TicksPerDay;
-        }
-        // split date and time parts
-        var sep = t.IndexOfAny([' ', 'T']);
-        string datePart = sep < 0 ? t : t[..sep];
-        string? timePart = sep < 0 ? null : t[(sep + 1)..].Trim();
-        int year, month, day;
-        if (!TryParseDate(datePart, out year, out month, out day)) throw Err.Conversion(s);
-        long time = 0;
-        if (!string.IsNullOrEmpty(timePart))
-        {
-            if (!TryParseTime(timePart, out time)) throw Err.Conversion(s);
-            hasTime = true;
-        }
-        DateOnly date;
-        try { date = new DateOnly(year, month, day); }
-        catch (ArgumentOutOfRangeException) { throw Err.Conversion(s); }
-        return DateToDay(date) * Value.TicksPerDay + time;
-    }
-
-    static bool TryParseDate(string s, out int year, out int month, out int day)
-    {
-        year = month = day = 0;
-        var parts = s.Split(['-', '.', '/'], StringSplitOptions.None);
-        if (parts.Length != 3) return false;
-        var sepChar = s[parts[0].Length];
-        int MonthOf(string p)
-        {
-            if (int.TryParse(p, NumberStyles.None, CultureInfo.InvariantCulture, out var m)) return m;
-            var u = p.ToUpperInvariant();
-            for (var i = 0; i < 12; i++)
-                if (u.StartsWith(Months[i], StringComparison.Ordinal)) return i + 1;
-            return -1;
-        }
-        int Num(string p) => int.TryParse(p, NumberStyles.None, CultureInfo.InvariantCulture, out var n) ? n : -1;
-        if (parts[0].Length == 4)
-        {
-            year = Num(parts[0]); month = MonthOf(parts[1]); day = Num(parts[2]);
-        }
-        else if (sepChar == '/')
-        {
-            // MM/DD/YYYY
-            month = MonthOf(parts[0]); day = Num(parts[1]); year = Num(parts[2]);
-        }
-        else
-        {
-            // DD.MM.YYYY or DD-MON-YYYY
-            day = Num(parts[0]); month = MonthOf(parts[1]); year = Num(parts[2]);
-        }
-        if (parts[^1].Length <= 2 && parts[0].Length != 4 && year >= 0)
-            year += year < 50 ? 2000 : 1900;
-        return year > 0 && month is >= 1 and <= 12 && day >= 1;
-    }
-
-    static bool TryParseTime(string s, out long ticks)
-    {
-        ticks = 0;
-        var parts = s.Split(':');
-        if (parts.Length is < 2 or > 3) return false;
-        if (!int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var h)) return false;
-        if (!int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var m)) return false;
-        long frac = 0;
-        var sec = 0;
-        if (parts.Length == 3)
-        {
-            var sp = parts[2];
-            var dot = sp.IndexOf('.');
-            var secStr = dot < 0 ? sp : sp[..dot];
-            if (!int.TryParse(secStr, NumberStyles.None, CultureInfo.InvariantCulture, out sec)) return false;
-            if (dot >= 0)
-            {
-                var f = sp[(dot + 1)..];
-                if (f.Length > 4) f = f[..4];
-                if (f.Length > 0 && !long.TryParse(f.PadRight(4, '0'), NumberStyles.None, CultureInfo.InvariantCulture, out frac)) return false;
-            }
-        }
-        if (h > 23 || m > 59 || sec > 59) return false;
-        ticks = ((h * 60L + m) * 60 + sec) * Value.TicksPerSecond + frac;
-        return true;
-    }
-
     // ------------------------------------------------------------------ casting
 
     /// <summary>Converts a value to the given type (CAST / assignment semantics).</summary>
@@ -351,57 +230,55 @@ public static class Conv
                     CheckRange(v.L, t.Kind);
                     return v;
                 }
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Err.Conversion(ToStr(v));
+                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
                 return CastExact(v, t.Scale, t.Kind);
             case TypeKind.Float:
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Err.Conversion(ToStr(v));
-                return Value.Dbl((float)ToDouble(v));
+            {
+                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
+                if (v.IsFloat) return v;
+                var d = ToDouble(v);
+                if (Math.Abs(d) > float.MaxValue) throw Err.NumericOverflow();
+                return Value.Flt((float)d);
+            }
             case TypeKind.Double:
-                if (v.Tag == VTag.Double) return v;
-                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Err.Conversion(ToStr(v));
+                if (v.Tag == VTag.Double) return v.IsFloat ? Value.Dbl(v.AsDouble) : v;
+                if (v.Tag is VTag.Date or VTag.Time or VTag.Timestamp) throw Cvt.ConversionError(v);
                 return Value.Dbl(ToDouble(v));
             case TypeKind.Boolean:
                 if (v.Tag == VTag.Bool) return v;
                 if (v.Tag == VTag.String)
                 {
-                    var s = v.AsString.Trim();
+                    // CVT_get_boolean: TRUE/FALSE ignoring case and surrounding white space
+                    var s = v.AsString.Trim(' ', '\t', '\n', '\r', '\v', '\f');
                     if (s.Equals("TRUE", StringComparison.OrdinalIgnoreCase)) return Value.True;
                     if (s.Equals("FALSE", StringComparison.OrdinalIgnoreCase)) return Value.False;
                 }
-                throw Err.Conversion(ToStr(v));
+                throw Cvt.ConversionError(v);
             case TypeKind.Date:
                 switch (v.Tag)
                 {
                     case VTag.Date: return v;
                     case VTag.Timestamp: return Value.Date(SplitTimestamp(v.L).day);
-                    case VTag.String:
-                        return Value.Date(SplitTimestamp(ParseTimestamp(v.AsString, out _)).day);
+                    case VTag.String: return Value.Date(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Date));
                 }
-                throw Err.Conversion(ToStr(v));
+                throw Cvt.ConversionError(v);
             case TypeKind.Time:
                 switch (v.Tag)
                 {
                     case VTag.Time: return v;
                     case VTag.Timestamp: return Value.Time(SplitTimestamp(v.L).time);
-                    case VTag.String:
-                    {
-                        var s = v.AsString.Trim();
-                        if (TryParseTime(s, out var tt)) return Value.Time(tt);
-                        if (s.Equals("NOW", StringComparison.OrdinalIgnoreCase))
-                            return Value.Time(SplitTimestamp(Now().L).time);
-                        throw Err.Conversion(s);
-                    }
+                    case VTag.String: return Value.Time(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Time));
                 }
-                throw Err.Conversion(ToStr(v));
+                throw Cvt.ConversionError(v);
             case TypeKind.Timestamp:
                 switch (v.Tag)
                 {
                     case VTag.Timestamp: return v;
                     case VTag.Date: return Value.Timestamp(v.L * Value.TicksPerDay);
                     case VTag.Time: return Value.Timestamp(DateToDay(DateOnly.FromDateTime(DateTime.Now)) * Value.TicksPerDay + v.L);
-                    case VTag.String: return Value.Timestamp(ParseTimestamp(v.AsString, out _));
+                    case VTag.String: return Value.Timestamp(Cvt.StringToDateTime(v.AsString, Cvt.Expect.Timestamp));
                 }
-                throw Err.Conversion(ToStr(v));
+                throw Cvt.ConversionError(v);
             case TypeKind.Char:
             case TypeKind.VarChar:
                 return CastString(v, t);
@@ -415,11 +292,24 @@ public static class Conv
         throw Err.Unsupported("cast to " + t);
     }
 
+    /// <summary>
+    /// Text of a value moved into a string of <paramref name="t"/>: doubles get as many digits as fit in its byte
+    /// length (float_to_text) and exact numbers that do not fit fail with a conversion error (integer_to_text).
+    /// </summary>
+    static string NumberText(in Value v, SqlType t)
+    {
+        var bytes = t.Length * (t.Charset == Charset.Octets ? 1 : t.BytesPerChar);
+        if (v.Tag == VTag.Double) return Cvt.FloatToText(v.AsDouble, v.IsFloat, bytes);
+        var s = FormatExact(v.L, v.Scale);
+        if (s.Length > bytes) throw Cvt.ConversionError(v);
+        return s;
+    }
+
     static Value CastString(in Value v, SqlType t)
     {
         if (t.Charset == Charset.Octets)
         {
-            var bytes = v.Tag == VTag.Bytes ? v.AsBytes : Utf8.GetBytes(ToStr(v));
+            var bytes = v.Tag == VTag.Bytes ? v.AsBytes : Utf8.GetBytes(v.Tag is VTag.Int or VTag.Double ? NumberText(v, t) : ToStr(v));
             if (bytes.Length > t.Length)
             {
                 // excess must be all zero/space padding
@@ -435,7 +325,7 @@ public static class Conv
             }
             return Value.Bytes(bytes);
         }
-        var s = v.Tag == VTag.String ? v.AsString : ToStr(v);
+        var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Double ? NumberText(v, t) : ToStr(v);
         var len = CharLength(s);
         if (len > t.Length)
         {
@@ -523,7 +413,7 @@ public static class Conv
             case VTag.String when b.Tag == VTag.Bytes:
                 return CompareBytes(Utf8.GetBytes(a.AsString), b.AsBytes);
         }
-        throw Err.Conversion(ToStr(b));
+        throw Cvt.ConversionError(b);
     }
 
     static SqlType TypeOfTag(VTag t) => t switch
