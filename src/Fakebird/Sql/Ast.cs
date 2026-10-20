@@ -335,6 +335,7 @@ public sealed class JoinRef : TableRef
     public TableRef Right = null!;
     public Expr? On;
     public List<string>? Using;
+    public List<(int Line, int Col)>? UsingPos;
     public bool Natural;
 }
 

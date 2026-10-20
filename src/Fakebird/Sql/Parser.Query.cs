@@ -232,7 +232,18 @@ public sealed partial class Parser
             var j = new JoinRef { Kind = kind, Left = left, Right = TablePrimary(), Natural = natural, Pos = pos };
             if (!natural)
             {
-                if (Accept("USING")) j.Using = ParenIdentList();
+                if (Accept("USING"))
+                {
+                    ExpectOp("(");
+                    j.Using = new();
+                    j.UsingPos = new();
+                    do
+                    {
+                        j.UsingPos.Add((Cur.Line, Cur.Col));
+                        j.Using.Add(AnyIdent());
+                    } while (AcceptOp(","));
+                    ExpectOp(")");
+                }
                 else
                 {
                     Expect("ON");

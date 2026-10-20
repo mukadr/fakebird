@@ -12,6 +12,8 @@ public sealed class ColInfo
     public bool NotNull;
     public string Relation = "";
     public string Field = "";
+    /// <summary>A derived table column produced by a UNION: grouping on it loses the column's origin.</summary>
+    public bool ViaUnion;
 }
 
 /// <summary>A record source visible by name in a query scope.</summary>
@@ -23,12 +25,20 @@ public sealed class SourceItem
     public int Stream;
     public List<ColInfo> Cols = new();
     public Table? Table;
+    /// <summary>What the name is, in ambiguity errors: table, view, procedure or derived table.</summary>
+    public string Context = "derived table";
+    /// <summary>Position in Firebird's context stack (a RIGHT/FULL join puts its right side first).</summary>
+    public int CtxOrder;
     /// <summary>NEW/OLD/cursor contexts: only resolvable with a qualifier.</summary>
     public bool QualifiedOnly;
     /// <summary>Hidden from '*' expansion.</summary>
     public bool Hidden;
     /// <summary>Columns merged by USING/NATURAL joins: hidden from unqualified lookup and '*'.</summary>
     public HashSet<int>? HiddenCols;
+    /// <summary>Columns merged by USING/NATURAL joins into COALESCE(left, right), for unqualified references.</summary>
+    public Dictionary<int, Func<Scope, Scope, Exec.XNode>>? Merged;
+    /// <summary>On the null-extended side of an outer join: its columns are described as nullable.</summary>
+    public bool OuterNullable;
     Dictionary<string, int>? _index;
 
     public int Find(string col)
@@ -76,8 +86,12 @@ public sealed class Scope
 
     public Scope(Scope? parent) => Parent = parent;
 
+    /// <summary>While binding a join's ON condition: the items it can see (the join's own sources).</summary>
+    public HashSet<SourceItem>? Visible;
+
     public void Add(SourceItem item)
     {
+        item.CtxOrder = Items.Count;
         Items.Add(item);
         if (!Streams.Contains(item.Stream)) Streams.Add(item.Stream);
     }

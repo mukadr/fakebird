@@ -97,7 +97,9 @@ public sealed partial class Parser
     FbError Unexpected()
     {
         var t = Cur;
-        if (t.Kind == Tok.Eof) return Err.SyntaxMsg("Unexpected end of command - line " + t.Line + ", column " + t.Col);
+        if (t.Kind == Tok.Eof)
+            return new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104)
+                .Gds(FbMessages.command_end_err2).Num(t.Line).Num(Math.Max(1, t.Col - 1)).Build();
         // the token as written (keywords and identifiers are upper-cased by the lexer)
         var text = t.Kind == Tok.Ident && t.Pos + t.Text.Length <= _sql.Length && _sql[t.Pos] != '"'
             && string.Equals(_sql.Substring(t.Pos, t.Text.Length), t.Text, StringComparison.OrdinalIgnoreCase)

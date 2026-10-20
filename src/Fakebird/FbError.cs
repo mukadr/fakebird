@@ -43,9 +43,9 @@ public sealed class FbError : Exception
         for (var i = 0; i < status.Count; i++)
         {
             var a = status[i];
-            if (a.Type != Wire.Isc.arg_gds) continue;
+            if (a.Type is not (Wire.Isc.arg_gds or Wire.Isc.arg_warning)) continue;
             var args = new List<object>();
-            for (var j = i + 1; j < status.Count && status[j].Type != Wire.Isc.arg_gds; j++)
+            for (var j = i + 1; j < status.Count && status[j].Type is not (Wire.Isc.arg_gds or Wire.Isc.arg_warning); j++)
             {
                 if (status[j].Type == Wire.Isc.arg_string) args.Add(status[j].Text!);
                 else if (status[j].Type == Wire.Isc.arg_number) args.Add(status[j].Number);
@@ -84,6 +84,8 @@ internal sealed class StatusBuilder
     public StatusBuilder Gds(int code) { _args.Add(new(Wire.Isc.arg_gds, code, null)); return this; }
     public StatusBuilder Str(string s) { _args.Add(new(Wire.Isc.arg_string, 0, s)); return this; }
     public StatusBuilder Num(int n) { _args.Add(new(Wire.Isc.arg_number, n, null)); return this; }
+    /// <summary>A warning appended to the error (isc_arg_warning).</summary>
+    public StatusBuilder Warn(int code) { _args.Add(new(Wire.Isc.arg_warning, code, null)); return this; }
     /// <summary>isc_dsql_line_col_error ("At line L, column C") when the position is known.</summary>
     public StatusBuilder LineCol(int line, int col) => line > 0 ? Gds(Err.isc_dsql_line_col_error).Num(line).Num(col) : this;
     /// <summary>Builds the error; its SQLSTATE comes from the codes like Firebird's (the argument is the fallback

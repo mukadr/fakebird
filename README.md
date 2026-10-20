@@ -115,6 +115,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   shown value, the order in which MIN/MAX/LIST see the rows, and the DISTINCT survivor follow the bytes of
   Firebird's sort records; SUM/AVG DISTINCT add the values in sorted order; SUM(NULL) is CHAR(1); the
   aggregate errors (nested, in WHERE/GROUP BY, ungrouped columns per clause) carry Firebird's codes.
+* **Joins and subqueries**: USING/NATURAL columns are COALESCE(left, right) when unqualified (and in
+  `*`), the null-extended side of an outer join is described as nullable, ON conditions only see the
+  sources joined so far, and ambiguity, alias-conflict, USING, derived-table column list and column count
+  errors carry Firebird's codes and arguments (`Ambiguous field name between table R and table L`).
 * **Ordering and limits**: rows with equal ORDER BY keys come out in Firebird's sort-record order (e.g.
   INTEGER ties by their little-endian bytes, so -1 after 5); NULLs first ascending; UNION orders by
   positions only and keeps the last of duplicate rows; FIRST/SKIP/ROWS/OFFSET/FETCH follow Firebird's

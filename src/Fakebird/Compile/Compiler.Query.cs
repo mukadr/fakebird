@@ -267,7 +267,7 @@ public sealed partial class Compiler
         var boundary = new Scope(s);
         node.Query = CompileQueryExpr(q, boundary);
         if (expectedColumns > 0 && node.Query.Columns.Length != expectedColumns)
-            throw Err.Dsql(-104, "Subquery must return exactly one column");
+            throw CountMismatch();
         node.Uncorrelated = !boundary.Correlated;
         node.OuterStreams = boundary.OuterStreams;
         if (boundary.OuterStreams != null)
@@ -377,11 +377,11 @@ public sealed partial class Compiler
         _selectListTypes = selectListTypes;
         var r = CompileQueryExpr(so.Right, outer);
         if (l.Columns.Length != r.Columns.Length)
-            throw Err.Dsql(-104, "Column count mismatch in UNION");
+            throw CountMismatch();
         var cols = new OutCol[l.Columns.Length];
         for (var i = 0; i < cols.Length; i++)
         {
-            var t = Builtins.CommonType([l.Columns[i].Type, r.Columns[i].Type], "UNION");
+            var t = Builtins.CommonType([TypeOf(l.Columns[i]), TypeOf(r.Columns[i])], "UNION");
             var lc = l.Columns[i];
             // the first branch describes the column; when it must be cast to the union's type, only an alias or a
             // column name survives (as the name), like Firebird's pass1 union processing
@@ -393,6 +393,8 @@ public sealed partial class Compiler
             };
         }
         return new UnionQuery { Left = l, Right = r, All = so.Kind == SetOpKind.UnionAll, Columns = cols };
+
+        static SqlType TypeOf(OutCol c) => c.NullLiteral ? SqlType.Null : c.Type;
     }
 
     static bool SameDescriptor(SqlType a, SqlType b)
@@ -404,7 +406,14 @@ public sealed partial class Compiler
         var frame = new Dictionary<string, CteInfo>(StringComparer.Ordinal);
         _ctes.Add(frame);
         foreach (var def in q.With!)
+        {
+            // the first of two CTEs with one name is never used: Firebird warns about it with the error
+            if (frame.ContainsKey(def.Name))
+                throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+                    .Gds(FbMessages.alias_conflict_err).Str(def.Name)
+                    .Warn(FbMessages.sqlwarn).Num(-104).Warn(FbMessages.dsql_cte_not_used).Str(def.Name).Build();
             frame[def.Name] = new CteInfo { Def = def, Recursive = q.Recursive, Outer = outer };
+        }
     }
 
     CteInfo? FindCte(string name)
@@ -487,20 +496,34 @@ public sealed partial class Compiler
     /// Columns of a derived table or CTE: they describe like the inner select list (its relation, sqlname and
     /// nullability), while view columns (<paramref name="view"/>) describe as the view's own, always nullable.
     /// </summary>
-    static List<ColInfo> ColsFor(List<string>? names, OutCol[] cols, string relation, bool view = false)
+    static List<ColInfo> ColsFor(List<string>? names, OutCol[] cols, string relation, bool view = false, bool viaUnion = false)
     {
         if (names != null && names.Count != cols.Length)
-            throw Err.Dsql(-104, "Column list count mismatch for " + relation);
+        {
+            if (view) throw Err.Dsql(-104, "Column list count mismatch for " + relation);
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.dsql_command_err)
+                .Gds(names.Count < cols.Length ? FbMessages.dsql_derived_table_less_columns : FbMessages.dsql_derived_table_more_columns)
+                .Str(relation).Build();
+        }
         var list = new List<ColInfo>();
         for (var i = 0; i < cols.Length; i++)
         {
             var name = names?[i] ?? cols[i].Name;
+            if (!view && list.Any(c => c.Name == name))
+                throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104).Gds(FbMessages.dsql_command_err)
+                    .Gds(FbMessages.dsql_derived_field_dup_name).Str(name).Str(relation).Build();
             list.Add(view
                 ? new ColInfo { Name = name, Type = cols[i].Type, NotNull = false, Relation = relation, Field = name }
-                : new ColInfo { Name = name, Type = cols[i].Type, NotNull = !cols[i].Nullable, Relation = cols[i].Relation, Field = cols[i].Field });
+                : new ColInfo { Name = name, Type = cols[i].Type, NotNull = !cols[i].Nullable, Relation = cols[i].Relation, Field = cols[i].Field, ViaUnion = viaUnion });
         }
         return list;
     }
+
+    static bool IsUnion(QueryNode q) => q is UnionQuery || q is LimitQuery { Input: UnionQuery };
+
+    /// <summary>[dsql_error, sqlerr -104, dsql_command_err, dsql_count_mismatch]: a column count that does not fit.</summary>
+    static FbError CountMismatch() => new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-104)
+        .Gds(FbMessages.dsql_command_err).Gds(FbMessages.dsql_count_mismatch).Build();
 
     // ======================================================================== query specification
 
@@ -598,6 +621,8 @@ public sealed partial class Compiler
                 ab.KeyCanon.Add(Canon(ge, s) ?? Guid.NewGuid().ToString());
                 ab.KeyTypes.Add(kn.Type);
                 if (kn is ColNode cn) ab.GroupedColumns.Add((cn.Stream, cn.Index));
+                else if (kn is CoalesceNode { Field: "COALESCE" } merged) // a USING/NATURAL column
+                    foreach (var a in merged.Args.OfType<ColNode>()) ab.GroupedColumns.Add((a.Stream, a.Index));
                 else if (kn is ComputedColNode cc) ab.GroupedColumns.Add((cc.Stream, cc.Index));
             }
             ab.KeyCount = keys.Count;
@@ -668,8 +693,9 @@ public sealed partial class Compiler
                     any = true;
                     for (var i = 0; i < src.Cols.Count; i++)
                     {
-                        if (src.HiddenCols?.Contains(i) == true) continue;
-                        var n = MakeCol(s, s, src, i);
+                        // t.* lists all of t's columns; * shows a USING/NATURAL column once, merged
+                        if (star.Qualifier == null && src.HiddenCols?.Contains(i) == true) continue;
+                        var n = MakeCol(s, s, src, i, qualified: star.Qualifier != null);
                         proj.Add(n);
                         outCols.Add(OutColOf(n, null));
                     }
@@ -746,6 +772,7 @@ public sealed partial class Compiler
         Relation = n.Relation ?? "",
         // a bare NULL is described as CHAR(1) like Firebird (clients cannot handle SQL_NULL columns)
         Type = n.Type.Kind == TypeKind.Null ? SqlType.Char(1, Charset.None) : n.Type,
+        NullLiteral = n.Type.Kind == TypeKind.Null,
         Nullable = !n.NotNull,
         Derived = alias == null && n.Field is not { Length: > 0 },
     };
@@ -895,11 +922,11 @@ public sealed partial class Compiler
             {
                 var boundary = new Scope(d.Lateral ? s : s.Parent);
                 var q = CompileSelect(d.Query, boundary);
-                var cols = ColsFor(d.Columns, q.Columns, d.Alias ?? "");
+                var cols = ColsFor(d.Columns, q.Columns, d.Alias ?? "", viaUnion: IsUnion(q));
                 var stream = NewStream(cols.Count);
                 var rel = new DerivedRel(q, stream, []) { Cacheable = !boundary.Correlated };
                 var item = new SourceItem { Alias = d.Alias, Name = d.Alias ?? "", Stream = stream, Cols = cols };
-                s.Add(item);
+                AddSource(s, item);
                 if (boundary.Correlated && boundary.OuterStreams != null && s.Parent != null)
                     foreach (var st in boundary.OuterStreams)
                         if (!s.Streams.Contains(st)) { s.Correlated = true; (s.OuterStreams ??= new()).Add(st); }
@@ -909,6 +936,17 @@ public sealed partial class Compiler
             {
                 var l = BuildRef(j.Left, s);
                 var r = BuildRef(j.Right, s);
+                if (j.Kind is JoinKind.Right or JoinKind.Full)
+                {
+                    foreach (var i in ItemsOf(l)) i.OuterNullable = true;
+                    // Firebird turns them around (r LEFT JOIN l): the right side's contexts come first
+                    var li = ItemsOf(l);
+                    var ri = ItemsOf(r);
+                    var orders = li.Concat(ri).Select(i => i.CtxOrder).Order().ToList();
+                    var k = 0;
+                    foreach (var i in ri.Concat(li)) i.CtxOrder = orders[k++];
+                }
+                if (j.Kind is JoinKind.Left or JoinKind.Full) foreach (var i in ItemsOf(r)) i.OuterNullable = true;
                 return new JJoin { Kind = j.Kind, L = l, R = r, Ast = j };
             }
         }
@@ -925,7 +963,7 @@ public sealed partial class Compiler
                 var (rel, cols) = CompileCteRef(cte);
                 var stream = rel is DerivedRel dr ? dr.Stream : ((FuncRel)rel).Stream;
                 var item = new SourceItem { Alias = n.Alias, Name = n.Name, Stream = stream, Cols = cols };
-                s.Add(item);
+                AddSource(s, item);
                 return new JLeaf { Item = item, Fixed = rel };
             }
             if (Db.Tables.TryGetValue(n.Name, out var table))
@@ -933,10 +971,10 @@ public sealed partial class Compiler
                 var stream = NewStream(table.Columns.Count);
                 var item = new SourceItem
                 {
-                    Alias = n.Alias, Name = n.Name, Stream = stream, Table = table,
+                    Alias = n.Alias, Name = n.Name, Stream = stream, Table = table, Context = "table",
                     Cols = table.Columns.Select(c => new ColInfo { Name = c.Name, Type = c.Type, NotNull = c.NotNull, Relation = table.Name, Field = c.Name }).ToList(),
                 };
-                s.Add(item);
+                AddSource(s, item);
                 return new JLeaf { Item = item, Table = table };
             }
             if (Db.Views.TryGetValue(n.Name, out var view))
@@ -954,8 +992,8 @@ public sealed partial class Compiler
                 }
                 var stream = NewStream(cols.Count);
                 var rel = new DerivedRel(q, stream, []) { Cacheable = true };
-                var item = new SourceItem { Alias = n.Alias, Name = n.Name, Stream = stream, Cols = cols };
-                s.Add(item);
+                var item = new SourceItem { Alias = n.Alias, Name = n.Name, Stream = stream, Cols = cols, Context = "view" };
+                AddSource(s, item);
                 return new JLeaf { Item = item, Fixed = rel };
             }
         }
@@ -967,15 +1005,24 @@ public sealed partial class Compiler
             var rel = new FuncRel(c => Routines.CallSelectable(c, p, args), stream);
             var item = new SourceItem
             {
-                Alias = n.Alias, Name = n.Name, Stream = stream,
+                Alias = n.Alias, Name = n.Name, Stream = stream, Context = "procedure",
                 Cols = proc.Outputs.Select(o => new ColInfo { Name = o.Name, Type = o.Type, Relation = proc.Name, Field = o.Name }).ToList(),
             };
-            s.Add(item);
+            AddSource(s, item);
             return new JLeaf { Item = item, Fixed = rel };
         }
         if (Routine?.SubRoutines != null && Routine.SubRoutines.TryGetValue(n.Name, out var sub) && !sub.IsFunction)
             return BuildSubProcRef(sub, n, s);
         throw Err.TableUnknown(n.Name, n.Line, n.Col);
+    }
+
+    /// <summary>Adds a FROM source; two sources of one query cannot share an alias.</summary>
+    static void AddSource(Scope s, SourceItem item)
+    {
+        if (item.Alias != null && s.Items.Any(i => !i.QualifiedOnly && i.Alias == item.Alias))
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+                .Gds(FbMessages.alias_conflict_err).Str(item.Alias).Build();
+        s.Add(item);
     }
 
     internal XNode[] BindProcArgs(List<RoutineParam> inputs, List<Expr> args, Scope s, string name)
@@ -1000,7 +1047,10 @@ public sealed partial class Compiler
         if (ast.On != null)
         {
             if (ContainsAggregate(ast.On)) throw Err.Dsql(-104, "Aggregates are not allowed in ON clause");
-            foreach (var c in SplitAnd(ast.On)) j.On.Add(MakeConj(c, s));
+            var saved = s.Visible;
+            s.Visible = ItemsOf(j).ToHashSet();
+            try { foreach (var c in SplitAnd(ast.On)) j.On.Add(MakeConj(c, s)); }
+            finally { s.Visible = saved; }
         }
         else if (ast.Using != null || ast.Natural)
         {
@@ -1015,10 +1065,14 @@ public sealed partial class Compiler
                     foreach (var c in li.Cols)
                         if (rightItems.Any(r => r.Find(c.Name) >= 0) && !names.Contains(c.Name)) names.Add(c.Name);
             }
-            foreach (var name in names)
+            for (var n = 0; n < names.Count; n++)
             {
-                var li = leftItems.FirstOrDefault(i => i.Find(name) >= 0) ?? throw Err.ColumnUnknown(name);
-                var ri = rightItems.FirstOrDefault(i => i.Find(name) >= 0) ?? throw Err.ColumnUnknown(name);
+                var name = names[n];
+                if (names.IndexOf(name) != n)
+                    throw Err.Dsql104(FbMessages.dsql_col_more_than_once_using, name);
+                var (line, col) = ast.UsingPos?[n] ?? (0, 0);
+                var li = leftItems.FirstOrDefault(i => i.Find(name) >= 0) ?? throw Err.ColumnUnknown("<left side of USING>." + name, line, col);
+                var ri = rightItems.FirstOrDefault(i => i.Find(name) >= 0) ?? throw Err.ColumnUnknown("<right side of USING>." + name, line, col);
                 var lc = li.Find(name);
                 var rc = ri.Find(name);
                 var ln = MakeColRaw(li, lc);
@@ -1029,6 +1083,17 @@ public sealed partial class Compiler
                     Streams = [li.Stream, ri.Stream],
                 });
                 (ri.HiddenCols ??= new()).Add(rc);
+                // an unqualified reference is COALESCE(left, right), named after the column
+                Func<Scope, Scope, XNode>? previous = null;
+                li.Merged?.TryGetValue(lc, out previous);
+                var columnName = name;
+                (li.Merged ??= new())[lc] = (from, owner) =>
+                {
+                    var x = previous != null ? previous(from, owner) : MakeCol(from, owner, li, lc, qualified: true);
+                    var y = MakeCol(from, owner, ri, rc, qualified: true);
+                    var (type, nullable) = TypeRules.FromList([x, y], "COALESCE");
+                    return new CoalesceNode([x, y]) { Type = type, Name = columnName, Field = "COALESCE", Relation = "", NotNull = !nullable };
+                };
             }
         }
     }

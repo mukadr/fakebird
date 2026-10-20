@@ -806,30 +806,28 @@ public sealed partial class Compiler
         {
             if (r.Qualifier != null)
             {
-                foreach (var item in sc.Items)
+                var matching = sc.Items.Where(i => i.Matches(r.Qualifier) && (sc.Visible == null || sc.Visible.Contains(i))).ToList();
+                if (matching.Count > 1 && matching.All(i => i.Find(r.Name) >= 0)) throw Ambiguous(r.Name, matching);
+                foreach (var item in matching)
                 {
-                    if (!item.Matches(r.Qualifier)) continue;
                     var idx = item.Find(r.Name);
                     if (idx < 0 && r.Name == "RDB$DB_KEY" && item.Table is { IsSystem: false }) return new DbKeyNode(item.Stream);
                     if (idx < 0) throw Err.ColumnUnknown(r.Qualifier + "." + r.Name, r.Line, r.Col);
-                    return MakeCol(s, sc, item, idx);
+                    return MakeCol(s, sc, item, idx, qualified: true);
                 }
             }
             else
             {
-                SourceItem? found = null;
-                var fi = -1;
+                var found = new List<(SourceItem Item, int Index)>();
                 foreach (var item in sc.Items)
                 {
-                    if (item.QualifiedOnly) continue;
+                    if (item.QualifiedOnly || sc.Visible != null && !sc.Visible.Contains(item)) continue;
                     var idx = item.Find(r.Name);
                     if (idx < 0 || item.HiddenCols?.Contains(idx) == true) continue;
-                    if (found != null && found.Stream != item.Stream)
-                        throw Err.Dsql(-204, $"Ambiguous field name between {Describe(found)} and {Describe(item)}");
-                    found = item;
-                    fi = idx;
+                    if (found.Count == 0 || found.All(f => f.Item.Stream != item.Stream)) found.Add((item, idx));
                 }
-                if (found != null) return MakeCol(s, sc, found, fi);
+                if (found.Count > 1) throw Ambiguous(r.Name, found.Select(f => f.Item).ToList());
+                if (found.Count == 1) return MakeCol(s, sc, found[0].Item, found[0].Index);
                 if (r.Name == "RDB$DB_KEY" && sc.Items.Count(i => !i.QualifiedOnly) == 1 && sc.Items.First(i => !i.QualifiedOnly) is { Table.IsSystem: false } only)
                     return new DbKeyNode(only.Stream);
             }
@@ -841,7 +839,15 @@ public sealed partial class Compiler
         throw Err.ColumnUnknown(r.ToString(), r.Line, r.Col);
     }
 
-    static string Describe(SourceItem i) => (i.Table != null ? "table " : "") + (i.Alias ?? i.Name);
+    /// <summary>PASS1_ambiguity_check: the contexts, last one first, as "table R" and "table L and table M ".</summary>
+    static FbError Ambiguous(string name, List<SourceItem> items)
+    {
+        var names = items.OrderByDescending(i => i.CtxOrder)
+            .Select(i => i.Context + " " + (i.Context == "derived table" ? i.Alias ?? "" : i.Table?.Name ?? i.Name)).ToList();
+        var rest = string.Concat(names.Skip(1).Select((n, k) => (k > 0 ? "and " : "") + n + " "));
+        return new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204)
+            .Gds(FbMessages.dsql_ambiguous_field_name).Str(names[0]).Str(rest).Gds(Err.isc_random).Str(name).Build();
+    }
 
     HashSet<(Table, int)>? _computing;
 
@@ -869,8 +875,9 @@ public sealed partial class Compiler
         }
     }
 
-    XNode MakeCol(Scope from, Scope owner, SourceItem item, int idx)
+    XNode MakeCol(Scope from, Scope owner, SourceItem item, int idx, bool qualified = false)
     {
+        if (!qualified && item.Merged != null && item.Merged.TryGetValue(idx, out var merged)) return merged(from, owner);
         if (!ReferenceEquals(from, owner))
         {
             for (var sc = from; sc != null && !ReferenceEquals(sc, owner); sc = sc.Parent)
@@ -892,7 +899,12 @@ public sealed partial class Compiler
         var n = Col(item.Stream, idx, ci.Type, ci.Name, ci.Relation);
         n.Field = ci.Field;
         n.Relation = ci.Relation;
-        n.NotNull = ci.NotNull;
+        n.NotNull = ci.NotNull && !item.OuterNullable;
+        if (owner.AggMode && ci.ViaUnion)
+        {
+            n.Relation = "";
+            n.Field = "";
+        }
         return n;
     }
 

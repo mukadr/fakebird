@@ -13,6 +13,8 @@ public sealed class OutCol
     public bool Nullable = true;
     /// <summary>Name derived from an expression (no alias, not a column): a UNION does not inherit it.</summary>
     public bool Derived;
+    /// <summary>A bare NULL (described as CHAR(1)): it does not take part in a UNION's type.</summary>
+    public bool NullLiteral;
 }
 
 public abstract class QCursor

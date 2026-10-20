@@ -1,0 +1,1998 @@
+--- select l.id, r.id from l join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+affected 0
+--- select * from l join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+affected 0
+--- select l.*, r.k from l join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+2 | 20 | b | NULL | 20 | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 3 | 3 | 
+affected 0
+--- select l.id, r.id from l join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+affected 0
+--- select * from l join r using (id) order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+affected 0
+--- select * from l join r using (id, k) order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+affected 0
+--- select id, k, s, t from l join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+K
+--- select l.id, r.id, id from l join r using (id) order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+affected 0
+--- select * from l natural join r order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+affected 0
+--- select id from l natural join m order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+1 | 
+2 | 
+affected 0
+--- select l.id, r.id from l inner join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l inner join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+affected 0
+--- select * from l inner join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+affected 0
+--- select l.*, r.k from l inner join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+2 | 20 | b | NULL | 20 | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l inner join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+3 | 3 | 3 | 
+affected 0
+--- select l.id, r.id from l inner join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l inner join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l inner join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l inner join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l inner join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+affected 0
+--- select * from l inner join r using (id) order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+affected 0
+--- select * from l inner join r using (id, k) order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+affected 0
+--- select id, k, s, t from l inner join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+K
+--- select l.id, r.id, id from l inner join r using (id) order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+affected 0
+--- select * from l natural inner join r order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+affected 0
+--- select id from l natural inner join m order by 1
+ID:INTEGER (4,,,False,,COALESCE,False,False)
+1 | 
+2 | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l left join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+3 | c | NULL | NULL | 
+4 | NULL | NULL | NULL | 
+affected 0
+--- select * from l left join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select l.*, r.k from l left join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+1 | 10 | a | 1.5 | NULL | 
+2 | 20 | b | NULL | 20 | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l left join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+4 | 4 | 3 | 
+affected 0
+--- select l.id, r.id from l left join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l left join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+3 | NULL | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l left join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select * from l left join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | 
+affected 0
+--- select * from l left join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | 
+affected 0
+--- select id, k, s, t from l left join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+K
+--- select l.id, r.id, id from l left join r using (id) order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+4 | NULL | 4 | 
+affected 0
+--- select * from l natural left join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 20 | b | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | NULL | 
+affected 0
+--- select id from l natural left join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select l.id, r.id from l left outer join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l left outer join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+3 | c | NULL | NULL | 
+4 | NULL | NULL | NULL | 
+affected 0
+--- select * from l left outer join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select l.*, r.k from l left outer join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+1 | 10 | a | 1.5 | NULL | 
+2 | 20 | b | NULL | 20 | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l left outer join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+4 | 4 | 3 | 
+affected 0
+--- select l.id, r.id from l left outer join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l left outer join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select l.id, r.id from l left outer join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+3 | NULL | 
+affected 0
+--- select l.id, r.id from l left outer join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l left outer join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select * from l left outer join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | 
+affected 0
+--- select * from l left outer join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | 
+affected 0
+--- select id, k, s, t from l left outer join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+K
+--- select l.id, r.id, id from l left outer join r using (id) order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+4 | NULL | 4 | 
+affected 0
+--- select * from l natural left outer join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 20 | b | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | NULL | 
+affected 0
+--- select id from l natural left outer join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select l.id, r.id from l right join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+NULL | 2 | 
+NULL | 6 | 
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l right join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+NULL | NULL | 5 | z | 
+NULL | NULL | 6 | NULL | 
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+affected 0
+--- select * from l right join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+NULL | NULL | NULL | NULL | 2 | 30 | y | 2 | 
+NULL | NULL | NULL | NULL | 5 | 20 | z | NULL | 
+NULL | NULL | NULL | NULL | 6 | NULL | NULL | 7.125 | 
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+affected 0
+--- select l.*, r.k from l right join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+NULL | NULL | NULL | NULL | 10 | 
+NULL | NULL | NULL | NULL | 30 | 
+NULL | NULL | NULL | NULL | NULL | 
+2 | 20 | b | NULL | 20 | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l right join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+5 | 3 | 5 | 
+affected 0
+--- select l.id, r.id from l right join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l right join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+NULL | 1 | 
+NULL | 2 | 
+NULL | 5 | 
+NULL | 6 | 
+affected 0
+--- select l.id, r.id from l right join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l right join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l right join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+affected 0
+--- select * from l right join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+5 | NULL | NULL | NULL | 20 | z | NULL | 
+6 | NULL | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select * from l right join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 30 | NULL | NULL | y | 2 | 
+5 | 20 | NULL | NULL | z | NULL | 
+6 | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select id, k, s, t from l right join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table L' 'table R ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table L and table R
+K
+--- select l.id, r.id, id from l right join r using (id) order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+NULL | 5 | 5 | 
+NULL | 6 | 6 | 
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+affected 0
+--- select * from l natural right join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 30 | NULL | 2 | y | 
+5 | 20 | NULL | NULL | z | 
+6 | NULL | NULL | 7.125 | NULL | 
+affected 0
+--- select id from l natural right join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+affected 0
+--- select l.id, r.id from l right outer join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+NULL | 2 | 
+NULL | 6 | 
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l right outer join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+NULL | NULL | 5 | z | 
+NULL | NULL | 6 | NULL | 
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+affected 0
+--- select * from l right outer join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+NULL | NULL | NULL | NULL | 2 | 30 | y | 2 | 
+NULL | NULL | NULL | NULL | 5 | 20 | z | NULL | 
+NULL | NULL | NULL | NULL | 6 | NULL | NULL | 7.125 | 
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+affected 0
+--- select l.*, r.k from l right outer join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+NULL | NULL | NULL | NULL | 10 | 
+NULL | NULL | NULL | NULL | 30 | 
+NULL | NULL | NULL | NULL | NULL | 
+2 | 20 | b | NULL | 20 | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l right outer join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+5 | 3 | 5 | 
+affected 0
+--- select l.id, r.id from l right outer join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l right outer join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+NULL | 1 | 
+NULL | 2 | 
+NULL | 5 | 
+NULL | 6 | 
+affected 0
+--- select l.id, r.id from l right outer join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l right outer join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l right outer join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+affected 0
+--- select * from l right outer join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+5 | NULL | NULL | NULL | 20 | z | NULL | 
+6 | NULL | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select * from l right outer join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 30 | NULL | NULL | y | 2 | 
+5 | 20 | NULL | NULL | z | NULL | 
+6 | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select id, k, s, t from l right outer join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table L' 'table R ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table L and table R
+K
+--- select l.id, r.id, id from l right outer join r using (id) order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+NULL | 5 | 5 | 
+NULL | 6 | 6 | 
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+affected 0
+--- select * from l natural right outer join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 30 | NULL | 2 | y | 
+5 | 20 | NULL | NULL | z | 
+6 | NULL | NULL | 7.125 | NULL | 
+affected 0
+--- select id from l natural right outer join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+affected 0
+--- select l.id, r.id from l full join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+NULL | 2 | 
+NULL | 6 | 
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l full join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+NULL | NULL | 5 | z | 
+NULL | NULL | 6 | NULL | 
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+3 | c | NULL | NULL | 
+4 | NULL | NULL | NULL | 
+affected 0
+--- select * from l full join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+NULL | NULL | NULL | NULL | 2 | 30 | y | 2 | 
+NULL | NULL | NULL | NULL | 5 | 20 | z | NULL | 
+NULL | NULL | NULL | NULL | 6 | NULL | NULL | 7.125 | 
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select l.*, r.k from l full join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+NULL | NULL | NULL | NULL | 10 | 
+NULL | NULL | NULL | NULL | 30 | 
+NULL | NULL | NULL | NULL | NULL | 
+1 | 10 | a | 1.5 | NULL | 
+2 | 20 | b | NULL | 20 | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l full join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+6 | 4 | 5 | 
+affected 0
+--- select l.id, r.id from l full join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l full join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+NULL | 1 | 
+NULL | 2 | 
+NULL | 5 | 
+NULL | 6 | 
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select l.id, r.id from l full join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+3 | NULL | 
+affected 0
+--- select l.id, r.id from l full join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l full join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select * from l full join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | 
+5 | NULL | NULL | NULL | 20 | z | NULL | 
+6 | NULL | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select * from l full join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | 
+2 | 30 | NULL | NULL | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | 
+5 | 20 | NULL | NULL | z | NULL | 
+6 | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select id, k, s, t from l full join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table L' 'table R ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table L and table R
+K
+--- select l.id, r.id, id from l full join r using (id) order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+NULL | 5 | 5 | 
+NULL | 6 | 6 | 
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+4 | NULL | 4 | 
+affected 0
+--- select * from l natural full join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 20 | b | NULL | NULL | 
+2 | 30 | NULL | 2 | y | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | NULL | 
+5 | 20 | NULL | NULL | z | 
+6 | NULL | NULL | 7.125 | NULL | 
+affected 0
+--- select id from l natural full join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+3 | 
+4 | 
+affected 0
+--- select l.id, r.id from l full outer join r on l.k = r.k order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+NULL | 2 | 
+NULL | 6 | 
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, l.s, r.id, r.t from l full outer join r on l.id = r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+NULL | NULL | 5 | z | 
+NULL | NULL | 6 | NULL | 
+1 | a | 1 | x | 
+2 | b | 2 | y | 
+3 | c | NULL | NULL | 
+4 | NULL | NULL | NULL | 
+affected 0
+--- select * from l full outer join r on l.id = r.id and r.t <> 'y' order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+NULL | NULL | NULL | NULL | 2 | 30 | y | 2 | 
+NULL | NULL | NULL | NULL | 5 | 20 | z | NULL | 
+NULL | NULL | NULL | NULL | 6 | NULL | NULL | 7.125 | 
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | NULL | NULL | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select l.*, r.k from l full outer join r on l.k = r.k and l.id < r.id order by l.id, r.id
+ID:INTEGER (4,,,True,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+NULL | NULL | NULL | NULL | 10 | 
+NULL | NULL | NULL | NULL | 30 | 
+NULL | NULL | NULL | NULL | NULL | 
+1 | 10 | a | 1.5 | NULL | 
+2 | 20 | b | NULL | 20 | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | 20 | 
+affected 0
+--- select count(*), count(l.id), count(r.id) from l full outer join r on l.k = r.k
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+6 | 4 | 5 | 
+affected 0
+--- select l.id, r.id from l full outer join r on 1 = 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+1 | 2 | 
+1 | 5 | 
+1 | 6 | 
+2 | 1 | 
+2 | 2 | 
+2 | 5 | 
+2 | 6 | 
+3 | 1 | 
+3 | 2 | 
+3 | 5 | 
+3 | 6 | 
+4 | 1 | 
+4 | 2 | 
+4 | 5 | 
+4 | 6 | 
+affected 0
+--- select l.id, r.id from l full outer join r on 1 = 0 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+NULL | 1 | 
+NULL | 2 | 
+NULL | 5 | 
+NULL | 6 | 
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select l.id, r.id from l full outer join r on l.k = r.k where r.id is null order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+3 | NULL | 
+affected 0
+--- select l.id, r.id from l full outer join r on l.k = r.k where l.id > 1 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, e.id from l full outer join e on l.id = e.id order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,E,ID,False,False)
+1 | NULL | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select * from l full outer join r using (id) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 30 | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | NULL | 
+5 | NULL | NULL | NULL | 20 | z | NULL | 
+6 | NULL | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select * from l full outer join r using (id, k) order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | x | 1.5 | 
+2 | 20 | b | NULL | NULL | NULL | 
+2 | 30 | NULL | NULL | y | 2 | 
+3 | NULL | c | 2.25 | NULL | NULL | 
+4 | 20 | NULL | 0 | NULL | NULL | 
+5 | 20 | NULL | NULL | z | NULL | 
+6 | NULL | NULL | NULL | NULL | 7.125 | 
+affected 0
+--- select id, k, s, t from l full outer join r using (id) order by 1
+ERROR 335544569 335544436 #-204 336003085 'table L' 'table R ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table L and table R
+K
+--- select l.id, r.id, id from l full outer join r using (id) order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+NULL | 5 | 5 | 
+NULL | 6 | 6 | 
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+4 | NULL | 4 | 
+affected 0
+--- select * from l natural full outer join r order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,4,3,True,,COALESCE,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | a | 1.5 | x | 
+2 | 20 | b | NULL | NULL | 
+2 | 30 | NULL | 2 | y | 
+3 | NULL | c | 2.25 | NULL | 
+4 | 20 | NULL | 0 | NULL | 
+5 | 20 | NULL | NULL | z | 
+6 | NULL | NULL | 7.125 | NULL | 
+affected 0
+--- select id from l natural full outer join m order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+1 | 
+2 | 
+3 | 
+3 | 
+4 | 
+affected 0
+--- select * from l cross join r order by l.id, r.id
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+N:NUMERIC (4,9,3,True,R,N,False,False)
+1 | 10 | a | 1.5 | 1 | 10 | x | 1.5 | 
+1 | 10 | a | 1.5 | 2 | 30 | y | 2 | 
+1 | 10 | a | 1.5 | 5 | 20 | z | NULL | 
+1 | 10 | a | 1.5 | 6 | NULL | NULL | 7.125 | 
+2 | 20 | b | NULL | 1 | 10 | x | 1.5 | 
+2 | 20 | b | NULL | 2 | 30 | y | 2 | 
+2 | 20 | b | NULL | 5 | 20 | z | NULL | 
+2 | 20 | b | NULL | 6 | NULL | NULL | 7.125 | 
+3 | NULL | c | 2.25 | 1 | 10 | x | 1.5 | 
+3 | NULL | c | 2.25 | 2 | 30 | y | 2 | 
+3 | NULL | c | 2.25 | 5 | 20 | z | NULL | 
+3 | NULL | c | 2.25 | 6 | NULL | NULL | 7.125 | 
+4 | 20 | NULL | 0 | 1 | 10 | x | 1.5 | 
+4 | 20 | NULL | 0 | 2 | 30 | y | 2 | 
+4 | 20 | NULL | 0 | 5 | 20 | z | NULL | 
+4 | 20 | NULL | 0 | 6 | NULL | NULL | 7.125 | 
+affected 0
+--- select l.id, r.id from l, r where l.k = r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l, r where l.k = r.k or l.id = r.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 2 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l, r where l.k > r.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 1 | 
+4 | 1 | 
+affected 0
+--- select a.id, b.id from l a join l b on a.k = b.k and a.id < b.id order by 1, 2
+ID:INTEGER (4,,,False,L,ID,True,False)
+ID:INTEGER (4,,,False,L,ID,True,False)
+2 | 4 | 
+affected 0
+--- select a.id, b.id, c.id from l a join r b on a.id = b.id join m c on c.id = a.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,False,M,ID,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+affected 0
+--- select a.id, b.id, c.id from l a left join r b on a.id = b.id left join m c on c.id = b.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,M,ID,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | NULL | 
+4 | NULL | NULL | 
+affected 0
+--- select a.id, b.id, c.id from l a left join r b on a.id = b.id join m c on c.id = a.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,False,M,ID,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+affected 0
+--- select a.id, b.id, c.id from l a join r b on a.id = b.id right join m c on c.k = a.k order by 3, 1
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,False,M,ID,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+1 | 1 | 3 | 
+affected 0
+--- select a.id, b.id, c.id from l a full join r b on a.id = b.id full join m c on c.id = coalesce(a.id, b.id) order by 1, 2, 3
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,M,ID,False,False)
+NULL | 5 | NULL | 
+NULL | 6 | NULL | 
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | 3 | 
+4 | NULL | NULL | 
+affected 0
+--- select a.id, b.id, c.id from l a left join (r b join m c on c.id = b.id) on a.id = b.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+ID:INTEGER (4,,,True,M,ID,False,False)
+1 | 1 | 1 | 
+2 | 2 | 2 | 
+3 | NULL | NULL | 
+4 | NULL | NULL | 
+affected 0
+--- select a.id, b.id from l a left join r b on a.k = b.k and b.t = 'z' order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select a.id, b.id from l a left join r b on a.k = b.k where b.t = 'z' order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select a.id, b.id from l a left join r b on a.k = b.k where b.t = 'z' or b.t is null order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select a.id, b.id from l a left join r b on a.k = b.k and a.s = 'b' order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | 5 | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select a.id, b.id from l a left join r b on b.k = 20 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 5 | 
+2 | 5 | 
+3 | 5 | 
+4 | 5 | 
+affected 0
+--- select a.id, coalesce(b.t, '-') from l a left join r b on a.id = b.id order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+COALESCE:VARCHAR (5,,,True,,COALESCE,False,False)
+1 | x | 
+2 | y | 
+3 | - | 
+4 | - | 
+affected 0
+--- select a.id, b.n + a.n from l a full join r b on a.id = b.id order by a.id, b.id
+ID:INTEGER (4,,,True,L,ID,True,False)
+ADD:NUMERIC (8,8,3,True,,ADD,False,False)
+NULL | NULL | 
+NULL | NULL | 
+1 | 3 | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select a.k, count(b.id) from l a left join r b on a.k = b.k group by a.k order by 1
+K:INTEGER (4,,,True,L,K,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 0 | 
+10 | 1 | 
+20 | 2 | 
+affected 0
+--- select b.k, sum(a.n) from l a right join r b on a.k = b.k group by b.k order by 1
+K:INTEGER (4,,,True,R,K,False,False)
+SUM:NUMERIC (8,8,2,True,,SUM,False,False)
+NULL | NULL | 
+10 | 1.5 | 
+20 | 0 | 
+30 | NULL | 
+affected 0
+--- select x.id, x.cnt from (select l.id, count(r.id) cnt from l left join r on r.k = l.k group by l.id) x order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+CNT:BIGINT (8,,,False,,COUNT,False,False)
+1 | 1 | 
+2 | 1 | 
+3 | 0 | 
+4 | 1 | 
+affected 0
+--- select a.id, b.id from l a join (select id, k from r where k is not null) b on a.k = b.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select a.id, b.id from l a left join (select first 1 id, k from r order by id) b on a.k = b.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+2 | NULL | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select a.id, b.mx from l a left join (select k, max(id) mx from r group by k) b on b.k = a.k order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+MX:INTEGER (4,,,True,,MAX,False,False)
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select a.id, b.id from l a join r b on a.id = b.id join l c on c.id = b.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 2 | 
+affected 0
+--- select id from l join r on l.id = r.id
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'ID' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+ID
+--- select k from l join r using (id)
+ERROR 335544569 335544436 #-204 336003085 'table R' 'table L ' 335544382 'K' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table R and table L
+K
+--- select l.k, r.k from l join r using (k) order by 1, 2
+K:INTEGER (4,,,True,L,K,False,False)
+K:INTEGER (4,,,True,R,K,False,False)
+10 | 10 | 
+20 | 20 | 
+20 | 20 | 
+affected 0
+--- select k from l join r using (k) order by 1
+K:INTEGER (4,,,True,,COALESCE,False,False)
+10 | 
+20 | 
+20 | 
+affected 0
+--- select l.id from l natural join r
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+affected 0
+--- select * from l join r using (s)
+ERROR 335544569 335544436 #-206 335544578 335544382 '<right side of USING>.S' 336397208 #1 #31 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+<right side of USING>.S
+At line 1, column 31
+--- select * from l join r using (x)
+ERROR 335544569 335544436 #-206 335544578 335544382 '<left side of USING>.X' 336397208 #1 #31 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+<left side of USING>.X
+At line 1, column 31
+--- select * from l join r using (id, id)
+ERROR 335544569 335544436 #-104 336397235 'ID' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+column ID appears more than once in USING clause
+--- select * from l natural join e order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+N:NUMERIC (4,5,2,True,L,N,False,False)
+affected 0
+--- select * from e natural join e order by 1
+ID:INTEGER (4,,,True,,COALESCE,False,False)
+K:INTEGER (4,,,True,,COALESCE,False,False)
+affected 0
+--- select * from l a join l a on a.id = a.id
+ERROR 335544569 335544436 #-204 335544620 'A' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+alias A conflicts with an alias in the same statement
+--- select * from l join l on l.id = l.id
+ERROR 335544569 335544436 #-204 336003085 'table L' 'table L ' 335544382 'ID' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Ambiguous field name between table L and table L
+ID
+--- select l.id from l a
+ERROR 335544569 335544436 #-206 335544578 335544382 'L.ID' 336397208 #1 #8 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+L.ID
+At line 1, column 8
+--- select a.id from l a join r a on 1 = 1
+ERROR 335544569 335544436 #-204 335544620 'A' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+alias A conflicts with an alias in the same statement
+--- select x.id from l join r on x.id = l.id
+ERROR 335544569 335544436 #-206 335544578 335544382 'X.ID' 336397208 #1 #30 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+X.ID
+At line 1, column 30
+--- select l.id from l join r on l.zz = r.id
+ERROR 335544569 335544436 #-206 335544578 335544382 'L.ZZ' 336397208 #1 #30 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+L.ZZ
+At line 1, column 30
+--- select l.id from l join r on l.k = r.k join m on m.k = q.k
+ERROR 335544569 335544436 #-206 335544578 335544382 'Q.K' 336397208 #1 #56 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+Q.K
+At line 1, column 56
+--- select l.id from l left join r on r.id = m.id join m on m.id = l.id
+ERROR 335544569 335544436 #-206 335544578 335544382 'M.ID' 336397208 #1 #42 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+M.ID
+At line 1, column 42
+--- select 1 from l join r
+ERROR 335544569 335544436 #-104 335544851 #1 #22 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Unexpected end of command - line 1, column 22
+--- select 1 from l join r on l.k
+ERROR 335544569 335544436 #-104 335545023 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid usage of boolean expression
+--- select 1 from l join r on (select 1 from rdb$database) = 1 order by 1 rows 1
+CONSTANT:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+affected 0
+--- select l.id, r.id from l join r on l.id = r.id and exists (select 1 from m where m.id = r.id) order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 2 | 
+affected 0
+--- select l.id from l where exists (select 1 from r where r.k = l.k) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+4 | 
+affected 0
+--- select l.id from l where not exists (select 1 from r where r.k = l.k) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+3 | 
+affected 0
+--- select l.id from l where l.k in (select k from r) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+4 | 
+affected 0
+--- select l.id from l where l.k not in (select k from r) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+affected 0
+--- select l.id from l where l.k not in (select k from r where k is not null) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+affected 0
+--- select l.id from l where singular (select 1 from r where r.k = l.k) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+4 | 
+affected 0
+--- select l.id from l where not singular (select 1 from m where m.k = l.k) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+3 | 
+affected 0
+--- select l.id, (select t from r where r.id = l.id) from l order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | x | 
+2 | y | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select l.id, (select t from r where r.k = l.k) from l order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | x | 
+2 | z | 
+3 | NULL | 
+4 | z | 
+affected 0
+--- select l.id, (select count(*) from r where r.k = l.k), (select max(r.n) from r where r.k = l.k) from l order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+COUNT:BIGINT (8,,,True,,COUNT,False,False)
+MAX:NUMERIC (4,4,3,True,,MAX,False,False)
+1 | 1 | 1.5 | 
+2 | 1 | NULL | 
+3 | 0 | NULL | 
+4 | 1 | NULL | 
+affected 0
+--- select l.id, (select first 1 r.t from r where r.k >= l.k order by r.t desc) from l order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | z | 
+2 | z | 
+3 | NULL | 
+4 | z | 
+affected 0
+--- select l.id, (select r.t from r where r.id = l.id + 0) || '!' from l order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+CONCATENATION:VARCHAR (6,,,True,,CONCATENATION,False,False)
+1 | x! | 
+2 | y! | 
+3 | NULL | 
+4 | NULL | 
+affected 0
+--- select (select id from r) from rdb$database
+ID:INTEGER (4,,,True,R,ID,True,False)
+ERROR 335544652 '' 21000
+multiple rows in singleton select
+--- select (select id, k from r where id = 1) from rdb$database
+ERROR 335544569 335544436 #-104 335544570 335544669 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+count of column list and variable list do not match
+--- select l.id from l where l.k = (select k from r where r.id = 1) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+affected 0
+--- select l.id from l where l.k = (select k from r) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+ERROR 335544652 '' 21000
+multiple rows in singleton select
+--- select l.id from l where l.k = (select k from r where r.id = l.id) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+affected 0
+--- select l.id from l where l.k > all (select k from r where r.k is not null) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+affected 0
+--- select l.id from l where l.k > any (select k from r) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+2 | 
+4 | 
+affected 0
+--- select l.id from l where (select count(*) from r where r.k = l.k) > 0 order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+4 | 
+affected 0
+--- select id, (select count(*) from l l2 where l2.id <= l.id) from l order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+COUNT:BIGINT (8,,,True,,COUNT,False,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+affected 0
+--- select id from l where id = (select max(id) from l)
+ID:INTEGER (4,,,False,L,ID,True,False)
+4 | 
+affected 0
+--- select id, (select max(id) from l l2 where l2.k = l.k and l2.id <> l.id) from l order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+MAX:INTEGER (4,,,True,,MAX,False,False)
+1 | NULL | 
+2 | 4 | 
+3 | NULL | 
+4 | 2 | 
+affected 0
+--- select * from (select id, k from l) x join (select id, t from r) y on x.id = y.id order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+K:INTEGER (4,,,True,L,K,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+T:VARCHAR (5,,,True,R,T,False,False)
+1 | 10 | 1 | x | 
+2 | 20 | 2 | y | 
+affected 0
+--- select * from (select id, k from l) x (a, b) order by 1
+A:INTEGER (4,,,False,L,ID,True,False)
+B:INTEGER (4,,,True,L,K,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | NULL | 
+4 | 20 | 
+affected 0
+--- select * from (select id, k from l) x (a) order by 1
+ERROR 335544569 335544436 #-104 335544570 336397219 'X' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+column list from derived table X has less columns than the number of items in its SELECT statement
+--- select x.* from (select l.id, r.id from l join r on l.id = r.id) x
+ERROR 335544569 335544436 #-104 335544570 336397221 'ID' 'X' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+column ID was specified multiple times for derived table X
+--- select x.* from (select l.id, r.id rid from l join r on l.id = r.id) x order by 1
+ID:INTEGER (4,,,False,L,ID,False,False)
+RID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+2 | 2 | 
+affected 0
+--- select * from (select * from (select id from l) a) b order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+affected 0
+--- select a.id from (select id from l) a where a.id in (select id from (select id from r) b) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+affected 0
+--- select x.c from (select count(*) c from l) x
+C:BIGINT (8,,,False,,COUNT,False,False)
+4 | 
+affected 0
+--- select * from (select id from l union select id from r) u order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select * from (select id from l union all select id from r) u order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+1 | 
+2 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from l union select id from r order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from l union all select id from r order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+1 | 
+2 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id, s from l union select id, t from r order by 1, 2
+ID:INTEGER (4,,,False,L,ID,True,False)
+S:VARCHAR (5,,,True,L,S,False,False)
+1 | a | 
+1 | x | 
+2 | b | 
+2 | y | 
+3 | c | 
+4 | NULL | 
+5 | z | 
+6 | NULL | 
+affected 0
+--- select k from l union select k from r order by 1
+K:INTEGER (4,,,True,L,K,False,False)
+NULL | 
+10 | 
+20 | 
+30 | 
+affected 0
+--- select k from l union all select k from r order by 1 nulls last
+K:INTEGER (4,,,True,L,K,False,False)
+10 | 
+10 | 
+20 | 
+20 | 
+20 | 
+30 | 
+NULL | 
+NULL | 
+affected 0
+--- select n from l union select n from r order by 1
+N:NUMERIC (4,4,3,True,,,False,False)
+NULL | 
+0 | 
+1.5 | 
+2 | 
+2.25 | 
+7.125 | 
+affected 0
+--- select s from l union select t from r union select x from m order by 1
+S:VARCHAR (5,,,True,L,S,False,False)
+NULL | 
+a | 
+b | 
+c | 
+p  | 
+q  | 
+r  | 
+x | 
+y | 
+z | 
+affected 0
+--- select id from l union all select id from r union select id from m order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from l union select id from r union all select id from m order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+1 | 
+2 | 
+2 | 
+3 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select 1 from l union select 1.5 from r order by 1
+:DECIMAL (8,8,1,False,,,False,False)
+1 | 
+1.5 | 
+affected 0
+--- select 1, 'a' from rdb$database union select 2.5, 'bcd' from rdb$database union select 1e0, null from rdb$database order by 1
+:DOUBLE PRECISION (8,,,False,,,False,False)
+:CHAR (3,,,True,,,False,False)
+1 | NULL | 
+1 | a   | 
+2.5 | bcd | 
+affected 0
+--- select null from rdb$database union select 1 from rdb$database order by 1
+:INTEGER (4,,,True,,,False,False)
+NULL | 
+1 | 
+affected 0
+--- select id from l union select s from l order by 1
+ID:VARCHAR (11,,,True,,,False,False)
+NULL | 
+1 | 
+2 | 
+3 | 
+4 | 
+a | 
+b | 
+c | 
+affected 0
+--- select id from l union select id, k from r
+ERROR 335544569 335544436 #-104 335544570 335544669 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Invalid command
+count of column list and variable list do not match
+--- select dt from (select current_date dt from rdb$database) union select 'x' from rdb$database
+DT:VARCHAR (10,,,False,,,False,False)
+2026-10-20 | 
+x | 
+affected 0
+--- select first 1 id from l union select first 1 id from r order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+affected 0
+--- select count(*) from (select k from l union select k from r)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+4 | 
+affected 0
+--- select count(*) from (select k from l union all select k from r)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+8 | 
+affected 0
+--- select k, count(*) from (select k from l union all select k from r) group by k order by 1
+K:INTEGER (4,,,True,,,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 2 | 
+10 | 2 | 
+20 | 3 | 
+30 | 1 | 
+affected 0
+--- select id from l where id in (select id from r union select id from m) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+3 | 
+affected 0
+--- select (select max(id) from (select id from l union select id from r)) from rdb$database
+MAX:INTEGER (4,,,True,,MAX,False,False)
+6 | 
+affected 0
+--- with c as (select id, k from l) select c.id, r.id from c left join r on r.k = c.k order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | 1 | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- with c as (select id from l), d as (select id from c where id > 1) select * from d order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+2 | 
+3 | 
+4 | 
+affected 0
+--- with c (a, b) as (select id, k from l) select a, b from c order by 1
+A:INTEGER (4,,,False,L,ID,True,False)
+B:INTEGER (4,,,True,L,K,False,False)
+1 | 10 | 
+2 | 20 | 
+3 | NULL | 
+4 | 20 | 
+affected 0
+--- with c as (select id from l) select * from c a join c b on a.id = b.id order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 1 | 
+2 | 2 | 
+3 | 3 | 
+4 | 4 | 
+affected 0
+--- with recursive n (i) as (select 1 from rdb$database union all select i + 1 from n where i < 5) select i from n
+I:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+affected 0
+--- with recursive n (i) as (select 1 from rdb$database union all select i + 1 from n where i < 5) select sum(i), count(*) from n
+SUM:BIGINT (8,,,True,,SUM,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+15 | 5 | 
+affected 0
+--- with recursive t (id, depth) as (select id, 0 from m where id = 1 union all select m.id, t.depth + 1 from m join t on m.k = t.id * 10 where t.depth < 3) select * from t order by 1, 2
+ID:INTEGER (4,,,False,M,ID,False,False)
+DEPTH:INTEGER (4,,,False,,CONSTANT,False,False)
+1 | 0 | 
+1 | 1 | 
+1 | 2 | 
+1 | 3 | 
+3 | 1 | 
+3 | 2 | 
+3 | 3 | 
+affected 0
+--- with c as (select id from l) select * from c where id in (select id from c where id < 3) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+affected 0
+--- with c as (select id from l) select id from l where id not in (select id from c) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+affected 0
+--- with c as (select id from x) select * from c
+ERROR 335544569 335544436 #-204 335544580 335544382 'X' 336397208 #1 #27 '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Table unknown
+X
+At line 1, column 27
+--- with c as (select id from l), c as (select id from r) select * from c
+ERROR 335544569 335544436 #-204 335544620 'C' warning:335544807 #-104 warning:336397237 'C' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+alias C conflicts with an alias in the same statement
+SQL warning code = -104
+CTE "C" is not used in query
