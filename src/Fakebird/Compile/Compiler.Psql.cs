@@ -228,7 +228,7 @@ public sealed partial class Compiler
                 throw c.Frame.Trace(e);
             }
             if (selectable) return new ExecResult { Rows = c.Output!, Selected = c.Output!.Count };
-            if (outs.Length == 0) return new ExecResult { Rows = [] };
+            if (outs.Length == 0) return new ExecResult { Rows = [[]] };
             return new ExecResult { Rows = [outs.Select(o => vars[o]).ToArray()] };
         })
         {
@@ -303,9 +303,9 @@ public sealed partial class Compiler
         switch (e)
         {
             case VariableExpr v:
-                return VarTarget(v.Name);
+                return VarTarget(v.Name, v);
             case ColumnRefExpr { Qualifier: null } c:
-                return VarTarget(c.Name);
+                return VarTarget(c.Name, c);
             case ColumnRefExpr { Qualifier: "NEW" } c when r.IsTrigger:
             {
                 if (!_triggerBefore) throw Err.Random("Cannot update NEW context in AFTER trigger");
@@ -321,10 +321,10 @@ public sealed partial class Compiler
         throw Err.Dsql(-104, "Invalid assignment target");
     }
 
-    Target VarTarget(string name)
+    Target VarTarget(string name, Expr at)
     {
         var r = Routine!;
-        if (!r.VarIndex.TryGetValue(name, out var vi)) throw Err.Dsql(-206, "Variable " + name + " is not defined", "42S22");
+        if (!r.VarIndex.TryGetValue(name, out var vi)) throw Err.ColumnUnknown(name, at.Line, at.Col);
         var v = r.Vars[vi];
         return new Target(r.VarStream, vi, v.Type, v.NotNull, name);
     }
@@ -415,6 +415,7 @@ public sealed partial class Compiler
             }
             case SuspendStmt:
                 if (r.IsTrigger || r.IsFunction) throw Err.Dsql(-104, "SUSPEND is not allowed in triggers or functions");
+                if (r.OutputVars.Length == 0) throw Err.Dsql104(FbMessages.suspend_without_returns);
                 r.HasSuspend = true;
                 return new SuspendP(r.OutputVars, r.VarStream);
             case ExitStmt:
@@ -441,17 +442,17 @@ public sealed partial class Compiler
             case OpenCursorStmt oc:
             {
                 var cur = r.Cursors.TryGetValue(oc.Name, out var cc) ? cc : throw Err.Dsql(-504, "Cursor " + oc.Name + " is not found");
-                return new OpenCursorP(cur.Query!, cur.Index, oc.Name);
+                return new OpenCursorP(cur.Query!, cur.Index);
             }
             case FetchCursorStmt fc:
             {
                 var cur = r.Cursors.TryGetValue(fc.Name, out var cc) ? cc : throw Err.Dsql(-504, "Cursor " + fc.Name + " is not found");
-                return new FetchCursorP(cur.Index, cur.Stream, Targets(fc.Into), fc.Name);
+                return new FetchCursorP(cur.Index, cur.Stream, Targets(fc.Into));
             }
             case CloseCursorStmt cl:
             {
                 var cur = r.Cursors.TryGetValue(cl.Name, out var cc) ? cc : throw Err.Dsql(-504, "Cursor " + cl.Name + " is not found");
-                return new CloseCursorP(cur.Index, cl.Name);
+                return new CloseCursorP(cur.Index);
             }
             case AutonomousStmt au:
                 return new AutonomousP(CompilePsql(au.Body));
@@ -523,13 +524,13 @@ public sealed partial class Compiler
     {
         var cr = GetSubRoutine(sub);
         var parms = sub.Inputs.Select(i => new RoutineParam { Name = i.Name, Type = ResolveType(i.Type), Default = i.Default }).ToList();
-        var args = BindProcArgs(parms, f.Args, s, sub.Name);
+        var args = BindProcArgs(parms, f.Args, s, sub.Name, function: true);
         return new CallFunctionNode { Local = cr, Args = args, Type = cr.Returns ?? ResolveType(sub.Returns!), Name = sub.Name };
     }
 
     XNode BindFunctionCall(Function fn, FuncExpr f, Scope s)
     {
-        var args = BindProcArgs(fn.Inputs, f.Args, s, fn.Name);
+        var args = BindProcArgs(fn.Inputs, f.Args, s, fn.Name, function: true);
         return new CallFunctionNode { Function = fn, Args = args, Type = fn.Returns, Name = fn.Name };
     }
 

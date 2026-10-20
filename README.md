@@ -74,10 +74,19 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   Firebird's codes. Parameters in the select list of INSERT ... SELECT take
   the types of the target columns.
 * **PSQL**: variables, cursors, IF/WHILE/FOR SELECT/FOR EXECUTE STATEMENT, LEAVE/CONTINUE/EXIT,
-  SUSPEND, exceptions with WHEN handlers (EXCEPTION/SQLCODE/GDSCODE/SQLSTATE/ANY, with undo of the
-  block), EXECUTE STATEMENT (with expressions and named parameters `(name := value)`), IN AUTONOMOUS
-  TRANSACTION, sub-procedures/functions, NEW/OLD,
-  INSERTING/UPDATING/DELETING, ROW_COUNT, context variables, RDB$GET_CONTEXT/RDB$SET_CONTEXT.
+  SUSPEND, exceptions with WHEN handlers (EXCEPTION/SQLCODE/GDSCODE/SQLSTATE/ANY), EXECUTE STATEMENT
+  (with expressions and named parameters `(name := value)`), IN AUTONOMOUS TRANSACTION,
+  sub-procedures/functions, NEW/OLD, INSERTING/UPDATING/DELETING, ROW_COUNT, context variables,
+  RDB$GET_CONTEXT/RDB$SET_CONTEXT. Firebird's rules apply: a handler undoes only the failed statement
+  (or nested block), not the work the block completed before it; inside SQL statements and queries a
+  variable needs its colon (a bare name is a column); EXCEPTION ... USING reports
+  isc_formatted_exception with its arguments; a bare EXCEPTION outside a handler does nothing; OPEN
+  restarts an open cursor and CLOSE of a closed one is ignored; EXECUTE PROCEDURE/BLOCK without outputs
+  still return their (empty) output row; and the errors (unknown procedure, parameter mismatch,
+  SUSPEND without RETURNS, duplicate variables, labels on non-loops) carry Firebird's codes.
+* **READ COMMITTED reads a statement-level snapshot** (READ CONSISTENCY): a top-level statement,
+  including all the PSQL it runs, sees the data committed when it started, and is restarted when it
+  meets a row committed after that.
 * **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...
 * **Transactions**: read committed (default) and snapshot isolation, no dirty reads, statement
   atomicity, savepoints, WAIT/NOWAIT lock conflicts with deadlock detection and lock timeouts. A NOWAIT

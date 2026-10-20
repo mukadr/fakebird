@@ -21,6 +21,11 @@ public sealed class FbError : Exception
     public bool TraceDone { get; init; }
     /// <summary>Raised while opening the top-level cursor, so the client sees it at execute rather than at fetch.</summary>
     public bool AtExecute { get; set; }
+    /// <summary>
+    /// PSQL: where the work to undo when a handler catches the error starts, i.e. the start of the outermost
+    /// unfinished block or statement under the handling block (Firebird's savepoints above the block's own).
+    /// </summary>
+    public int? UndoMark { get; set; }
 
     public FbError(IReadOnlyList<StatusArg> status, string sqlState)
         : base(Render(status))
@@ -231,10 +236,15 @@ internal static class Err
         => new StatusBuilder().Gds(isc_deadlock).Gds(isc_update_conflict)
             .Gds(isc_concurrent_transaction).Num((int)otherTx).Build("40001");
 
-    public static FbError UserException(string name, int number, string message)
+    public static FbError UserException(string name, int number, string message, string? formatted = null, string[]? args = null)
     {
         var b = new StatusBuilder().Gds(isc_except).Num(number).Gds(isc_random).Str(name);
-        if (message.Length > 0) b.Gds(isc_random).Str(message);
+        if (formatted != null)
+        {
+            b.Gds(FbMessages.formatted_exception).Str(formatted);
+            foreach (var a in args ?? []) b.Str(a);
+        }
+        else if (message.Length > 0) b.Gds(isc_random).Str(message);
         return b.Build("HY000");
     }
 

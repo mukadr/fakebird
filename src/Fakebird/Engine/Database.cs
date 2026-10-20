@@ -231,6 +231,11 @@ public sealed class Transaction
     public bool ReadOnly;
     public bool Wait;
     public long StartSeq;
+    /// <summary>
+    /// READ COMMITTED (READ CONSISTENCY, Firebird 4+): the commit sequence when the current top-level statement
+    /// started; the whole statement, PSQL included, reads the data committed up to then.
+    /// </summary>
+    internal long? StatementSeq;
     public bool Active = true;
     internal readonly List<UndoEntry> Undo = new();
     internal List<(string Name, int Mark)>? Savepoints;
@@ -290,6 +295,9 @@ public sealed class Transaction
         }
         if (Snapshot && slot.Committed != null && slot.Committed.Seq > StartSeq)
             throw Err.UpdateConflict(0);
+        // the row was committed after the statement's view was taken: READ CONSISTENCY restarts the statement
+        if (!Snapshot && StatementSeq is { } seq && slot.Committed != null && slot.Committed.Seq > seq)
+            throw new StatementRestart(0);
     }
 
     /// <summary>Blocks (releasing the database lock) until <paramref name="other"/> ends, like a WAIT transaction.</summary>

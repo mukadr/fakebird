@@ -832,7 +832,8 @@ public sealed partial class Compiler
                     return new DbKeyNode(only.Stream);
             }
         }
-        if (Routine != null)
+        // a bare name is a variable only in PSQL expressions: inside a query or DML statement it must be :name
+        if (Routine != null && ReferenceEquals(s, RootScope))
         {
             if (r.Qualifier == null && Routine.VarIndex.ContainsKey(r.Name)) return BindVariable(r.Name, r.Pos);
         }

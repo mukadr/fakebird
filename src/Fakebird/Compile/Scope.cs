@@ -117,7 +117,8 @@ public sealed class RoutineScope
 
     public int Declare(string name, SqlType type, bool notNull)
     {
-        if (VarIndex.ContainsKey(name)) throw Err.Dsql(-637, "Variable " + name + " is already declared");
+        if (VarIndex.ContainsKey(name))
+            throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-637).Gds(FbMessages.dsql_duplicate_spec).Str(name).Build();
         var i = Vars.Count;
         Vars.Add((name, type, notNull));
         VarIndex[name] = i;

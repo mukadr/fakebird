@@ -310,6 +310,6 @@ public sealed partial class Parser
         }
         var n = AnyIdent();
         if (AcceptOp(".")) return At(new ColumnRefExpr(n, AnyIdent()), pos);
-        return new VariableExpr(n) { Pos = pos };
+        return At(new VariableExpr(n), pos);
     }
 }

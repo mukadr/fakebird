@@ -566,7 +566,8 @@ public sealed partial class Compiler
 
     public Prepared CompileExecProc(ExecProcStmt st, Scope? parent)
     {
-        var s = DmlScope(parent);
+        // in PSQL the arguments are PSQL expressions (bare variable names allowed)
+        var s = parent ?? DmlScope(null);
         if (Routine?.SubRoutines != null && Routine.SubRoutines.TryGetValue(st.Name, out var sub) && !sub.IsFunction)
         {
             var cr = GetSubRoutine(sub);
@@ -578,13 +579,15 @@ public sealed partial class Compiler
                 Outputs = subOuts,
             };
         }
-        var proc = Db.Procedures.TryGetValue(st.Name, out var p) ? p : throw Err.ObjectUnknown("Procedure", st.Name);
+        var proc = Db.Procedures.TryGetValue(st.Name, out var p) ? p
+            : throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204).Gds(FbMessages.dsql_procedure_err)
+                .Gds(Err.isc_random).Str(st.Name).Build();
         var args = BindProcArgs(proc.Inputs, st.Args, s, proc.Name);
         var outs = proc.Outputs.Select(o => new OutCol { Name = o.Name, Field = o.Name, Relation = proc.Name, Type = o.Type }).ToArray();
         return new DelegatePrepared(c =>
         {
             var row = Routines.CallExecutable(c, proc, EvalAll(c, args));
-            return new ExecResult { Rows = outs.Length > 0 ? [row] : [] };
+            return new ExecResult { Rows = [outs.Length > 0 ? row : []] };
         })
         {
             StmtType = Wire.Isc.stmt_exec_procedure,

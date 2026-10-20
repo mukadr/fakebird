@@ -759,7 +759,8 @@ internal sealed class Connection
                 try { row = CoerceRow(s.Prepared.Outputs, row); }
                 catch (FbError e) { error = e; row = null; }
             }
-            if (row != null && s!.Prepared!.Outputs.Length > 0)
+            // an executable procedure or block answers with its output message even when it has no fields
+            if (row != null && (s!.Prepared!.Outputs.Length > 0 || s.Prepared.StmtType == Isc.stmt_exec_procedure))
             {
                 _xdr.WriteInt32(1);
                 WriteRow(s.Prepared.Outputs, row, s.Tx);

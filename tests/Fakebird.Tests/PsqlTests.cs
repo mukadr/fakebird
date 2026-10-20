@@ -83,7 +83,7 @@ public class PsqlTests(ServerFixture fx)
     }
 
     [Fact]
-    public void HandlersUndoBlockEffectsAndReraise()
+    public void HandlersUndoFailedStatementAndReraise()
     {
         using var cn = fx.NewDatabase(Schema + """
             set term ^ ;
@@ -118,12 +118,14 @@ public class PsqlTests(ServerFixture fx)
             """);
         Assert.Equal("failed: -836", Scalar(cn, "execute procedure try_transfer 3, 1, 10"));
         Assert.Equal(100m, Scalar(cn, "select balance from acc where id = 1")); // undone
-        Assert.Equal(0L, Scalar(cn, "select count(*) from audit")); // block effects undone, including the insert
+        // only the failed statement is undone (Firebird rolls back the savepoints above the handling block's own):
+        // the insert that completed before it stays
+        Assert.Equal(1L, Scalar(cn, "select count(*) from audit"));
         Assert.Equal("ok", Scalar(cn, "execute procedure try_transfer 1, 3, 10"));
         Assert.Equal(10m, Scalar(cn, "select balance from acc where id = 3"));
         var ex = Assert.Throws<FbException>(() => Exec(cn, "execute procedure rethrow"));
         Assert.Contains("deep", ex.Message);
-        Assert.Equal(1L, Scalar(cn, "select count(*) from audit")); // 'attempt' from the successful transfer only
+        Assert.Equal(2L, Scalar(cn, "select count(*) from audit")); // the two 'attempt' rows; the re-raise undid 'handled'
         // GDSCODE / SQLSTATE handlers
         Assert.Equal("dup", Scalar(cn, """
             execute block returns (r varchar(10)) as

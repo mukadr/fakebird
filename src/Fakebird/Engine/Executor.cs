@@ -39,9 +39,12 @@ public static class Executor
         if (parent != null) return RunOnce(p, tx, parameters, parent);
         // READ CONSISTENCY: a top-level statement that met a row changed by a transaction that committed meanwhile
         // is undone and run again with a fresh view of the data
+        // a statement run from inside another (EXECUTE STATEMENT) keeps the outer statement's view
+        var outerSeq = tx.StatementSeq;
         for (tx.Restarts = 0; ; tx.Restarts++)
         {
             var mark = tx.Mark;
+            tx.StatementSeq = outerSeq ?? tx.Db.CommitSeq;
             try
             {
                 return RunOnce(p, tx, parameters, null);
@@ -51,6 +54,10 @@ public static class Executor
                 tx.DeferredRefChecks = null;
                 if (tx.Active) tx.RollbackTo(mark);
                 if (tx.Restarts >= 10) throw Err.UpdateConflict(r.OtherTransaction);
+            }
+            finally
+            {
+                tx.StatementSeq = outerSeq;
             }
         }
     }

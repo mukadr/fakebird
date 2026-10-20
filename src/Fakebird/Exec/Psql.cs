@@ -40,7 +40,7 @@ public sealed class PsqlFrame(string context, PsqlFrame? caller)
             status.Add(new StatusArg(Wire.Isc.arg_gds, Err.isc_stack_trace, null));
             status.Add(new StatusArg(Wire.Isc.arg_string, 0, sb.ToString()));
         }
-        return new FbError(status, e.SqlState) { UserExceptionName = e.UserExceptionName, TraceDone = true };
+        return new FbError(status, e.SqlState) { UserExceptionName = e.UserExceptionName, TraceDone = true, UndoMark = e.UndoMark };
     }
 }
 
@@ -114,7 +114,6 @@ public sealed class BlockP : PStmt
             c.Cache = null;
             t.Set(c, init == null ? Value.Null : init.Eval(c));
         }
-        if (Handlers.Length == 0) return RunBody(c);
         var mark = c.Tx.Mark;
         try
         {
@@ -125,7 +124,9 @@ public sealed class BlockP : PStmt
             foreach (var (match, handler) in Handlers)
             {
                 if (!match(e)) continue;
-                c.Tx.RollbackTo(mark);
+                // Firebird undoes the savepoints above the block's own: the failed statement or nested block,
+                // while the work of the statements that completed before it stays
+                if (e.UndoMark is { } undo) c.Tx.RollbackTo(undo);
                 var prev = c.CurrentError;
                 c.CurrentError = e;
                 try
@@ -138,6 +139,7 @@ public sealed class BlockP : PStmt
                     c.CurrentError = prev;
                 }
             }
+            e.UndoMark = mark; // unhandled here: the whole block is undone by the handler that catches it
             throw;
         }
     }
@@ -252,21 +254,21 @@ public sealed class CursorState
     public int Pos = -1;
 }
 
-public sealed class OpenCursorP(QueryNode query, int slot, string name) : PStmt
+public sealed class OpenCursorP(QueryNode query, int slot) : PStmt
 {
     public override Flow Exec(Ctx c)
     {
-        if (c.Cursors![slot] != null) throw Err.Random($"Attempt to reopen an open cursor {name}");
-        c.Cursors[slot] = new CursorState { Rows = query.ToList(c) };
+        // opening an open cursor restarts it, like Firebird's Cursor::open
+        c.Cursors![slot] = new CursorState { Rows = query.ToList(c) };
         return Flow.Normal;
     }
 }
 
-public sealed class FetchCursorP(int slot, int stream, Target[] into, string name) : PStmt
+public sealed class FetchCursorP(int slot, int stream, Target[] into) : PStmt
 {
     public override Flow Exec(Ctx c)
     {
-        var cs = c.Cursors![slot] as CursorState ?? throw Err.Random($"Attempt to fetch from a closed cursor {name}");
+        var cs = c.Cursors![slot] as CursorState ?? throw new StatusBuilder().Gds(FbMessages.cursor_not_open).Build();
         cs.Pos++;
         if (cs.Pos >= cs.Rows.Count)
         {
@@ -281,12 +283,11 @@ public sealed class FetchCursorP(int slot, int stream, Target[] into, string nam
     }
 }
 
-public sealed class CloseCursorP(int slot, string name) : PStmt
+public sealed class CloseCursorP(int slot) : PStmt
 {
     public override Flow Exec(Ctx c)
     {
-        if (c.Cursors![slot] == null) throw Err.Random($"Attempt to close a closed cursor {name}");
-        c.Cursors[slot] = null;
+        c.Cursors![slot] = null; // closing a closed cursor does nothing
         return Flow.Normal;
     }
 }
@@ -296,7 +297,14 @@ public sealed class StatementP(Prepared stmt, Target[]? into) : PStmt
 {
     public override Flow Exec(Ctx c)
     {
-        var r = stmt.Execute(c);
+        var mark = c.Tx.Mark;
+        ExecResult r;
+        try { r = stmt.Execute(c); }
+        catch (FbError e)
+        {
+            e.UndoMark ??= mark; // a failed statement is undone as a whole
+            throw;
+        }
         c.RowCount = r.Inserted + r.Updated + r.Deleted;
         if (stmt.StmtType == Wire.Isc.stmt_select)
         {
@@ -360,7 +368,8 @@ public sealed class RaiseP(ExceptionDef? def, XNode? message, XNode[]? args) : P
     {
         if (def == null)
         {
-            if (c.CurrentError == null) throw Err.Random("EXCEPTION without name is allowed only in a WHEN handler");
+            // outside a handler there is nothing to re-raise: Firebird does nothing
+            if (c.CurrentError == null) return Flow.Normal;
             // a re-raised error gets a second stack trace from the re-raising frame, like Firebird
             throw new FbError(c.CurrentError.Status, c.CurrentError.SqlState) { UserExceptionName = c.CurrentError.UserExceptionName };
         }
@@ -372,9 +381,12 @@ public sealed class RaiseP(ExceptionDef? def, XNode? message, XNode[]? args) : P
         }
         else if (args != null)
         {
-            var vals = args.Select(a => a.Eval(c)).ToArray();
-            for (var i = 0; i < vals.Length; i++)
-                msg = msg.Replace("@" + (i + 1), vals[i].IsNull ? "<null>" : Conv.ToStr(vals[i]));
+            // EXCEPTION ... USING: isc_formatted_exception with the message and every argument
+            var vals = args.Select(a => a.Eval(c)).Select(v => v.IsNull ? "<null>" : Conv.ToStr(v)).ToArray();
+            for (var i = 0; i < vals.Length; i++) msg = msg.Replace("@" + (i + 1), vals[i]);
+            var f = Err.UserException(def.Name, def.Number, "", msg, vals);
+            f.UserExceptionName = def.Name;
+            throw f;
         }
         var e = Err.UserException(def.Name, def.Number, msg);
         e.UserExceptionName = def.Name;

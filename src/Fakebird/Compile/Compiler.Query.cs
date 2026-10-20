@@ -1026,15 +1026,17 @@ public sealed partial class Compiler
         s.Add(item);
     }
 
-    internal XNode[] BindProcArgs(List<RoutineParam> inputs, List<Expr> args, Scope s, string name)
+    internal XNode[] BindProcArgs(List<RoutineParam> inputs, List<Expr> args, Scope s, string name, bool function = false)
     {
-        if (args.Count > inputs.Count) throw Err.Dsql(-170, "Input parameter mismatch for procedure " + name);
+        FbError Mismatch() => new StatusBuilder().Gds(Err.isc_dsql_error)
+            .Gds(function ? FbMessages.fun_param_mismatch : FbMessages.prcmismat).Str(name).Build();
+        if (args.Count > inputs.Count) throw Mismatch();
         var result = new XNode[inputs.Count];
         for (var i = 0; i < inputs.Count; i++)
         {
             if (i < args.Count) result[i] = Bind(args[i], s, inputs[i].Type);
             else if (inputs[i].Default != null) result[i] = Bind(inputs[i].Default!, new Scope(null), inputs[i].Type);
-            else throw Err.Dsql(-170, "Input parameter mismatch for procedure " + name);
+            else throw Mismatch();
         }
         return result;
     }

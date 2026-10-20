@@ -1118,6 +1118,8 @@ public sealed partial class Parser
         {
             var label = Advance().Text;
             _i++;
+            // a label can only name a loop
+            if (!Is("WHILE") && !Is("FOR")) throw Unexpected();
             var st = PsqlStatement();
             switch (st)
             {
@@ -1308,7 +1310,7 @@ public sealed partial class Parser
         var name = AnyIdent();
         Expr target;
         if (AcceptOp(".")) target = At(new ColumnRefExpr(name, AnyIdent()), pos);
-        else target = new VariableExpr(name) { Pos = pos };
+        else target = At(new VariableExpr(name), pos);
         ExpectOp("=");
         var value = Expression();
         EndStatement();

@@ -1,0 +1,449 @@
+--- create procedure sel (a integer) returns (id integer, v varchar(10)) as
+affected 0
+--- create procedure exe (a integer, b varchar(5) = 'dflt') returns (r varchar(30)) as
+affected 0
+--- create procedure boom (k integer) as
+affected 0
+--- create procedure wrap (k integer) returns (msg varchar(100)) as
+affected 0
+--- create procedure counter returns (i integer) as
+affected 0
+--- create function f_add (a integer, b integer = 5) returns integer as
+affected 0
+--- create function f_str (s varchar(5)) returns varchar(3) as
+affected 0
+--- create trigger t_bi for t before insert position 0 as
+affected 0
+--- create trigger t_bi2 for t before insert position 1 as
+affected 0
+--- create trigger t_au for t after update as
+affected 0
+--- create trigger t_bd for t before delete as
+affected 0
+--- execute block (a integer = ?, b varchar(10) = ?) returns (r varchar(30)) as begin r = a || b; suspend; end
+R:VARCHAR (30,,,True,,R,False,False)
+1x | 
+affected 0
+--- execute block (a integer = ?, b varchar(10) = ?) returns (r varchar(30)) as begin r = a || b; suspend; end
+R:VARCHAR (30,,,True,,R,False,False)
+NULL | 
+affected 0
+--- select * from sel(2)
+ID:INTEGER (4,,,True,SEL,ID,False,False)
+V:VARCHAR (10,,,True,SEL,V,False,False)
+2 | two | 
+3 | NULL | 
+affected 0
+--- select id from sel(1) where id < 3 order by id desc
+ID:INTEGER (4,,,True,SEL,ID,False,False)
+2 | 
+1 | 
+affected 0
+--- select * from sel
+ERROR 335544569 335544512 'SEL' '' 42000
+Dynamic SQL Error
+Input parameter mismatch for procedure SEL
+--- select * from sel(1, 2)
+ERROR 335544569 335544512 'SEL' '' 42000
+Dynamic SQL Error
+Input parameter mismatch for procedure SEL
+--- execute procedure exe(1)
+R:VARCHAR (30,,,True,EXE,R,False,False)
+1-dflt | 
+affected 0
+--- execute procedure exe(1, 'x')
+R:VARCHAR (30,,,True,EXE,R,False,False)
+1-x | 
+affected 0
+--- execute procedure exe(1, 'toolong')
+ERROR 335544321 335544914 335545033 #5 #7 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 7
+--- execute procedure sel(1)
+ID:INTEGER (4,,,True,SEL,ID,False,False)
+V:VARCHAR (10,,,True,SEL,V,False,False)
+1 | one | 
+affected 0
+--- execute procedure nosuch
+ERROR 335544569 335544436 #-204 335544581 335544382 'NOSUCH' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Procedure unknown
+NOSUCH
+--- select * from counter
+I:INTEGER (4,,,True,COUNTER,I,False,False)
+1 | 
+2 | 
+4 | 
+5 | 
+affected 0
+--- select f_add(1), f_add(1, 2), f_add(null) from rdb$database
+F_ADD:INTEGER (4,,,True,,F_ADD,False,False)
+F_ADD:INTEGER (4,,,True,,F_ADD,False,False)
+F_ADD:INTEGER (4,,,True,,F_ADD,False,False)
+6 | 3 | NULL | 
+affected 0
+--- select f_str('ab'), f_str('abcd') from rdb$database
+F_STR:VARCHAR (3,,,True,,F_STR,False,False)
+F_STR:VARCHAR (3,,,True,,F_STR,False,False)
+ERROR 335544321 335544914 335545033 #3 #4 335544842 'At function 'F_STR' line: 3, col: 3' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 4
+--- select f_add() from rdb$database
+ERROR 335544569 335545101 'F_ADD' '' 42000
+Dynamic SQL Error
+Input parameter mismatch for function F_ADD
+--- execute procedure boom(0)
+
+affected 0
+--- execute procedure boom(1)
+ERROR 335544517 #1 335544382 'EX1' 335544382 'ex1 message' 335544842 'At procedure 'BOOM' line: 4, col: 19' '' HY000
+EX1
+ex1 message
+--- execute procedure boom(2)
+ERROR 335544517 #2 335544382 'EX2' 335545016 'value 2 is bad (two)' '2' 'two' 335544842 'At procedure 'BOOM' line: 5, col: 19' '' HY000
+EX2
+value 2 is bad (two)
+--- execute procedure boom(3)
+ERROR 335544321 335544778 335544842 'At procedure 'BOOM' line: 6, col: 19' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.
+--- execute procedure boom(4)
+ERROR 335544665 'INTEG_2' 'T' 335545072 '("ID" = 1)' 335544842 'At procedure 'BOOM' line: 7, col: 19' '' 23000
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T"
+Problematic key value is ("ID" = 1)
+--- execute procedure boom(5)
+ERROR 335544517 #1 335544382 'EX1' 335544382 'custom 5' 335544842 'At procedure 'BOOM' line: 8, col: 19' '' HY000
+EX1
+custom 5
+--- select * from wrap(0)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+ok | 
+affected 0
+--- select * from wrap(1)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+caught -836 335544517 HY000 | 
+affected 0
+--- select * from wrap(2)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+caught -836 335544517 HY000 | 
+affected 0
+--- select * from wrap(3)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+caught -802 335544321 22012 | 
+affected 0
+--- select * from wrap(4)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+caught -803 335544665 23000 | 
+affected 0
+--- insert into t (id) values (10)
+affected 1
+--- insert into t (id, v, n) values (11, 'x', 5)
+affected 1
+--- select id, v, n from t where id >= 10 order by id
+ID:INTEGER (4,,,False,T,ID,True,False)
+V:VARCHAR (10,,,True,T,V,False,False)
+N:INTEGER (4,,,True,T,N,False,False)
+10 | auto | 1 | 
+11 | x | 6 | 
+affected 0
+--- update t set v = 'ten' where id = 10
+affected 1
+--- delete from t where id = 2
+ERROR 335544517 #2 335544382 'EX2' 335545016 'value 2 is bad (no delete)' '2' 'no delete' 335544842 'At trigger 'T_BD' line: 3, col: 24' '' HY000
+EX2
+value 2 is bad (no delete)
+--- delete from t where id = 11
+affected 1
+--- select seq, msg from log order by seq
+SEQ:INTEGER (4,,,True,LOG,SEQ,False,False)
+MSG:VARCHAR (60,,,True,LOG,MSG,False,False)
+3 | bi 10 | 
+4 | bi 11 | 
+5 | au auto>ten U- | 
+affected 0
+--- execute block returns (a integer, b varchar(5), c numeric(5,2), d date) as begin a = '12'; b = 12345; c = 1.005; d = '2024-02-29'; suspend; end
+A:INTEGER (4,,,True,,A,False,False)
+B:VARCHAR (5,,,True,,B,False,False)
+C:NUMERIC (4,4,2,True,,C,False,False)
+D:DATE (4,,,True,,D,False,False)
+12 | 12345 | 1.01 | 2024-02-29 00:00:00.0000 | 
+affected 0
+--- execute block returns (a smallint) as begin a = 32768; suspend; end
+A:SMALLINT (2,,,True,,A,False,False)
+ERROR 335544321 335544916 335544842 'At block line: 1, col: 45' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+numeric value is out of range
+--- execute block returns (b varchar(3)) as begin b = 'abcd'; suspend; end
+B:VARCHAR (3,,,True,,B,False,False)
+ERROR 335544321 335544914 335545033 #3 #4 335544842 'At block line: 1, col: 47' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 3, actual 4
+--- execute block returns (b varchar(3)) as begin b = 'abc   '; suspend; end
+B:VARCHAR (3,,,True,,B,False,False)
+abc | 
+affected 0
+--- execute block returns (x integer) as declare y integer; begin x = y; suspend; end
+X:INTEGER (4,,,True,,X,False,False)
+NULL | 
+affected 0
+--- execute block returns (x integer) as declare y integer = 5; declare z type of column t.n = 7; begin x = y + z; suspend; end
+X:INTEGER (4,,,True,,X,False,False)
+12 | 
+affected 0
+--- execute block returns (x varchar(20)) as declare c cursor for (select v from t order by id); declare s varchar(10); begin open c; fetch c into s; x = s || ' ' || row_count; fetch c into s; x = x || ',' || s; close c; suspend; end
+X:VARCHAR (20,,,True,,X,False,False)
+one 1,two | 
+affected 0
+--- execute block returns (x varchar(40)) as declare c cursor for (select id from t where id > 100); declare i integer; begin open c; fetch c into i; x = coalesce(i, -1) || ' ' || row_count; close c; suspend; end
+X:VARCHAR (40,,,True,,X,False,False)
+-1 0 | 
+affected 0
+--- execute block returns (i integer, r integer) as begin update t set n = n where id < 3; r = row_count; i = 1; suspend; delete from t where id = 999; r = row_count; i = 2; suspend; select count(*) from t into :i; r = row_count; suspend; end
+I:INTEGER (4,,,True,,I,False,False)
+R:INTEGER (4,,,True,,R,False,False)
+1 | 2 | 
+2 | 0 | 
+4 | 1 | 
+affected 0
+--- execute block returns (i integer) as begin for select id from t order by id into :i do begin if (i = 3) then break; suspend; end end
+I:INTEGER (4,,,True,,I,False,False)
+1 | 
+2 | 
+affected 0
+--- execute block returns (i integer) as begin i = 0; lbl: while (i < 5) do begin i = i + 1; if (i = 2) then continue lbl; if (i = 4) then leave lbl; suspend; end end
+I:INTEGER (4,,,True,,I,False,False)
+1 | 
+3 | 
+affected 0
+--- execute block returns (i integer) as begin i = 1; suspend; exit; i = 2; suspend; end
+I:INTEGER (4,,,True,,I,False,False)
+1 | 
+affected 0
+--- execute block as begin suspend; end
+ERROR 335544569 335544436 #-104 335545265 '' 42000
+Dynamic SQL Error
+SQL error code = -104
+SUSPEND could not be used without RETURNS clause in PROCEDURE or EXECUTE BLOCK
+--- execute block returns (s varchar(60)) as begin begin exception ex1; when exception ex1 do s = 'ex1 ' || sqlcode || ' ' || gdscode; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+ex1 -836 335544517 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin exception ex2 using (1, 'x'); when exception ex1 do s = 'wrong'; when exception ex2 do s = 'ex2 ' || sqlstate; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+ex2 HY000 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin x: begin exception ex1; end when any do begin s = 'outer'; end end suspend; end
+ERROR 335544569 335544436 #-104 335544634 #1 #57 335544382 'begin' '' 42000
+Dynamic SQL Error
+SQL error code = -104
+Token unknown - line 1, column 57
+begin
+--- execute block returns (s varchar(60)) as begin begin begin s = 1/0; when any do exception; end when gdscode arith_except do s = 're-raised ' || gdscode; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+re-raised 335544321 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin insert into t values (1, 'x', 1); when sqlcode -803 do s = 'dup -803'; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+dup -803 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin insert into t values (1, 'x', 1); when gdscode unique_key_violation do s = 'dup gds'; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+dup gds | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin insert into t values (1, 'x', 1); when sqlstate '23000' do s = 'dup state'; end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+dup state | 
+affected 0
+--- execute block returns (s varchar(80)) as begin begin s = cast('x' as integer); when any do s = sqlcode || ' ' || gdscode || ' ' || sqlstate; end suspend; end
+S:VARCHAR (80,,,True,,S,False,False)
+-413 335544334 22018 | 
+affected 0
+--- execute block returns (s varchar(80)) as begin begin s = cast('abcdef' as varchar(2)); when any do s = sqlcode || ' ' || gdscode || ' ' || sqlstate; end suspend; end
+S:VARCHAR (80,,,True,,S,False,False)
+-802 335544321 22001 | 
+affected 0
+--- execute block returns (s varchar(80)) as begin begin execute procedure nosuch_at_runtime; when any do s = sqlcode || ' ' || gdscode; end suspend; end
+ERROR 335544569 335544436 #-204 335544581 335544382 'NOSUCH_AT_RUNTIME' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Procedure unknown
+NOSUCH_AT_RUNTIME
+--- execute block returns (s varchar(80)) as begin begin execute statement 'select 1 from nosuch' into :s; when any do s = sqlcode || ' ' || gdscode || ' ' || sqlstate; end suspend; end
+S:VARCHAR (80,,,True,,S,False,False)
+-204 335544569 42S02 | 
+affected 0
+--- execute block returns (n integer) as begin begin insert into log values (100, 'undone'); n = 1 / 0; when any do n = (select count(*) from log where seq = 100); end suspend; end
+N:INTEGER (4,,,True,,N,False,False)
+1 | 
+affected 0
+--- execute block returns (n integer) as begin insert into log values (101, 'kept'); begin n = 1 / 0; when any do n = (select count(*) from log where seq = 101); end suspend; end
+N:INTEGER (4,,,True,,N,False,False)
+1 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin begin exception ex1; when any do begin s = 'handler'; s = 1/0; end end suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+ERROR 335544321 335544778 335544842 'At block line: 1, col: 102' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.
+--- execute block as begin exception ex2 using ('abc'); end
+ERROR 335544517 #2 335544382 'EX2' 335545016 'value abc is bad (@2)' 'abc' 335544842 'At block line: 1, col: 24' '' HY000
+EX2
+value abc is bad (@2)
+--- execute block as begin exception ex2 using (1, 2, 3); end
+ERROR 335544517 #2 335544382 'EX2' 335545016 'value 1 is bad (2)' '1' '2' '3' 335544842 'At block line: 1, col: 24' '' HY000
+EX2
+value 1 is bad (2)
+--- execute block as begin exception; end
+
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement 'select v from t where id = 1' into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+one | 
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement ('select v from t where id = ?') (3) into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+NULL | 
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement ('select v from t where id = :i') (i := 1) into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+one | 
+affected 0
+--- execute block returns (i integer) as begin for execute statement 'select id from t order by id' into :i do suspend; end
+I:INTEGER (4,,,True,,I,False,False)
+1 | 
+2 | 
+3 | 
+10 | 
+affected 0
+--- execute block returns (s varchar(60)) as begin execute statement 'select v from t' into :s; suspend; end
+S:VARCHAR (60,,,True,,S,False,False)
+ERROR 335544652 335544842 'At block line: 1, col: 48' '' 21000
+multiple rows in singleton select
+--- execute block returns (n integer) as begin in autonomous transaction do insert into log values (200, 'auto'); n = (select count(*) from log where seq = 200); suspend; end
+N:INTEGER (4,,,True,,N,False,False)
+0 | 
+affected 0
+--- execute block returns (r integer) as declare function sq (x integer) returns integer as begin return x * x; end begin r = sq(7); suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+49 | 
+affected 0
+--- execute block returns (r integer) as declare procedure p returns (o integer) as begin o = 3; suspend; o = 4; suspend; end begin for select o from p into :r do suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+3 | 
+4 | 
+affected 0
+--- execute block returns (r varchar(30)) as begin r = current_user; r = r || ' ' || (select count(*) from rdb$database); suspend; end
+R:VARCHAR (30,,,True,,R,False,False)
+SYSDBA 1 | 
+affected 0
+--- execute block returns (x integer) as begin x = undefined_var; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'UNDEFINED_VAR' 336397208 #1 #48 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+UNDEFINED_VAR
+At line 1, column 48
+--- execute block returns (x integer) as begin y = 1; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'Y' 336397208 #1 #44 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+Y
+At line 1, column 44
+--- execute block returns (x integer) as declare x integer; begin suspend; end
+ERROR 335544569 335544436 #-637 335544664 'X' '' 42000
+Dynamic SQL Error
+SQL error code = -637
+duplicate specification of X - not supported
+--- execute block as declare c cursor for (select id from t); begin fetch c into :c; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'C' 336397208 #1 #78 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+C
+At line 1, column 78
+--- execute block as declare c cursor for (select id from t); declare i integer; begin fetch c into :i; end
+ERROR 335544834 335544842 'At block line: 1, col: 84' '' 24000
+Cursor is not open
+--- execute block as declare c cursor for (select id from t); begin open c; open c; end
+
+affected 0
+--- execute block returns (s varchar(20)) as begin if (1 = 1) then s = 'a'; else s = 'b'; suspend; if (null = null) then s = 'n'; else s = 'not'; suspend; end
+S:VARCHAR (20,,,True,,S,False,False)
+a | 
+not | 
+affected 0
+--- select * from wrap(5)
+MSG:VARCHAR (100,,,True,WRAP,MSG,False,False)
+caught -836 335544517 HY000 | 
+affected 0
+--- execute block returns (r integer) as declare i integer = 1; begin select count(*) from rdb$database where 1 = i into :r; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #111 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 111
+--- execute block returns (r integer) as declare i integer = 1; begin update t set n = n where id = i; r = row_count; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #97 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 97
+--- execute block returns (r integer) as declare i integer = 1; begin insert into log values (300, 'x' || i); r = row_count; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #103 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 103
+--- execute block returns (r integer) as declare i integer = 1; begin insert into log values (301, 'x' || :i); r = row_count; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+1 | 
+affected 0
+--- execute block returns (r integer) as declare v integer = 2; begin select count(*) from t where id = v into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+ERROR 335544334 'one' 335544842 'At block line: 1, col: 67' '' 22018
+conversion error from string "one"
+--- execute block returns (r integer) as declare id integer = 2; begin select count(*) from t where id = id into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+4 | 
+affected 0
+--- execute block returns (r integer) as declare id integer = 2; begin select count(*) from t where id = :id into :r; suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+1 | 
+affected 0
+--- execute block returns (r integer) as declare i integer = 1; begin r = (select count(*) from t where id = i); suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #106 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 106
+--- execute block returns (r integer) as declare i integer = 1; begin r = (select count(*) from t where id = :i); suspend; end
+R:INTEGER (4,,,True,,R,False,False)
+1 | 
+affected 0
+--- execute block returns (r integer) as declare i integer = 1; declare c cursor for (select id from t where id = i); begin open c; fetch c into :r; close c; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #111 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 111
+--- execute block returns (r varchar(30)) as declare i integer = 1; begin execute procedure exe(i, 'q') returning_values :r; suspend; end
+R:VARCHAR (30,,,True,,R,False,False)
+1-q | 
+affected 0
+--- execute block returns (r varchar(30)) as declare i integer = 1; begin select r from exe(i) into :r; suspend; end
+ERROR 335544569 335544436 #-206 335544578 335544382 'I' 336397208 #1 #89 '' 42000
+Dynamic SQL Error
+SQL error code = -206
+Column unknown
+I
+At line 1, column 89

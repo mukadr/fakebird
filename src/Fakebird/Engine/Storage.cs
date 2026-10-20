@@ -32,8 +32,9 @@ public sealed class RowSlot
     {
         if (Owner == tx) return PendingDelete ? null : Pending;
         var v = Committed;
-        if (tx.Snapshot)
-            while (v != null && v.Seq > tx.StartSeq) v = v.Older;
+        var limit = tx.Snapshot ? tx.StartSeq : tx.StatementSeq;
+        if (limit != null)
+            while (v != null && v.Seq > limit) v = v.Older;
         return v?.Data;
     }
 
