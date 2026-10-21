@@ -4535,9 +4535,12 @@ conversion error from string "23:59:59.9999"
 CAST:TIME (4,,,False,,CAST,False,False)
 23:59:59.9999 | 
 affected 0
---- select cast(time '23:59:59.9999' as timestamp) from rdb$database
+--- select cast(time '23:59:59.9999' as timestamp) from rdb$database where 1 = 0
 CAST:TIMESTAMP (8,,,False,,CAST,False,False)
-2026-10-20 23:59:59.9999 | 
+affected 0
+--- select cast(time '23:59:59.9999' as timestamp) = current_date + time '23:59:59.9999' from rdb$database
+:BOOLEAN (1,,,True,,,False,False)
+True | 
 affected 0
 --- select cast(time '23:59:59.9999' as boolean) from rdb$database
 CAST:BOOLEAN (1,,,False,,CAST,False,False)

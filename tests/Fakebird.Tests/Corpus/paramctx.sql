@@ -1686,7 +1686,7 @@ select f + 1 from r union all select f + 1 from r
 -- @case params: []
 select upper(v) from r union all select upper(v) from r
 -- @case params: []
-select current_date from r union all select current_date from r
+select current_date from r where 1 = 0 union all select current_date from r where 1 = 0
 -- @case params: []
 select (select max(i) from r) from r union all select (select max(i) from r) from r
 -- @case params: []

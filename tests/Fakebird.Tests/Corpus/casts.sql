@@ -2158,7 +2158,9 @@ select cast(time '23:59:59.9999' as date) from rdb$database
 -- @case
 select cast(time '23:59:59.9999' as time) from rdb$database
 -- @case
-select cast(time '23:59:59.9999' as timestamp) from rdb$database
+select cast(time '23:59:59.9999' as timestamp) from rdb$database where 1 = 0
+-- @case
+select cast(time '23:59:59.9999' as timestamp) = current_date + time '23:59:59.9999' from rdb$database
 -- @case
 select cast(time '23:59:59.9999' as boolean) from rdb$database
 -- @case

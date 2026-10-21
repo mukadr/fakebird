@@ -462,7 +462,9 @@ select id from l union select s from l order by 1
 -- @case
 select id from l union select id, k from r
 -- @case
-select dt from (select current_date dt from rdb$database) union select 'x' from rdb$database
+select dt from (select current_date dt from rdb$database where 1 = 0) union select 'x' from rdb$database
+-- @case
+select dt from (select date '2024-01-02' dt from rdb$database) union select 'x' from rdb$database
 -- @case
 select first 1 id from l union select first 1 id from r order by 1
 -- @case

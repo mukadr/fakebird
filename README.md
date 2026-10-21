@@ -246,6 +246,9 @@ insert into t values (?, ?)
 -- @commit                       (or @rollback)
 ```
 
+The golden files are text recorded once, so a case must not print the current date or time: compare
+it instead (`cast(t as timestamp) = current_date + t`) or describe it with `where 1 = 0`.
+
 To check the golden files against a real server, or to record new ones, run Firebird 5 in docker:
 
 ```

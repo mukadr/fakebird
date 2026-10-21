@@ -3520,10 +3520,8 @@ affected 0
 7 | 
 7 | 
 affected 0
---- select current_date from r union all select current_date from r
+--- select current_date from r where 1 = 0 union all select current_date from r where 1 = 0
 :DATE (4,,,False,,,False,False)
-2026-10-20 00:00:00.0000 | 
-2026-10-20 00:00:00.0000 | 
 affected 0
 --- select (select max(i) from r) from r union all select (select max(i) from r) from r
 :INTEGER (4,,,True,,,False,False)

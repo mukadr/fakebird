@@ -1885,9 +1885,13 @@ Dynamic SQL Error
 SQL error code = -104
 Invalid command
 count of column list and variable list do not match
---- select dt from (select current_date dt from rdb$database) union select 'x' from rdb$database
+--- select dt from (select current_date dt from rdb$database where 1 = 0) union select 'x' from rdb$database
 DT:VARCHAR (10,,,False,,,False,False)
-2026-10-20 | 
+x | 
+affected 0
+--- select dt from (select date '2024-01-02' dt from rdb$database) union select 'x' from rdb$database
+DT:VARCHAR (10,,,False,,,False,False)
+2024-01-02 | 
 x | 
 affected 0
 --- select first 1 id from l union select first 1 id from r order by 1
