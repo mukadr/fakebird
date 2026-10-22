@@ -276,6 +276,11 @@ FAKEBIRD_RECORD=1 dotnet test tests/Fakebird.Tests --filter CorpusTests    # rew
 
 A missing golden file is recorded automatically when the server is configured.
 
+GitHub Actions (`.github/workflows/test.yml`, Ubuntu) runs `dotnet test` on the whole solution for every
+push to `main`/`dev` and every pull request, and a second job runs `tests/Fakebird.Tests` again against a
+`firebirdsql/firebird:5` service container configured as above, so the golden files are checked against a
+real server too.
+
 To explore, put statements in a file (corpus format, or one statement per line run after the setup of
 `basics.sql`) and set `FAKEBIRD_PROBE=/path/to/file`: the `Probe` test prints the answers of every
 configured server and of Fakebird, marked SAME or DIFF. Besides `FAKEBIRD_FB5C3_CS` it uses
@@ -316,4 +321,5 @@ tools/genmsg.py        generates FbMessages.g.cs from Firebird's message files
 tools/gensys.py        generates SystemSchema.g.cs (system table columns) from Firebird's relations.h
 samples/               ASP.NET Core API + WebApplicationFactory tests using Fakebird
 bench/                 throughput checks through the real client
+.github/workflows      CI: dotnet test, and the corpus against a real Firebird 5
 ```

@@ -1,0 +1,59 @@
+name: test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  test:
+    name: dotnet test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore Fakebird.slnx
+      - run: dotnet build Fakebird.slnx --no-restore
+      - run: dotnet test Fakebird.slnx --no-build --logger "trx" --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: TestResults
+
+  # Golden corpus checked against a real Firebird 5 (DataTypeCompatibility = 3.0), see README.
+  corpus-fb5:
+    name: corpus vs Firebird 5
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      firebird:
+        image: firebirdsql/firebird:5
+        ports:
+          - 127.0.0.1:3053:3050
+        env:
+          FIREBIRD_ROOT_PASSWORD: masterkey
+          FIREBIRD_CONF_DataTypeCompatibility: '3.0'
+    env:
+      FAKEBIRD_FB5C3_CS: DataSource=127.0.0.1;Port=3053;Database=/var/lib/firebird/data/{db}.fdb;User=SYSDBA;Password=masterkey;Charset=UTF8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build tests/Fakebird.Tests
+      - name: Wait for Firebird
+        run: timeout 120 bash -c 'until (echo > /dev/tcp/127.0.0.1/3053) 2>/dev/null; do sleep 1; done'
+      - run: dotnet test tests/Fakebird.Tests --no-build
