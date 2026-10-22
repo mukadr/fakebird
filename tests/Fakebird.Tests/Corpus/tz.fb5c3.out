@@ -671,6 +671,70 @@ EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
 EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
 1900-01-01 00:00:00.0000 | 1900-01-01 00:00:00.0000 Europe/Amsterdam | 0 | 0 | 
 affected 0
+--- select cast('1880-01-01 00:00:00 Europe/Brussels' as timestamp with time zone), cast(cast('1880-01-01 00:00:00 Europe/Brussels' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('1880-01-01 00:00:00 Europe/Brussels' as timestamp with time zone)), extract(timezone_minute from cast('1880-01-01 00:00:00 Europe/Brussels' as timestamp with time zone)), cast(cast('1880-01-01 00:00:00 Europe/Brussels' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+1879-12-31 23:43:00.0000 | 1880-01-01 00:00:00.0000 Europe/Brussels | 0 | 17 | 1879-12-31 23:43:00.0000 UTC | 
+affected 0
+--- select cast('1900-01-01 00:00:00 Europe/Lisbon' as timestamp with time zone), cast(cast('1900-01-01 00:00:00 Europe/Lisbon' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('1900-01-01 00:00:00 Europe/Lisbon' as timestamp with time zone)), extract(timezone_minute from cast('1900-01-01 00:00:00 Europe/Lisbon' as timestamp with time zone)), cast(cast('1900-01-01 00:00:00 Europe/Lisbon' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+1900-01-01 00:36:00.0000 | 1900-01-01 00:00:00.0000 Europe/Lisbon | 0 | -36 | 1900-01-01 00:36:00.0000 UTC | 
+affected 0
+--- select cast('2100-07-01 12:00:00 America/New_York' as timestamp with time zone), cast(cast('2100-07-01 12:00:00 America/New_York' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2100-07-01 12:00:00 America/New_York' as timestamp with time zone)), extract(timezone_minute from cast('2100-07-01 12:00:00 America/New_York' as timestamp with time zone)), cast(cast('2100-07-01 12:00:00 America/New_York' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2100-07-01 16:00:00.0000 | 2100-07-01 12:00:00.0000 America/New_York | -4 | 0 | 2100-07-01 16:00:00.0000 UTC | 
+affected 0
+--- select cast('2100-01-15 12:00:00 Australia/Sydney' as timestamp with time zone), cast(cast('2100-01-15 12:00:00 Australia/Sydney' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2100-01-15 12:00:00 Australia/Sydney' as timestamp with time zone)), extract(timezone_minute from cast('2100-01-15 12:00:00 Australia/Sydney' as timestamp with time zone)), cast(cast('2100-01-15 12:00:00 Australia/Sydney' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2100-01-15 01:00:00.0000 | 2100-01-15 12:00:00.0000 Australia/Sydney | 11 | 0 | 2100-01-15 01:00:00.0000 UTC | 
+affected 0
+--- select cast('2100-07-15 12:00:00 Australia/Sydney' as timestamp with time zone), cast(cast('2100-07-15 12:00:00 Australia/Sydney' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2100-07-15 12:00:00 Australia/Sydney' as timestamp with time zone)), extract(timezone_minute from cast('2100-07-15 12:00:00 Australia/Sydney' as timestamp with time zone)), cast(cast('2100-07-15 12:00:00 Australia/Sydney' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2100-07-15 02:00:00.0000 | 2100-07-15 12:00:00.0000 Australia/Sydney | 10 | 0 | 2100-07-15 02:00:00.0000 UTC | 
+affected 0
+--- select cast('2100-03-28 02:30:00 Europe/Amsterdam' as timestamp with time zone), cast(cast('2100-03-28 02:30:00 Europe/Amsterdam' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2100-03-28 02:30:00 Europe/Amsterdam' as timestamp with time zone)), extract(timezone_minute from cast('2100-03-28 02:30:00 Europe/Amsterdam' as timestamp with time zone)), cast(cast('2100-03-28 02:30:00 Europe/Amsterdam' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2100-03-28 01:30:00.0000 | 2100-03-28 03:30:00.0000 Europe/Amsterdam | 2 | 0 | 2100-03-28 01:30:00.0000 UTC | 
+affected 0
+--- select cast('2100-10-31 02:30:00 Europe/Amsterdam' as timestamp with time zone), cast(cast('2100-10-31 02:30:00 Europe/Amsterdam' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2100-10-31 02:30:00 Europe/Amsterdam' as timestamp with time zone)), extract(timezone_minute from cast('2100-10-31 02:30:00 Europe/Amsterdam' as timestamp with time zone)), cast(cast('2100-10-31 02:30:00 Europe/Amsterdam' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2100-10-31 00:30:00.0000 | 2100-10-31 02:30:00.0000 Europe/Amsterdam | 2 | 0 | 2100-10-31 00:30:00.0000 UTC | 
+affected 0
+--- select cast('2300-06-01 12:00:00 America/Santiago' as timestamp with time zone), cast(cast('2300-06-01 12:00:00 America/Santiago' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2300-06-01 12:00:00 America/Santiago' as timestamp with time zone)), extract(timezone_minute from cast('2300-06-01 12:00:00 America/Santiago' as timestamp with time zone)), cast(cast('2300-06-01 12:00:00 America/Santiago' as timestamp with time zone) at time zone 'UTC' as varchar(60)) from rdb$database
+CAST:TIMESTAMP (8,,,False,,CAST,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+EXTRACT:SMALLINT (2,,,False,,EXTRACT,False,False)
+CAST:VARCHAR (60,,,False,,CAST,False,False)
+2300-06-01 16:00:00.0000 | 2300-06-01 12:00:00.0000 America/Santiago | -4 | 0 | 2300-06-01 16:00:00.0000 UTC | 
+affected 0
 --- select cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone), cast(cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone) as varchar(60)), extract(timezone_hour from cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone)), extract(timezone_minute from cast('2024-06-01 12:00:00 Asia/Kathmandu' as timestamp with time zone)) from rdb$database
 CAST:TIMESTAMP (8,,,False,,CAST,False,False)
 CAST:VARCHAR (60,,,False,,CAST,False,False)

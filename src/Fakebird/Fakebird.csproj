@@ -16,4 +16,8 @@
     <InternalsVisibleTo Include="Fakebird.Bench" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Types\TimeZoneData.bin" LogicalName="Fakebird.Types.TimeZoneData.bin" />
+  </ItemGroup>
+
 </Project>

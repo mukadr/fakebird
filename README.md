@@ -107,7 +107,10 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   calls. As with `DataTypeCompatibility = 3.0`, the client gets zoned values (columns, results and
   parameters) as TIMESTAMP / TIME in the session zone. The session zone starts as
   `FakebirdOptions.TimeZone`, a database's `DefaultTimeZone`, or the operating system's zone (Firebird's
-  DefaultTimeZone); region rules come from the system's tz database.
+  DefaultTimeZone). Region rules are bundled (tz data 2026e, `tools/gentzdata.py`): the main IANA data that
+  Firebird's ICU carries, so results do not depend on the host (Debian/Ubuntu's tz database includes
+  backzone's older local mean times, Windows has none). Offsets in seconds truncate to minutes, as in Firebird
+  (Brussels' +00:17:30 of 1880 is +00:17).
 * **Built-in functions**: string, numeric, date/time, UUID, bit, LIST, COALESCE/NULLIF/IIF/DECODE...,
   and Firebird 4's HEX_ENCODE/HEX_DECODE, BASE64_ENCODE/BASE64_DECODE, BLOB_APPEND, CRYPT_HASH (MD5,
   SHA1, SHA2, SHA3) and HASH ... USING CRC32; HASH is Firebird 5's 64-bit hash; a wrong number of
@@ -236,8 +239,8 @@ the services API (backup/restore), external tables/functions, WHERE CURRENT OF, 
   connection exchanges the bytes of ASCII/ISO8859_1/WIN1252 text untransliterated, as Firebird does (a binary
   blob moved into a WIN1252 text blob reads back as its original bytes there). Text is kept as Unicode: a NONE value is not its raw bytes (comparing it with WIN1252 text compares
   characters), and WIN1250/WIN1251 are labels only (no transliteration, code point order).
-* Time zone rules come from the operating system's tz database (on Windows, .NET's ICU data), which can
-  differ from the ICU data of a Firebird build where rules changed recently.
+* Time zone rules are the bundled tz data (2026e), which can differ from the ICU data of a Firebird build
+  where rules changed since; regenerate it with `tools/gentzdata.py` (see its header) for a newer release.
 
 ## Checking against a real Firebird
 
@@ -293,7 +296,9 @@ generated file stays under Firebird's Initial Developer's Public License, see it
 nullability of the system tables' columns come from Firebird's relation definitions:
 `tools/gensys.py <firebird>/src/jrd > src/Fakebird/Engine/SystemSchema.g.cs` (same license), and the
 time zone list (whose order fixes the zone ids) from its `TimeZones.h`:
-`tools/gentz.py <firebird>/src/common/TimeZones.h > src/Fakebird/Types/TimeZoneList.g.cs`.
+`tools/gentz.py <firebird>/src/common/TimeZones.h > src/Fakebird/Types/TimeZoneList.g.cs`. The rules of
+those zones come from the IANA tz data compiled by `zic` (its header has the commands):
+`tools/gentzdata.py <zoneinfo> > src/Fakebird/Types/TimeZoneData.bin`.
 
 ## Loading a real-world schema
 
@@ -319,6 +324,8 @@ tests/Fakebird.Tests   engine, wire, SQL feature, client behaviour, Dapper and E
 tests/Fakebird.Tests/Corpus   SQL corpus with the golden output of a real Firebird 5
 tools/genmsg.py        generates FbMessages.g.cs from Firebird's message files
 tools/gensys.py        generates SystemSchema.g.cs (system table columns) from Firebird's relations.h
+tools/gentz.py         generates TimeZoneList.g.cs (zone names and ids) from Firebird's TimeZones.h
+tools/gentzdata.py     generates TimeZoneData.bin (zone rules) from the IANA tz data
 samples/               ASP.NET Core API + WebApplicationFactory tests using Fakebird
 bench/                 throughput checks through the real client
 .github/workflows      CI: dotnet test, and the corpus against a real Firebird 5

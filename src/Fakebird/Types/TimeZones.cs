@@ -4,8 +4,8 @@ namespace Fakebird.Types;
 
 /// <summary>
 /// Firebird's time zones (TimeZoneUtil): a zone is a 16-bit id, either an offset (id = minutes + 1439, up to
-/// ±14:00) or a region of Firebird's built-in list (id = 65535 - index). Region rules come from the system's tz
-/// database. The session zone of the running statement is ambient (per thread), like Firebird's callbacks.
+/// ±14:00) or a region of Firebird's built-in list (id = 65535 - index). Region rules come from the bundled tz
+/// data (TimeZoneRules). The session zone of the running statement is ambient (per thread), like Firebird's callbacks.
 /// </summary>
 public static class TimeZones
 {
@@ -16,7 +16,7 @@ public static class TimeZones
     public const long TimeTzBaseDate = 58849;
 
     static readonly Dictionary<string, ushort> Ids = BuildIds();
-    static readonly TimeZoneInfo?[] Infos = new TimeZoneInfo?[TimeZoneList.Names.Length];
+    static readonly TimeZoneRules?[] Rules = new TimeZoneRules?[TimeZoneList.Names.Length];
     static readonly object[] Boxed = new object[ushort.MaxValue + 1];
 
     [ThreadStatic] static ushort _session;
@@ -143,42 +143,14 @@ public static class TimeZones
     {
         if (zone == Gmt) return 0;
         if (IsOffset(zone)) return Displacement(zone);
-        var info = Info(zone);
-        if (info == null) return 0;
-        var (day, time) = Conv.SplitTimestamp(utcTicks);
-        if (day < -678575 + 1 || day > 2973483 - 1) return (int)info.BaseUtcOffset.TotalMinutes;
-        var dt = DateTime.SpecifyKind(Conv.DateToDateTime(day).AddTicks(time * 1000), DateTimeKind.Utc);
-        return (int)Math.Round(info.GetUtcOffset(dt).TotalMinutes);
+        var rules = Rules[Gmt - zone] ??= TimeZoneRules.Find(TimeZoneList.Names[Gmt - zone]);
+        if (rules == null) return 0;
+        // ICU's milliseconds divided by minutes, as Firebird does: local mean times truncate toward zero
+        return rules.OffsetAt(Math.DivRem(utcTicks, Value.TicksPerSecond, out var r) - (r < 0 ? 1 : 0) - UnixEpochSeconds) / 60;
     }
 
-    static TimeZoneInfo? Info(ushort zone)
-    {
-        var i = Gmt - zone;
-        if (Infos[i] is { } info) return info;
-        var name = TimeZoneList.Names[i];
-        if (!TimeZoneInfo.TryFindSystemTimeZoneById(name, out info) &&
-            !(Aliases.TryGetValue(name, out var alias) && TimeZoneInfo.TryFindSystemTimeZoneById(alias, out info)))
-            info = TimeZoneInfo.Utc;
-        return Infos[i] = info;
-    }
-
-    /// <summary>ICU's names that the tz database does not carry (old Java ids and SystemV zones).</summary>
-    static readonly Dictionary<string, string> Aliases = new(StringComparer.Ordinal)
-    {
-        ["ACT"] = "Australia/Darwin", ["AET"] = "Australia/Sydney", ["AGT"] = "America/Argentina/Buenos_Aires",
-        ["ART"] = "Africa/Cairo", ["AST"] = "America/Anchorage", ["BET"] = "America/Sao_Paulo", ["BST"] = "Asia/Dhaka",
-        ["CAT"] = "Africa/Harare", ["CNT"] = "America/St_Johns", ["CST"] = "America/Chicago", ["CTT"] = "Asia/Shanghai",
-        ["EAT"] = "Africa/Addis_Ababa", ["ECT"] = "Europe/Paris", ["IET"] = "America/Indiana/Indianapolis",
-        ["IST"] = "Asia/Kolkata", ["JST"] = "Asia/Tokyo", ["MIT"] = "Pacific/Apia", ["NET"] = "Asia/Yerevan",
-        ["NST"] = "Pacific/Auckland", ["PLT"] = "Asia/Karachi", ["PNT"] = "America/Phoenix", ["PRT"] = "America/Puerto_Rico",
-        ["PST"] = "America/Los_Angeles", ["SST"] = "Pacific/Guadalcanal", ["VST"] = "Asia/Ho_Chi_Minh",
-        ["Canada/East-Saskatchewan"] = "America/Regina", ["US/Pacific-New"] = "America/Los_Angeles",
-        ["SystemV/AST4"] = "America/Puerto_Rico", ["SystemV/AST4ADT"] = "America/Halifax", ["SystemV/CST6"] = "America/Regina",
-        ["SystemV/CST6CDT"] = "America/Chicago", ["SystemV/EST5"] = "America/Panama", ["SystemV/EST5EDT"] = "America/New_York",
-        ["SystemV/HST10"] = "Pacific/Honolulu", ["SystemV/MST7"] = "America/Phoenix", ["SystemV/MST7MDT"] = "America/Denver",
-        ["SystemV/PST8"] = "Pacific/Pitcairn", ["SystemV/PST8PDT"] = "America/Los_Angeles", ["SystemV/YST9"] = "Pacific/Gambier",
-        ["SystemV/YST9YDT"] = "America/Anchorage",
-    };
+    /// <summary>1970-01-01 in timestamp seconds (days since 1858-11-17).</summary>
+    const long UnixEpochSeconds = 40587L * 86400;
 
     /// <summary>Local wall time of a UTC instant in the zone.</summary>
     public static long ToLocal(long utcTicks, ushort zone) => utcTicks + OffsetAt(zone, utcTicks) * TicksPerMinute;
