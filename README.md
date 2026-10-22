@@ -232,8 +232,9 @@ the services API (backup/restore), external tables/functions, WHERE CURRENT OF, 
   the fetch, like Firebird: an error discards the rows of its fetch batch; WHERE conditions that depend on no table, such as an uncorrelated
   singleton subquery, fail at execute, also like Firebird).
 * NO ACTION foreign keys are verified at the end of each statement.
-* Connections talk UTF8 (`Charset=UTF8`, or NONE); other connection character sets are refused. Text
-  is kept as Unicode: a NONE value is not its raw bytes (comparing it with WIN1252 text compares
+* Connections talk UTF8 (`Charset=UTF8`) or NONE; other connection character sets are refused. A NONE
+  connection exchanges the bytes of ASCII/ISO8859_1/WIN1252 text untransliterated, as Firebird does (a binary
+  blob moved into a WIN1252 text blob reads back as its original bytes there). Text is kept as Unicode: a NONE value is not its raw bytes (comparing it with WIN1252 text compares
   characters), and WIN1250/WIN1251 are labels only (no transliteration, code point order).
 * Time zone rules come from the operating system's tz database (on Windows, .NET's ICU data), which can
   differ from the ICU data of a Firebird build where rules changed recently.

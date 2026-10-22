@@ -198,18 +198,23 @@ public sealed class SqlType : IEquatable<SqlType>
     /// <summary>
     /// The type as described to clients with DataTypeCompatibility = 3.0 (Firebird's "legacy" bindings): INT128
     /// becomes BIGINT with the same scale and subtype, and the WITH TIME ZONE types become TIMESTAMP and TIME (in the
-    /// session time zone). Text in another real character set is described in the attachment's, UTF8, with room for
-    /// its characters there.
+    /// session time zone).
     /// </summary>
     public SqlType Bound => Kind switch
     {
         TypeKind.Int128 => new SqlType(TypeKind.BigInt, scale: Scale, precision: 18, subType: SubType),
         TypeKind.TimestampTz => Timestamp,
         TypeKind.TimeTz => Time,
-        TypeKind.Char or TypeKind.VarChar when Charset is not (Charset.Utf8 or Charset.None or Charset.Octets) =>
-            new SqlType(Kind, Length, charset: Charset.Utf8),
         _ => this,
     };
+
+    /// <summary>
+    /// The type as described to a UTF8 attachment: text in another real character set is in UTF8, with room for its
+    /// characters there (a NONE attachment gets the column's own character set and bytes).
+    /// </summary>
+    public SqlType InUtf8 => IsString && Charset is not (Charset.Utf8 or Charset.None or Charset.Octets)
+        ? new SqlType(Kind, Length, charset: Charset.Utf8)
+        : this;
 
     public SqlType WithCollation(Collation c) => c == Collation ? this
         : new SqlType(Kind, Length, Scale, Precision, SubType, Charset, c);

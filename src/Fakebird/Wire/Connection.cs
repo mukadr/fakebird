@@ -30,6 +30,8 @@ internal sealed class Connection
     readonly Dictionary<int, BlobHandle> _blobs = new();
     /// <summary>Blob contents by blob id (written by the client or materialized for fetched rows).</summary>
     readonly Dictionary<long, (byte[] Data, Transaction? Tx)> _blobStore = new();
+    /// <summary>The attachment's character set (isc_dpb_lc_ctype): UTF8, or NONE (no transliteration).</summary>
+    Charset _charset = Charset.Utf8;
     long _nextBlobId = 1;
 
     sealed class StmtHandle
@@ -339,8 +341,10 @@ internal sealed class Connection
             }
             _server.Authenticate(user, password);
             // text goes over the wire as UTF-8: other attachment character sets would be misread
-            if (charset != null && Compile.Compiler.CharsetOf(charset) is not (Charset.Utf8 or Charset.UnicodeFss or Charset.None))
-                throw Err.Unsupported($"connection character set {charset.ToUpperInvariant()} (use UTF8)");
+            var attCharset = charset == null ? Charset.None : Compile.Compiler.CharsetOf(charset);
+            if (attCharset is not (Charset.Utf8 or Charset.UnicodeFss or Charset.None))
+                throw Err.Unsupported($"connection character set {charset!.ToUpperInvariant()} (use UTF8)");
+            _charset = attCharset == Charset.None ? Charset.None : Charset.Utf8;
             if (_att != null) Cleanup();
             var entry = create ? _server.CreateForClient(path) : _server.Find(path)
                 ?? throw new StatusBuilder().Gds(335544344).Str("open").Str(path)
@@ -625,15 +629,16 @@ internal sealed class Connection
                             return b.ToArray();
                         }
                         var (type, nullable, field, relation, alias) = cols[k];
+                        var bound = Described(type);
                         foreach (var w in wanted)
                         {
                             switch (w)
                             {
                                 case Isc.info_sql_sqlda_seq: b.Int(w, k + 1); break;
-                                case Isc.info_sql_type: b.Int(w, type.Bound.WireSqlType | (nullable ? 1 : 0)); break;
-                                case Isc.info_sql_sub_type: b.Int(w, type.Bound.WireSubType); break;
-                                case Isc.info_sql_scale: b.Int(w, -type.Bound.Scale); break;
-                                case Isc.info_sql_length: b.Int(w, type.Bound.ByteLength); break;
+                                case Isc.info_sql_type: b.Int(w, bound.WireSqlType | (nullable ? 1 : 0)); break;
+                                case Isc.info_sql_sub_type: b.Int(w, bound.WireSubType); break;
+                                case Isc.info_sql_scale: b.Int(w, -bound.Scale); break;
+                                case Isc.info_sql_length: b.Int(w, bound.ByteLength); break;
                                 case Isc.info_sql_null_ind: b.Int(w, nullable ? 1 : 0); break;
                                 case Isc.info_sql_field: b.Str(w, field); break;
                                 case Isc.info_sql_relation: b.Str(w, relation); break;
@@ -1032,12 +1037,12 @@ internal sealed class Connection
             {
                 var id = v.L;
                 if (!_blobStore.TryGetValue(id, out var data)) throw Err.Random("invalid BLOB ID " + id);
-                vals[i] = t.SubType == 1 ? Value.Str(_enc.GetString(data.Data)) : Value.Bytes(data.Data);
+                vals[i] = t.SubType == 1 ? Value.Str(Text(data.Data, t)) : Value.Bytes(data.Data);
                 continue;
             }
             if (v.Tag == VTag.Bytes && !(t.IsBinary))
             {
-                var s = _enc.GetString(v.AsBytes);
+                var s = Text(v.AsBytes, t);
                 if (descs![i].Blr == Isc.blr_text) s = s.TrimEnd(' ');
                 v = Value.Str(s);
             }
@@ -1076,11 +1081,21 @@ internal sealed class Connection
         return r;
     }
 
+    /// <summary>A type as described to this attachment (see <see cref="SqlType.InUtf8"/>).</summary>
+    SqlType Described(SqlType t) => _charset == Charset.None ? t.Bound : t.Bound.InUtf8;
+
+    /// <summary>A NONE attachment exchanges the bytes of text in a single-byte character set, untransliterated.</summary>
+    bool RawBytes(SqlType t) => _charset == Charset.None && Charsets.IsNarrow(t.Charset);
+
+    string Text(byte[] bytes, SqlType t) => RawBytes(t) ? Charsets.Decode(bytes, t.Charset) : _enc.GetString(bytes);
+
+    byte[] Bytes(string s, SqlType t) => RawBytes(t) ? Charsets.Encode(s, t.Charset) : _enc.GetBytes(s);
+
     void WriteRow(OutCol[] cols, Value[] row, Transaction? tx)
     {
         for (var i = 0; i < cols.Length; i++)
         {
-            var t = cols[i].Type.Bound;
+            var t = Described(cols[i].Type);
             var v = row[i];
             var isNull = v.IsNull;
             switch (t.Kind)
@@ -1088,11 +1103,13 @@ internal sealed class Connection
                 case TypeKind.Char:
                     if (isNull) _xdr.WriteOpaqueFixed([], t.ByteLength, (byte)' ');
                     else if (v.Tag == VTag.Bytes) _xdr.WriteOpaqueFixed(v.AsBytes, t.ByteLength, 0);
+                    else if (RawBytes(t)) _xdr.WriteOpaqueFixed(Bytes(v.AsString, t), t.ByteLength, (byte)' ');
                     else _xdr.WriteFixedString(v.AsString, t.ByteLength, _enc);
                     break;
                 case TypeKind.VarChar:
                     if (isNull) _xdr.WriteInt32(0);
                     else if (v.Tag == VTag.Bytes) _xdr.WriteBuffer(v.AsBytes);
+                    else if (RawBytes(t)) _xdr.WriteBuffer(Bytes(v.AsString, t));
                     else _xdr.WriteString(v.AsString, _enc);
                     break;
                 case TypeKind.SmallInt:
@@ -1137,7 +1154,7 @@ internal sealed class Connection
                     long id = 0;
                     if (!isNull)
                     {
-                        var data = v.Tag == VTag.Bytes ? v.AsBytes : _enc.GetBytes(Conv.ToStr(v));
+                        var data = v.Tag == VTag.Bytes ? v.AsBytes : Bytes(Conv.ToStr(v), t);
                         id = _nextBlobId++;
                         _blobStore[id] = (data, tx);
                     }

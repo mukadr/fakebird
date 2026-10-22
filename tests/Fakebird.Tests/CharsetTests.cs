@@ -72,4 +72,45 @@ public class CharsetTests(ServerFixture fx)
         Assert.Contains("connection character set ISO8859_1", e.Message);
         fx.Server.DropDatabase(db.Name);
     }
+
+    /// <summary>
+    /// As Firebird 5 answers: text is stored in WIN1252 (a binary blob moved into a text blob keeps its bytes, read as
+    /// WIN1252); a UTF8 attachment gets it transliterated, a NONE one gets its bytes.
+    /// </summary>
+    [Fact]
+    public void NoneConnectionsGetTheBytes()
+    {
+        var db = fx.Server.CreateDatabase("cs_" + Guid.NewGuid().ToString("N"), charset: "WIN1252");
+        db.RunScript("create table t (id int, v varchar(5), c char(3), b blob sub_type 1);");
+        var utf8 = System.Text.Encoding.UTF8.GetBytes("ÓX");
+        using (var cn = Open(db))
+        {
+            using (var cmd = new FbCommand("insert into t values (1, 'ÓX', 'ÓX', 'ÓX')", cn)) cmd.ExecuteNonQuery();
+            using (var cmd = new FbCommand("execute block (p blob sub_type binary = @p) as begin insert into t (id, b) values (2, :p); end", cn))
+            {
+                cmd.Parameters.Add("p", FbDbType.Binary).Value = utf8;
+                cmd.ExecuteNonQuery();
+            }
+            using (var cmd = new FbCommand("insert into t (id, b) values (3, @p)", cn))
+            {
+                cmd.Parameters.Add("p", FbDbType.Binary).Value = utf8;
+                cmd.ExecuteNonQuery();
+            }
+        }
+        string Read(string charset)
+        {
+            using var cn = new FbConnection(db.ConnectionString().Replace("Charset=UTF8", "Charset=" + charset));
+            cn.Open();
+            using var cmd = new FbCommand("select id, v, c, b, octet_length(b) from t order by id", cn);
+            using var r = cmd.ExecuteReader();
+            var rows = new List<string>();
+            while (r.Read())
+                rows.Add($"{r[0]}: [{r[1]}] [{r[2]}] {Convert.ToHexString(r.GetFieldValue<byte[]>(3))} {r[4]}");
+            return string.Join("\n", rows);
+        }
+        Assert.Equal("1: [ÓX] [ÓX ] C39358 2\n2: [] [] C383E2809C58 3\n3: [] [] C39358 2", Read("UTF8"));
+        // the client decodes the WIN1252 byte of Ó as UTF-8
+        Assert.Equal("1: [\uFFFDX] [\uFFFDX ] D358 2\n2: [] [] C39358 3\n3: [] [] D358 2", Read("NONE"));
+        fx.Server.DropDatabase(db.Name);
+    }
 }
