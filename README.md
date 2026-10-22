@@ -140,6 +140,18 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   accent insensitivity; lengths count code points; SIMILAR TO patterns are validated and translated like
   Firebird's (including `SUBSTRING ... SIMILAR`); character set introducers relabel the literal's bytes;
   OCTETS strings pad and trim with NUL and have no case.
+* **Database character sets**: a database's default character set (UTF8 unless set otherwise) is the
+  one of the text columns, domains, views and stored routines declared without one; DSQL statements,
+  EXECUTE BLOCK, literals and casts in them use the connection's, UTF8. Set it with `ALTER DATABASE SET
+  DEFAULT CHARACTER SET WIN1252` (it works over a UTF8 connection, on Firebird too), with
+  `server.CreateDatabase(name, charset: "WIN1252")` or with a database's `DefaultCharset`; snapshots and
+  `Restore` keep it. ASCII, ISO8859_1 and WIN1252 text is transliterated like Firebird does: a character
+  they lack fails with "Cannot transliterate character between character sets" when it is stored,
+  compared with their text (the other side moves to their character set), concatenated onto it, or
+  matched by LIKE, STARTING or CONTAINING. WIN1252 sorts by its bytes (`€` before `À`), UPPER/LOWER keep
+  the characters whose case it lacks (`µ`), lengths count its single-byte characters and a cast to
+  OCTETS gives its bytes. Such columns are described to the client in UTF8 (with room for four bytes a
+  character), as Firebird describes them to a UTF8 connection.
 * **Dates and times**: DATEADD (amounts rounded, Firebird's month-end rule, TIME wrap-around),
   DATEDIFF (calendar-field years/months, truncated time units, milliseconds with one decimal), EXTRACT
   (ISO week, part/type checks when preparing), FIRST_DAY/LAST_DAY, date/time arithmetic with range
@@ -220,7 +232,9 @@ the services API (backup/restore), external tables/functions, WHERE CURRENT OF, 
   the fetch, like Firebird: an error discards the rows of its fetch batch; WHERE conditions that depend on no table, such as an uncorrelated
   singleton subquery, fail at execute, also like Firebird).
 * NO ACTION foreign keys are verified at the end of each statement.
-* All text is treated as Unicode; columns are described to the client as UTF8.
+* Connections talk UTF8 (`Charset=UTF8`, or NONE); other connection character sets are refused. Text
+  is kept as Unicode: a NONE value is not its raw bytes (comparing it with WIN1252 text compares
+  characters), and WIN1250/WIN1251 are labels only (no transliteration, code point order).
 * Time zone rules come from the operating system's tz database (on Windows, .NET's ICU data), which can
   differ from the ICU data of a Firebird build where rules changed recently.
 

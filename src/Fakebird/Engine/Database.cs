@@ -33,6 +33,8 @@ public sealed partial class Database
     internal readonly Dictionary<string, string> GlobalContext = new(StringComparer.Ordinal);
     /// <summary>Session time zone of new attachments (Firebird's DefaultTimeZone); null is the system's zone.</summary>
     public ushort? DefaultTimeZone;
+    /// <summary>Character set of the text columns, domains and routine variables declared without one.</summary>
+    public Charset DefaultCharset = Charset.Utf8;
 
     public Database(string name)
     {
@@ -129,6 +131,7 @@ public sealed partial class Database
 
     void CopyCatalogInto(Database d)
     {
+        d.DefaultCharset = DefaultCharset;
         foreach (var (k, t) in Tables)
             if (!t.IsSystem) d.Tables[k] = t.CloneDef();
         foreach (var (k, v) in Views) d.Views[k] = v.Clone();

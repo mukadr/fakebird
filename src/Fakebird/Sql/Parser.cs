@@ -490,7 +490,7 @@ public sealed partial class Parser
     /// </summary>
     static Expr StringLiteralExpr(string text, string? introducer, int pos)
     {
-        var cs = introducer == null ? Charset.Utf8 : Compile.Compiler.CharsetOf(introducer);
+        var cs = introducer == null ? Charset.Utf8 : Compile.Compiler.TryCharsetOf(introducer) ?? Charset.None;
         switch (cs)
         {
             case Charset.Octets:
@@ -502,7 +502,8 @@ public sealed partial class Parser
                 return new LiteralExpr(Value.Str(text), SqlType.Char(Conv.CharLength(text), cs)) { Pos = pos };
             default:
             {
-                var relabeled = System.Text.Encoding.Latin1.GetString(Conv.Utf8.GetBytes(text));
+                var bytes = Conv.Utf8.GetBytes(text);
+                var relabeled = Charsets.IsNarrow(cs) ? Charsets.Decode(bytes, cs) : System.Text.Encoding.Latin1.GetString(bytes);
                 return new LiteralExpr(Value.Str(relabeled), SqlType.Char(relabeled.Length, cs)) { Pos = pos };
             }
         }

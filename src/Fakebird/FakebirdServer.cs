@@ -144,11 +144,16 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         }
     }
 
-    /// <summary>Creates (or replaces) a database, optionally from a snapshot (copy-on-write, O(tables)).</summary>
-    public FakeDatabase CreateDatabase(string name, DatabaseSnapshot? from = null)
+    /// <summary>
+    /// Creates (or replaces) a database, optionally from a snapshot (copy-on-write, O(tables)). The database's
+    /// default character set (for text declared without one) is <paramref name="charset"/>, else the snapshot's, else
+    /// UTF8; connections still talk UTF8.
+    /// </summary>
+    public FakeDatabase CreateDatabase(string name, DatabaseSnapshot? from = null, string? charset = null)
     {
         var db = from == null ? new Database(name) : Database.FromSnapshot(from.Frozen, name);
         db.DefaultTimeZone = DefaultZone;
+        if (charset != null) db.DefaultCharset = Compile.Compiler.CharsetOf(charset);
         lock (_dbs)
         {
             if (_dbs.ContainsKey(name)) throw new InvalidOperationException($"Database '{name}' already exists");
@@ -255,6 +260,16 @@ public sealed class FakeDatabase
     {
         get => Db.DefaultTimeZone is { } z ? TimeZones.Name(z) : null;
         set => Db.DefaultTimeZone = value == null ? null : TimeZones.Parse(value);
+    }
+
+    /// <summary>
+    /// Default character set of the database (ALTER DATABASE SET DEFAULT CHARACTER SET): the character set of the
+    /// text columns, domains and routine variables declared without one from then on.
+    /// </summary>
+    public string DefaultCharset
+    {
+        get => Charsets.Name(Db.DefaultCharset);
+        set => Db.DefaultCharset = Compile.Compiler.CharsetOf(value);
     }
 
     /// <summary>

@@ -611,12 +611,12 @@ public sealed partial class Compiler
             Domain? dom = col.Domain != null && db.Domains.TryGetValue(col.Domain, out var d) ? d : null;
             var def = col.Default ?? dom?.Default;
             if (def != null)
-                rt.Defaults[i] = new Compiler(db, 0).Bind(def, new Scope(null), col.Type);
+                rt.Defaults[i] = ForStored(db).Bind(def, new Scope(null), col.Type);
             if (col.IdentitySequence != null) rt.Identity[i] = db.Sequences[col.IdentitySequence];
             if (col.ComputedBy != null) computed.Add((i, RowExprFor(db, t, col.ComputedBy)));
             if (dom?.Check != null)
             {
-                var comp = new Compiler(db, 0);
+                var comp = ForStored(db);
                 var st = comp.NewStream(1);
                 var s = new Scope(null);
                 s.Add(new SourceItem
@@ -672,7 +672,7 @@ public sealed partial class Compiler
 
     static RowExpr RowExprFor(Database db, Table t, Expr e, bool bool_ = false)
     {
-        var comp = new Compiler(db, 0);
+        var comp = ForStored(db);
         var st = comp.NewStream(t.Columns.Count);
         var s = new Scope(null);
         s.Add(TableItem(t, null, st));

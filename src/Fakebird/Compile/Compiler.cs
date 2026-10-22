@@ -22,11 +22,20 @@ public sealed partial class Compiler
     readonly List<HashSet<int>> _trackers = new();
     readonly List<Dictionary<string, CteInfo>> _ctes = new();
 
+    /// <summary>
+    /// Character set of the text types declared without one: the attachment's (UTF8) in DSQL statements and EXECUTE
+    /// BLOCK, the database's default in stored definitions (tables, domains, views, routines and triggers).
+    /// </summary>
+    internal Charset DefaultCharset = Charset.Utf8;
+
     public Compiler(Database db, int paramCount)
     {
         Db = db;
         ParamTypes = new SqlType?[paramCount];
     }
+
+    /// <summary>A compiler for a stored definition: its text types default to the database's character set.</summary>
+    internal static Compiler ForStored(Database db) => new(db, 0) { DefaultCharset = db.DefaultCharset };
 
     public int StreamCount => _widths.Count;
 
@@ -144,7 +153,10 @@ public sealed partial class Compiler
                 .Gds(FbMessages.collation_not_found).Str(n).Str("UTF8").Build();
     }
 
-    public static Charset CharsetOf(string? name) => name?.ToUpperInvariant() switch
+    public static Charset CharsetOf(string? name) => TryCharsetOf(name) ?? throw new StatusBuilder().Gds(Err.isc_dsql_error)
+        .Gds(Err.isc_sqlerr).Num(-204).Gds(Err.isc_dsql_datatype_err).Gds(FbMessages.charset_not_found).Str(name!.ToUpperInvariant()).Build();
+
+    public static Charset? TryCharsetOf(string? name) => name?.ToUpperInvariant() switch
     {
         null => Charset.Utf8,
         "UTF8" or "UTF-8" => Charset.Utf8,
@@ -156,8 +168,10 @@ public sealed partial class Compiler
         "WIN1250" => Charset.Win1250,
         "WIN1251" => Charset.Win1251,
         "ISO8859_1" or "LATIN1" => Charset.Iso8859_1,
-        _ => Charset.None,
+        _ => null,
     };
+
+    Charset DeclaredCharset(TypeSpec ts) => ts.Charset == null ? DefaultCharset : CharsetOf(ts.Charset);
 
     public SqlType ResolveType(TypeSpec ts) => ResolveType(ts, out _);
 
@@ -200,7 +214,7 @@ public sealed partial class Compiler
                 "CHAR" => CharType(TypeKind.Char, ts.Length ?? 1, ts),
                 "VARCHAR" => CharType(TypeKind.VarChar, ts.Length ?? throw Err.Dsql(-104, "VARCHAR length required"), ts),
                 "BLOB" => ts.SubType == 1
-                    ? new SqlType(TypeKind.Blob, subType: 1, charset: CharsetOf(ts.Charset) == Charset.Octets ? Charset.Utf8 : CharsetOf(ts.Charset))
+                    ? new SqlType(TypeKind.Blob, subType: 1, charset: DeclaredCharset(ts) is var bcs && bcs == Charset.Octets ? Charset.Utf8 : bcs)
                     : SqlType.BlobBinary,
                 _ => throw Err.Unsupported("data type " + ts.BaseType),
             };
@@ -209,10 +223,10 @@ public sealed partial class Compiler
         return t;
     }
 
-    static SqlType CharType(TypeKind kind, int len, TypeSpec ts)
+    SqlType CharType(TypeKind kind, int len, TypeSpec ts)
     {
         if (len < 1 || len > 32767) throw Err.Dsql(-842, "Length out of range");
-        var cs = CharsetOf(ts.Charset);
+        var cs = DeclaredCharset(ts);
         var t = new SqlType(kind, length: len, charset: cs);
         if (t.ByteLength > 32765 + (kind == TypeKind.Char ? 2 : 0))
             throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204).Gds(Err.isc_dsql_datatype_err)
@@ -567,7 +581,9 @@ public sealed partial class Compiler
                 var r = Bind(b.Right, s, expected);
                 var (t, nullable) = TypeRules.Concat(l.Type, !l.NotNull, r.Type, !r.NotNull);
                 var node = new ArithNode(ArithOp.Concat, l, r) { Type = t, Name = "CONCATENATION", NotNull = !nullable };
-                return Fold(node);
+                // the operands are moved to the result's character set
+                return Charsets.IsNarrow(t.Charset) && (l.Type.Charset != t.Charset || r.Type.Charset != t.Charset)
+                    ? new TransliterateNode(Fold(node), t.Charset) : Fold(node);
             }
             default:
                 return BindArith(b, s, expected);
@@ -795,6 +811,16 @@ public sealed partial class Compiler
         var p = Bind(lk.Pattern, s, SqlType.VarChar(8191));
         var esc = lk.Escape == null ? null : Bind(lk.Escape, s, SqlType.VarChar(1));
         var col = MergeCollation(x.Type, p.Type);
+        // the pattern is moved to the matched text's character set; LIKE compiles a literal pattern when prepared
+        if (x.Type.IsTextual && Charsets.IsNarrow(x.Type.Charset))
+        {
+            var cs = x.Type.Charset;
+            XNode ToText(XNode n) => !n.Type.IsTextual || n.Type.Charset == cs ? n
+                : lk.Kind == LikeKind.Like && n is ConstNode { Value.Tag: VTag.String } k ? (Charsets.Fits(k.Value.AsString, cs) ? n : throw Charsets.TransliterationFailed())
+                : new TransliterateNode(n, cs);
+            p = ToText(p);
+            if (esc != null) esc = ToText(esc);
+        }
         return new LikeNode(lk.Kind, x, p, esc, lk.Not, col);
     }
 

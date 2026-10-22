@@ -47,10 +47,11 @@ public sealed class AggState
         {
             _distinct ??= new();
             // the sort that removes duplicates compares VARCHARs with their trailing blanks, except under an ICU
-            // collation, whose key drops them
-            var dk = v.Tag == VTag.String && _spec.Arg!.Type.Kind == TypeKind.VarChar && _spec.Collation == Collation.Binary
+            // collation, whose key drops them (WIN1252's byte order has the same equality as code points)
+            var col = _spec.Collation == Collation.Win1252 ? Collation.Binary : _spec.Collation;
+            var dk = v.Tag == VTag.String && _spec.Arg!.Type.Kind == TypeKind.VarChar && col == Collation.Binary
                 ? Value.Str(v.AsString + "\uFFFF") : v;
-            if (!_distinct.Add(new IndexKey([dk], [_spec.Collation]))) return;
+            if (!_distinct.Add(new IndexKey([dk], [col]))) return;
             // the distinct values reach SUM/AVG in sort order, which decides how doubles round
             if (_spec.Kind is AggKind.Sum or AggKind.Avg)
             {
@@ -195,7 +196,7 @@ public static class SortImage
     /// cannot be turned back into the text, and the key of a WITH TIME ZONE value has its zone cleared. Other keys
     /// hold the value itself (a VARCHAR's length is stored after the record numbers).
     /// </summary>
-    public static bool Volatile(SqlType t) => t.IsString && t.Collation != Collation.Binary || t.IsTz;
+    public static bool Volatile(SqlType t) => t.IsString && t.Collation is not (Collation.Binary or Collation.Win1252) || t.IsTz;
 
     /// <summary>The data part of the current row's sort record (SortedStream: zeroed, then flags and fields).</summary>
     public static byte[] Build(Ctx c, SortField[] fields)
@@ -321,8 +322,8 @@ public static class SortImage
         }
     }
 
-    static byte[] TextBytes(string s, Charset cs) => cs is Charset.Utf8 or Charset.UnicodeFss or Charset.None
-        ? Conv.Utf8.GetBytes(s)
+    static byte[] TextBytes(string s, Charset cs) => Charsets.IsNarrow(cs) ? Charsets.Encode(s, cs)
+        : cs is Charset.Utf8 or Charset.UnicodeFss or Charset.None ? Conv.Utf8.GetBytes(s)
         : System.Text.Encoding.Latin1.GetBytes(s);
 }
 

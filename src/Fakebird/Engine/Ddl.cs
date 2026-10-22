@@ -21,7 +21,7 @@ public static class Ddl
     }
 
     /// <summary>Firebird reports DDL errors as "unsuccessful metadata update / CREATE TABLE T failed / cause".</summary>
-    static FbError Wrap(FbError e, int failedCode, string name)
+    static FbError Wrap(FbError e, int failedCode, string? name)
     {
         var inner = e.Status.ToList();
         if (inner.Count > 0 && inner[0].Number == Err.isc_no_meta_update) inner.RemoveAt(0);
@@ -31,16 +31,17 @@ public static class Ddl
         {
             new(Wire.Isc.arg_gds, Err.isc_no_meta_update, null),
             new(Wire.Isc.arg_gds, failedCode, null),
-            new(Wire.Isc.arg_string, 0, name),
         };
+        if (name != null) status.Add(new(Wire.Isc.arg_string, 0, name)); // ALTER DATABASE failed names nothing
         status.AddRange(inner);
         return new FbError(status, SqlCodes.SqlStateOf(status, e.SqlState)) { UserExceptionName = e.UserExceptionName };
     }
 
-    static (int Code, string Name) FailedCode(Stmt stmt)
+    static (int Code, string? Name) FailedCode(Stmt stmt)
     {
         var (verb, obj, name) = stmt switch
         {
+            AlterDatabaseStmt => ("alter", "database", (string?)null),
             CreateTableStmt s => (Verb(s.Mode), "table", s.Name),
             AlterTableStmt s => ("alter", "table", s.Name),
             CreateIndexStmt s => ("create", "index", s.Name),
@@ -82,6 +83,10 @@ public static class Ddl
             case AlterTableStmt at: AlterTable(db, at, c); break;
             case CreateIndexStmt ci: CreateIndex(db, ci, c); break;
             case AlterIndexStmt ai: AlterIndex(db, ai); break;
+            case AlterDatabaseStmt ad:
+                db.DefaultCharset = Compiler.TryCharsetOf(ad.DefaultCharset)
+                    ?? throw new StatusBuilder().Gds(FbMessages.charset_not_found).Str(ad.DefaultCharset.ToUpperInvariant()).Build();
+                break;
             case CreateViewStmt cv: CreateView(db, cv); break;
             case CreateSequenceStmt cs: CreateSequence(db, cs); break;
             case CreateExceptionStmt ce: CreateException(db, ce); break;
@@ -148,7 +153,7 @@ public static class Ddl
 
     // ======================================================================== tables
 
-    static Compiler Comp(Database db) => new(db, 0);
+    static Compiler Comp(Database db) => Compiler.ForStored(db);
 
     static Column MakeColumn(Database db, Table t, ColumnDef def)
     {
@@ -903,7 +908,7 @@ public static class Ddl
             case CreateMode.Alter when !exists: throw Missing("View", st.Name);
         }
         if (!exists && db.Tables.ContainsKey(st.Name)) throw Exists("Table", st.Name);
-        var q = new Compiler(db, 0).CompileSelect(st.Query, null);
+        var q = Compiler.ForStored(db).CompileSelect(st.Query, null);
         if (st.Columns != null && st.Columns.Count != q.Columns.Length)
             throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err).Gds(FbMessages.num_field_err).Build();
         var view = new View { Name = st.Name, ColumnNames = st.Columns, Query = st.Query, Source = st.Source };

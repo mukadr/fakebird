@@ -35,7 +35,7 @@ internal static class SystemTables
         [
             ("RDB$DESCRIPTION", Text), ("RDB$RELATION_ID", Small), ("RDB$SECURITY_CLASS", Name),
             ("RDB$CHARACTER_SET_NAME", Name), ("RDB$LINGER", Int), ("RDB$SQL_SECURITY", Bool),
-        ], _ => [[Value.Null, I(128), N("SQL$1"), N("UTF8"), Value.Null, Value.Null]]);
+        ], d => [[Value.Null, I(128), N("SQL$1"), N(Charsets.Name(d.DefaultCharset)), Value.Null, Value.Null]]);
 
         Add(db, "RDB$RELATIONS",
         [
@@ -332,6 +332,9 @@ internal static class SystemTables
             [N("ASCII"), Value.Null, Value.Null, N("ASCII"), I(2), I(1), Value.Null, Value.Null, I(1)],
             [N("UNICODE_FSS"), Value.Null, Value.Null, N("UNICODE_FSS"), I(3), I(1), Value.Null, Value.Null, I(3)],
             [N("UTF8"), Value.Null, Value.Null, N("UTF8"), I(4), I(1), Value.Null, Value.Null, I(4)],
+            [N("ISO8859_1"), Value.Null, Value.Null, N("ISO8859_1"), I(21), I(1), Value.Null, Value.Null, I(1)],
+            [N("WIN1250"), Value.Null, Value.Null, N("WIN1250"), I(51), I(1), Value.Null, Value.Null, I(1)],
+            [N("WIN1251"), Value.Null, Value.Null, N("WIN1251"), I(52), I(1), Value.Null, Value.Null, I(1)],
             [N("WIN1252"), Value.Null, Value.Null, N("WIN1252"), I(53), I(1), Value.Null, Value.Null, I(1)],
         ]);
 
@@ -341,6 +344,8 @@ internal static class SystemTables
         [
             [N("NONE"), I(0), I(0), I(1)], [N("OCTETS"), I(0), I(1), I(1)], [N("UTF8"), I(0), I(4), I(1)],
             [N("UNICODE"), I(1), I(4), I(1)], [N("UNICODE_CI"), I(2), I(4), I(1)], [N("UNICODE_CI_AI"), I(3), I(4), I(1)],
+            [N("ASCII"), I(0), I(2), I(1)], [N("ISO8859_1"), I(0), I(21), I(1)], [N("WIN1250"), I(0), I(51), I(1)],
+            [N("WIN1251"), I(0), I(52), I(1)], [N("WIN1252"), I(0), I(53), I(1)],
         ]);
 
         Add(db, "RDB$TYPES",

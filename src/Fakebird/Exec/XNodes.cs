@@ -363,11 +363,40 @@ public sealed class CastNode : XNode
 {
     public readonly XNode X;
     public CastNode(XNode x, SqlType t) { X = x; Type = t; Name = "CAST"; NotNull = x.NotNull; }
-    public override Value Eval(Ctx c) => Conv.Cast(X.Eval(c), Type);
+    public override Value Eval(Ctx c) => Conv.Cast(X.Eval(c), Type, X.Type);
     // a move between the WITH and WITHOUT TIME ZONE types, or from text (that may name a zone or say NOW), depends on
     // the session time zone and the clock
     public override bool IsConstant => X.IsConstant
         && !(Type.IsDateTime && (Type.IsTz || X.Type.IsTz || X.Type.IsTextual || X.Type.Kind == TypeKind.Null));
+}
+
+/// <summary>
+/// Text moved into a narrower character set without a cast (a concatenation's result, a LIKE pattern): every
+/// character must exist there.
+/// </summary>
+public sealed class TransliterateNode : XNode
+{
+    public readonly XNode X;
+    readonly Charset _to;
+
+    public TransliterateNode(XNode x, Charset to)
+    {
+        X = x;
+        _to = to;
+        Type = x.Type;
+        Name = x.Name;
+        Relation = x.Relation;
+        Field = x.Field;
+        NotNull = x.NotNull;
+        EngineType = x.EngineType;
+    }
+
+    public override Value Eval(Ctx c)
+    {
+        var v = X.Eval(c);
+        if (v.Tag == VTag.String) Charsets.Check(v.AsString, _to);
+        return v;
+    }
 }
 
 /// <summary>Built-in function implemented by a delegate receiving the unevaluated argument nodes.</summary>
@@ -437,10 +466,15 @@ public static class Coercion
                 break;
             case TypeKind.Char:
             case TypeKind.VarChar:
-                if (t.Charset == Charset.Octets ? v.Tag == VTag.Bytes : v.Tag == VTag.String) return v;
+                // text moved into a narrower character set is transliterated
+                if (t.Charset == Charset.Octets ? v.Tag == VTag.Bytes : v.Tag == VTag.String)
+                {
+                    if (Charsets.IsNarrow(t.Charset)) Charsets.Check(v.AsString, t.Charset);
+                    return v;
+                }
                 break;
             case TypeKind.Blob:
-                if (t.SubType == 1 ? v.Tag == VTag.String : v.Tag == VTag.Bytes) return v;
+                if (t.SubType == 1 ? v.Tag == VTag.String && !Charsets.IsNarrow(t.Charset) : v.Tag == VTag.Bytes) return v;
                 break;
             case TypeKind.Date: if (v.Tag == VTag.Date) return v; break;
             case TypeKind.Time: if (v.Tag == VTag.Time) return v; break;

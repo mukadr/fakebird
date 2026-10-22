@@ -1,0 +1,586 @@
+--- select rdb$character_set_name from rdb$database
+RDB$CHARACTER_SET_NAME:CHAR (63,,,True,RDB$DATABASE,RDB$CHARACTER_SET_NAME,False,False)
+WIN1252                                                         | 
+affected 0
+--- select r.rdb$field_name, f.rdb$character_set_id, f.rdb$collation_id, f.rdb$field_length, f.rdb$character_length
+RDB$FIELD_NAME:CHAR (63,,,True,RDB$RELATION_FIELDS,RDB$FIELD_NAME,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+RDB$COLLATION_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$COLLATION_ID,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+ID                                                              | NULL | NULL | 4 | NULL | 
+V                                                               | 53 | 0 | 10 | 10 | 
+C                                                               | 53 | 0 | 5 | 5 | 
+U                                                               | 4 | 0 | 40 | 10 | 
+D                                                               | 53 | 0 | 5 | 5 | 
+B                                                               | 53 | 0 | 8 | NULL | 
+affected 0
+--- select f.rdb$character_set_id, f.rdb$field_length, f.rdb$character_length from rdb$fields f where f.rdb$field_name = 'DW'
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+53 | 5 | 5 | 
+affected 0
+--- select * from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+V:VARCHAR (10,,,True,W,V,False,False)
+C:CHAR (5,,,True,W,C,False,False)
+U:VARCHAR (10,,,True,W,U,False,False)
+D:VARCHAR (5,,,True,W,D,False,False)
+B:BLOB SUB_TYPE 1 (2147483647,,,True,W,B,False,False)
+1 | àéçãõ | àé    | àéçãõ | ção | àéçãõ€ | 
+2 | €ŠŒŽ | €     | €ŠŒŽ | € | €ŠŒŽ | 
+3 | abc | abc   | abc | abc | abc | 
+4 | ABC | ABC   | ABC | ABC | ABC | 
+5 | zz | zz    | zz | zz | zz | 
+6 | Àb | Àb    | Àb | Àb | Àb | 
+7 | NULL | NULL | ł😀 | NULL | NULL | 
+affected 0
+--- select id, char_length(v), octet_length(v), octet_length(c), octet_length(u), octet_length(d), octet_length(b), char_length(b) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:BIGINT (8,,,True,,CHAR_LENGTH,False,False)
+1 | 5 | 5 | 5 | 10 | 3 | 6 | 6 | 
+2 | 4 | 4 | 5 | 9 | 1 | 4 | 4 | 
+3 | 3 | 3 | 5 | 3 | 3 | 3 | 3 | 
+4 | 3 | 3 | 5 | 3 | 3 | 3 | 3 | 
+5 | 2 | 2 | 5 | 2 | 2 | 2 | 2 | 
+6 | 2 | 2 | 5 | 3 | 2 | 2 | 2 | 
+7 | NULL | NULL | NULL | 6 | NULL | NULL | NULL | 
+affected 0
+--- select id, v || '|', c || '|', v || u, u || v from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (6,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (20,,,True,,CONCATENATION,False,False)
+CONCATENATION:VARCHAR (20,,,True,,CONCATENATION,False,False)
+1 | àéçãõ| | àé   | | àéçãõàéçãõ | àéçãõàéçãõ | 
+2 | €ŠŒŽ| | €    | | €ŠŒŽ€ŠŒŽ | €ŠŒŽ€ŠŒŽ | 
+3 | abc| | abc  | | abcabc | abcabc | 
+4 | ABC| | ABC  | | ABCABC | ABCABC | 
+5 | zz| | zz   | | zzzz | zzzz | 
+6 | Àb| | Àb   | | ÀbÀb | ÀbÀb | 
+7 | NULL | NULL | NULL | NULL | 
+affected 0
+--- select id from w order by v, id
+ID:INTEGER (4,,,False,W,ID,True,False)
+7 | 
+4 | 
+3 | 
+5 | 
+2 | 
+6 | 
+1 | 
+affected 0
+--- select id from w order by v desc, id
+ID:INTEGER (4,,,False,W,ID,True,False)
+1 | 
+6 | 
+2 | 
+5 | 
+3 | 
+4 | 
+7 | 
+affected 0
+--- select id from w order by u, id
+ID:INTEGER (4,,,False,W,ID,True,False)
+4 | 
+3 | 
+5 | 
+6 | 
+1 | 
+7 | 
+2 | 
+affected 0
+--- select id from w order by c, id
+ID:INTEGER (4,,,False,W,ID,True,False)
+7 | 
+4 | 
+3 | 
+5 | 
+2 | 
+6 | 
+1 | 
+affected 0
+--- select min(v), max(v), min(c), max(c), min(u), max(u), count(distinct v) from w
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+MIN:CHAR (5,,,True,,MIN,False,False)
+MAX:CHAR (5,,,True,,MAX,False,False)
+MIN:VARCHAR (10,,,True,,MIN,False,False)
+MAX:VARCHAR (10,,,True,,MAX,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+ABC | àéçãõ | ABC   | àé    | ABC | €ŠŒŽ | 6 | 
+affected 0
+--- select v, count(*) from w group by v order by v
+V:VARCHAR (10,,,True,W,V,False,False)
+COUNT:BIGINT (8,,,False,,COUNT,False,False)
+NULL | 1 | 
+ABC | 1 | 
+abc | 1 | 
+zz | 1 | 
+€ŠŒŽ | 1 | 
+Àb | 1 | 
+àéçãõ | 1 | 
+affected 0
+--- select id, v < 'à', v > 'Z', v = u, v < u, v > u, c = 'àé', c < 'b' from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | True | True | False | False | True | False | 
+2 | True | True | True | False | False | False | False | 
+3 | True | True | True | False | False | False | True | 
+4 | True | False | True | False | False | False | True | 
+5 | True | True | True | False | False | False | False | 
+6 | True | True | True | False | False | False | False | 
+7 | NULL | NULL | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select a.id, b.id from w a join w b on a.v = b.u order by 1, 2
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where v = 'ÀB' or upper(v) = 'ÀB' order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+6 | 
+affected 0
+--- select id from w where v between 'a' and 'z' order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+3 | 
+affected 0
+--- select id, v in ('abc', '€ŠŒŽ'), v = 'àéçãõ', v = 'abc  ' from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | False | True | False | 
+2 | True | False | False | 
+3 | True | False | True | 
+4 | False | False | False | 
+5 | False | False | False | 
+6 | False | False | False | 
+7 | NULL | NULL | NULL | 
+affected 0
+--- select id, upper(v), lower(v), upper(c), lower(u) from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+UPPER:VARCHAR (10,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+UPPER:CHAR (5,,,True,,UPPER,False,False)
+LOWER:VARCHAR (10,,,True,,LOWER,False,False)
+1 | ÀÉÇÃÕ | àéçãõ | ÀÉ    | àéçãõ | 
+2 | €ŠŒŽ | €šœž | €     | €šœž | 
+3 | ABC | abc | ABC   | abc | 
+4 | ABC | abc | ABC   | abc | 
+5 | ZZ | zz | ZZ    | zz | 
+6 | ÀB | àb | ÀB    | àb | 
+7 | NULL | NULL | NULL | ł😀 | 
+affected 0
+--- select id, v like '%ç%', v like 'À_', v containing 'Ç', v starting with '€', v similar to '%[àé]%' from w order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+:BOOLEAN (1,,,True,,,False,False)
+1 | True | False | True | False | True | 
+2 | False | False | False | True | False | 
+3 | False | False | False | False | False | 
+4 | False | False | False | False | False | 
+5 | False | False | False | False | False | 
+6 | False | True | False | False | False | 
+7 | NULL | NULL | NULL | NULL | NULL | 
+affected 0
+--- select id, position('ç' in v), substring(v from 2 for 2), reverse(v), lpad(v, 7, '€'), rpad(c, 6, '.'), replace(v, 'ç', 'c') from w where id in (1, 2) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+POSITION:INTEGER (4,,,True,,POSITION,False,False)
+SUBSTRING:VARCHAR (2,,,True,,SUBSTRING,False,False)
+REVERSE:VARCHAR (10,,,True,,REVERSE,False,False)
+LPAD:VARCHAR (7,,,True,,LPAD,False,False)
+RPAD:VARCHAR (6,,,True,,RPAD,False,False)
+REPLACE:VARCHAR (10,,,True,,REPLACE,False,False)
+1 | 3 | éç | õãçéà | €€àéçãõ | àé   . | àécãõ | 
+2 | 0 | ŠŒ | ŽŒŠ€ | €€€€ŠŒŽ | €    . | €ŠŒŽ | 
+affected 0
+--- select id, cast(v as varchar(20) character set octets), cast(c as char(6) character set octets) from w where id in (1, 2) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CAST:VARCHAR (20,,,True,,CAST,False,False)
+CAST:CHAR (6,,,True,,CAST,False,False)
+1 | E0E9E7E3F5 | E0E920202000 | 
+2 | 808A8C8E | 802020202000 | 
+affected 0
+--- select id, cast(v as varchar(10) character set utf8), octet_length(cast(v as varchar(10) character set utf8)) from w where id in (1, 2) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+1 | àéçãõ | 10 | 
+2 | €ŠŒŽ | 9 | 
+affected 0
+--- select cast(u as varchar(10) character set win1252) from w where id = 7
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select cast(u as varchar(10)) from w where id = 7
+CAST:VARCHAR (10,,,True,,CAST,False,False)
+ł😀 | 
+affected 0
+--- select octet_length(cast('ação' as varchar(10))), octet_length(cast('ação' as char(5))), octet_length('ação'), char_length('ação') from rdb$database
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+6 | 7 | 6 | 4 | 
+affected 0
+--- select cast('ação' as varchar(10)), cast('😀' as varchar(10) character set utf8) from rdb$database
+CAST:VARCHAR (10,,,False,,CAST,False,False)
+CAST:VARCHAR (10,,,False,,CAST,False,False)
+ação | 😀 | 
+affected 0
+--- select cast('😀' as varchar(10)) from rdb$database
+CAST:VARCHAR (10,,,False,,CAST,False,False)
+😀 | 
+affected 0
+--- select octet_length(_win1252 'àb'), char_length(_win1252 'àb') from rdb$database
+OCTET_LENGTH:INTEGER (4,,,False,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,False,,CHAR_LENGTH,False,False)
+3 | 3 | 
+affected 0
+--- select v || 'ł', octet_length(v || 'ł') from w where id = 3
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select v || '😀' from w where id = 3
+CONCATENATION:VARCHAR (11,,,True,,CONCATENATION,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, v) values (10, '😀')
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, v) values (11, 'ł')
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, c) values (12, '→')
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, v) values (?, ?)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, v) values (?, ?)
+affected 1
+--- select id, v, octet_length(v) from w where id = 14
+ID:INTEGER (4,,,False,W,ID,True,False)
+V:VARCHAR (10,,,True,W,V,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+14 | ação€ŠŒŽ | 8 | 
+affected 0
+--- insert into w (id, c) values (15, 'àéçãõx')
+ERROR 335544321 335544914 335545033 #5 #6 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 6
+--- insert into w (id, c) values (16, 'àéçãõ')
+affected 1
+--- insert into w (id, v) values (17, 'àéçãõàéçãõ')
+affected 1
+--- insert into w (id, v) values (18, 'àéçãõàéçãõ€')
+ERROR 335544321 335544914 335545033 #10 #11 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 10, actual 11
+--- select id, c, octet_length(c), char_length(c) from w where id = 16
+ID:INTEGER (4,,,False,W,ID,True,False)
+C:CHAR (5,,,True,W,C,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+CHAR_LENGTH:INTEGER (4,,,True,,CHAR_LENGTH,False,False)
+16 | àéçãõ | 5 | 5 | 
+affected 0
+--- insert into w (id, d) values (19, '😀')
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- insert into w (id, d) values (20, 'àéçãõ')
+affected 1
+--- insert into w (id, d) values (21, 'àéçãõa')
+ERROR 335544321 335544914 335545033 #5 #6 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+string right truncation
+expected length 5, actual 6
+--- update w set b = 'ł😀' where id = 3
+ERROR 335544565 '' 22018
+Cannot transliterate character between character sets
+--- update w set b = 'ação€' where id = 4
+affected 1
+--- select id, b, octet_length(b) from w where id = 4
+ID:INTEGER (4,,,False,W,ID,True,False)
+B:BLOB SUB_TYPE 1 (2147483647,,,True,W,B,False,False)
+OCTET_LENGTH:BIGINT (8,,,True,,OCTET_LENGTH,False,False)
+4 | ação€ | 5 | 
+affected 0
+--- update w set v = u where id = 7
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- update w set v = u where id = 1
+affected 1
+--- select id from w where v = ?
+ID:INTEGER (4,,,False,W,ID,True,False)
+1 | 
+affected 0
+--- select id from w where v = ?
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where u = ?
+ID:INTEGER (4,,,False,W,ID,True,False)
+affected 0
+--- create procedure p (x varchar(5)) returns (y varchar(5), l integer) as
+affected 0
+--- select y, l from p('ação')
+Y:VARCHAR (5,,,True,P,Y,False,False)
+L:INTEGER (4,,,True,P,L,False,False)
+ação | 4 | 
+affected 0
+--- select y from p('😀')
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- execute block returns (r varchar(10), o integer) as declare x varchar(10); begin x = 'ação'; r = x; o = octet_length(x); suspend; end
+R:VARCHAR (10,,,True,,R,False,False)
+O:INTEGER (4,,,True,,O,False,False)
+ação | 6 | 
+affected 0
+--- execute block returns (r varchar(10)) as declare x varchar(10); begin x = 'ł'; r = x; suspend; end
+R:VARCHAR (10,,,True,,R,False,False)
+ł | 
+affected 0
+--- execute block returns (r varchar(10) character set utf8) as begin r = 'ł'; suspend; end
+R:VARCHAR (10,,,True,,R,False,False)
+ł | 
+affected 0
+--- select a.id, b.id from w a join w b on b.u = a.v order by 1, 2
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id, coalesce(v, u), octet_length(coalesce(v, u)) from w where id in (1, 7) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+OCTET_LENGTH:INTEGER (4,,,True,,OCTET_LENGTH,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select coalesce(u, v) from w where id = 7
+COALESCE:VARCHAR (10,,,True,,COALESCE,False,False)
+ł😀 | 
+affected 0
+--- select iif(id = 7, u, v) from w order by id
+CASE:VARCHAR (10,,,True,,CASE,False,False)
+àéçãõ | 
+€ŠŒŽ | 
+abc | 
+ABC | 
+zz | 
+Àb | 
+ł😀 | 
+ação€ŠŒŽ | 
+NULL | 
+àéçãõàéçãõ | 
+NULL | 
+affected 0
+--- select v from w where id = 1 union all select u from w where id = 7
+V:VARCHAR (10,,,True,W,V,False,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select u from w where id = 7 union all select v from w where id = 1
+U:VARCHAR (10,,,True,W,U,False,False)
+ł😀 | 
+àéçãõ | 
+affected 0
+--- select id, case when id = 1 then 'ł' else v end from w where id in (1, 2) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+CASE:VARCHAR (10,,,True,,CASE,False,False)
+1 | ł | 
+2 | €ŠŒŽ | 
+affected 0
+--- select id from w where v in (select u from w where id < 7) order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from w where v = 'ł' order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where 'ł' = v order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where u = v order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from w where v like 'ł%' order by id
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where v containing 'ł' order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where v starting with 'ł' order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where u = coalesce(v, 'x') order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where coalesce(v, 'x') = u order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where u > coalesce(v, 'x') order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select id from w where u like coalesce(v, 'x') order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+1 | 
+2 | 
+3 | 
+4 | 
+5 | 
+6 | 
+affected 0
+--- select id from w where cast(v as varchar(10) character set ascii) = u order by id
+ID:INTEGER (4,,,False,W,ID,True,False)
+ERROR 335544321 335544565 '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- select max(u || v) from w
+MAX:VARCHAR (20,,,True,,MAX,False,False)
+€ŠŒŽ€ŠŒŽ | 
+affected 0
+--- select id, upper(cast('µÿ' as varchar(5) character set win1252)) from w where id = 1
+ID:INTEGER (4,,,False,W,ID,True,False)
+UPPER:VARCHAR (5,,,False,,UPPER,False,False)
+1 | µŸ | 
+affected 0
+--- create procedure q returns (a integer, b integer, r varchar(10)) as
+affected 0
+--- select a, b, r from q
+A:INTEGER (4,,,True,Q,A,False,False)
+B:INTEGER (4,,,True,Q,B,False,False)
+R:VARCHAR (10,,,True,Q,R,False,False)
+ERROR 335544321 335544565 335544842 'At procedure 'Q' line: 7, col: 3' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- create procedure q3 returns (a integer, b integer, c integer) as
+affected 0
+--- select a, b, c from q3
+A:INTEGER (4,,,True,Q3,A,False,False)
+B:INTEGER (4,,,True,Q3,B,False,False)
+C:INTEGER (4,,,True,Q3,C,False,False)
+4 | 6 | 5 | 
+affected 0
+--- create procedure q2 returns (r varchar(10)) as
+affected 0
+--- select r from q2
+R:VARCHAR (10,,,True,Q2,R,False,False)
+ERROR 335544321 335544565 335544842 'At procedure 'Q2' line: 4, col: 3' '' 22000
+arithmetic exception, numeric overflow, or string truncation
+Cannot transliterate character between character sets
+--- create table tl (id integer, s varchar(10), n integer)
+affected 0
+--- create trigger tl_bi for tl before insert as
+affected 0
+--- insert into tl (id, s) values (1, 'ação')
+affected 1
+--- select id, s, n from tl
+ID:INTEGER (4,,,True,TL,ID,False,False)
+S:VARCHAR (10,,,True,TL,S,False,False)
+N:INTEGER (4,,,True,TL,N,False,False)
+1 | ação | 4 | 
+affected 0
+--- alter table w alter v type varchar(20)
+affected 0
+--- select r.rdb$field_name, f.rdb$character_set_id, f.rdb$field_length, f.rdb$character_length
+RDB$FIELD_NAME:CHAR (63,,,True,RDB$RELATION_FIELDS,RDB$FIELD_NAME,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+RDB$CHARACTER_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_LENGTH,False,False)
+V                                                               | 53 | 20 | 20 | 
+affected 0
+--- alter table w add e varchar(3), add e2 varchar(3) character set utf8
+affected 0
+--- select r.rdb$field_name, f.rdb$character_set_id from rdb$relation_fields r join rdb$fields f on f.rdb$field_name = r.rdb$field_source
+RDB$FIELD_NAME:CHAR (63,,,True,RDB$RELATION_FIELDS,RDB$FIELD_NAME,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+E                                                               | 53 | 
+E2                                                              | 4 | 
+affected 0
+--- create global temporary table g (s varchar(3))
+affected 0
+--- create view vw as select v, u, v || u as vu from w
+affected 0
+--- select r.rdb$field_name, f.rdb$character_set_id, f.rdb$field_length from rdb$relation_fields r join rdb$fields f on f.rdb$field_name = r.rdb$field_source
+RDB$FIELD_NAME:CHAR (63,,,True,RDB$RELATION_FIELDS,RDB$FIELD_NAME,False,False)
+RDB$CHARACTER_SET_ID:SMALLINT (2,,,True,RDB$FIELDS,RDB$CHARACTER_SET_ID,False,False)
+RDB$FIELD_LENGTH:SMALLINT (2,,,True,RDB$FIELDS,RDB$FIELD_LENGTH,False,False)
+S                                                               | 53 | 3 | 
+V                                                               | 53 | 20 | 
+U                                                               | 4 | 40 | 
+VU                                                              | 53 | 30 | 
+affected 0
+--- create table bad (s varchar(3) character set nosuch)
+ERROR 335544351 336397286 'BAD' 335544569 335544436 #-204 335544573 335544509 'NOSUCH' '' 42000
+unsuccessful metadata update
+CREATE TABLE BAD failed
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+CHARACTER SET NOSUCH is not defined
+--- alter database set default character set nosuch
+ERROR 335544351 336397313 335544509 'NOSUCH' '' 42000
+unsuccessful metadata update
+ALTER DATABASE failed
+CHARACTER SET NOSUCH is not defined
+--- select cast('a' as varchar(3) character set nosuch) from rdb$database
+ERROR 335544569 335544436 #-204 335544573 335544509 'NOSUCH' '' 42000
+Dynamic SQL Error
+SQL error code = -204
+Data type unknown
+CHARACTER SET NOSUCH is not defined

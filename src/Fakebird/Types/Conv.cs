@@ -358,7 +358,13 @@ public static class Conv
                 return CastString(v, t);
             case TypeKind.Blob:
                 if (t.SubType == 1)
-                    return v.Tag == VTag.String ? v : Value.Str(ToStr(v));
+                {
+                    var text = v.Tag == VTag.String ? v : Value.Str(v.Tag == VTag.Bytes && Charsets.IsNarrow(t.Charset) ? Charsets.Decode(v.AsBytes, t.Charset) : ToStr(v));
+                    // a blob's text that the character set cannot hold fails without the arithmetic exception
+                    if (!Charsets.Fits(text.AsString, t.Charset))
+                        throw new StatusBuilder().Gds(FbMessages.transliteration_failed).Build("22018");
+                    return text;
+                }
                 return v.Tag == VTag.Bytes ? v : Value.Bytes(Utf8.GetBytes(ToStr(v)));
             case TypeKind.Null:
                 return v;
@@ -377,6 +383,20 @@ public static class Conv
         var s = v.Tag == VTag.Int128 ? FormatExact(v.AsInt128, v.Scale) : FormatExact(v.L, v.Scale);
         if (s.Length > bytes) throw Cvt.ConversionError(v);
         return s;
+    }
+
+    /// <summary>
+    /// A cast of a value of type <paramref name="from"/>: text of a single-byte character set moved to OCTETS or to a
+    /// binary blob keeps its bytes in that character set.
+    /// </summary>
+    public static Value Cast(in Value v, SqlType t, SqlType from)
+    {
+        if (v.Tag == VTag.String && from.IsTextual && Charsets.IsNarrow(from.Charset) && t.IsBinary)
+        {
+            var bytes = Value.Bytes(Charsets.Encode(v.AsString, from.Charset));
+            return t.Kind == TypeKind.Blob ? bytes : CastString(bytes, t);
+        }
+        return Cast(v, t);
     }
 
     static Value CastString(in Value v, SqlType t)
@@ -400,7 +420,8 @@ public static class Conv
             return Value.Bytes(bytes);
         }
         var s = v.Tag == VTag.String ? v.AsString : v.Tag is VTag.Int or VTag.Int128 or VTag.Double ? NumberText(v, t)
-            : v.Tag == VTag.Bytes ? DecodeStrict(v.AsBytes) : ToStr(v);
+            : v.Tag == VTag.Bytes ? (Charsets.IsNarrow(t.Charset) ? Charsets.Decode(v.AsBytes, t.Charset) : DecodeStrict(v.AsBytes)) : ToStr(v);
+        Charsets.Check(s, t.Charset);
         var len = CharLength(s);
         if (len > t.Length)
         {
@@ -541,6 +562,7 @@ public static class Conv
         return collation switch
         {
             Collation.Binary => CompareOrdinalCodePoints(x, y),
+            Collation.Win1252 => Charsets.CompareWin1252(x, y),
             // ICU: tertiary strength for UNICODE, secondary (case-insensitive) for _CI, primary for _CI_AI
             Collation.Unicode => Math.Sign(Invariant.Compare(x, y, CompareOptions.None)),
             Collation.CaseInsensitive => Math.Sign(Invariant.Compare(x, y, CompareOptions.IgnoreCase)),
@@ -594,6 +616,7 @@ public static class Conv
                 return collation switch
                 {
                     Collation.Binary => string.GetHashCode(span),
+                    Collation.Win1252 => Charsets.Fits(v.AsString, Charset.Win1252) ? string.GetHashCode(span) : throw Charsets.TransliterationFailed(),
                     Collation.Unicode => Invariant.GetHashCode(span, CompareOptions.None),
                     Collation.CaseInsensitive => Invariant.GetHashCode(span, CompareOptions.IgnoreCase),
                     _ => Invariant.GetHashCode(span, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace),

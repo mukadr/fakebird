@@ -578,6 +578,12 @@ public sealed class CreateIndexStmt : Stmt
     public string? ComputedBySource;
 }
 
+/// <summary>ALTER DATABASE SET DEFAULT CHARACTER SET (the other ALTER DATABASE clauses are ignored).</summary>
+public sealed class AlterDatabaseStmt : Stmt
+{
+    public string DefaultCharset = null!;
+}
+
 public sealed class AlterIndexStmt : Stmt
 {
     public string Name = null!;

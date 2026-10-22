@@ -321,7 +321,7 @@ internal sealed class Connection
         var dpb = _xdr.ReadBuffer();
         Guard(() =>
         {
-            string? user = null, password = null, role = null;
+            string? user = null, password = null, role = null, charset = null;
             var i = 1; // version byte
             while (i + 1 < dpb.Length)
             {
@@ -333,10 +333,14 @@ internal sealed class Connection
                     case Isc.dpb_user_name: user = _enc.GetString(data); break;
                     case Isc.dpb_password: password = _enc.GetString(data); break;
                     case Isc.dpb_sql_role_name: role = _enc.GetString(data); break;
+                    case Isc.dpb_lc_ctype: charset = _enc.GetString(data); break;
                 }
                 i += 2 + len;
             }
             _server.Authenticate(user, password);
+            // text goes over the wire as UTF-8: other attachment character sets would be misread
+            if (charset != null && Compile.Compiler.CharsetOf(charset) is not (Charset.Utf8 or Charset.UnicodeFss or Charset.None))
+                throw Err.Unsupported($"connection character set {charset.ToUpperInvariant()} (use UTF8)");
             if (_att != null) Cleanup();
             var entry = create ? _server.CreateForClient(path) : _server.Find(path)
                 ?? throw new StatusBuilder().Gds(335544344).Str("open").Str(path)
@@ -1037,7 +1041,8 @@ internal sealed class Connection
                 if (descs![i].Blr == Isc.blr_text) s = s.TrimEnd(' ');
                 v = Value.Str(s);
             }
-            vals[i] = Conv.Cast(v, t);
+            // the message is in the attachment's character set: text moves to a narrower one where it is used
+            vals[i] = Conv.Cast(v, t.IsTextual && Charsets.IsNarrow(t.Charset) ? t.WithCharset(Charset.Utf8) : t);
         }
         return vals;
     }

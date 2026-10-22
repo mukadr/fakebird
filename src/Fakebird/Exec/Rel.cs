@@ -421,6 +421,8 @@ public sealed class HashJoinRel : RelNode
     public readonly bool LeftOuter;
     public readonly XNode? Condition;
     public readonly Value[][] RightNullRows;
+    /// <summary>A join of the top-level query: its hash table is built by op_execute, which raises its errors.</summary>
+    public bool AtExecute;
 
     public HashJoinRel(RelNode left, RelNode right, XNode[] leftKeys, XNode[] rightKeys, Collation[] collations,
         bool leftOuter, XNode? cond, Value[][] rightNullRows)
@@ -438,6 +440,20 @@ public sealed class HashJoinRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
+        try
+        {
+            var table = Build(c);
+            return new Cursor(this, c, Left.Open(c), table);
+        }
+        catch (FbError e) when (AtExecute)
+        {
+            e.AtExecute = true;
+            throw;
+        }
+    }
+
+    Dictionary<IndexKey, List<Frame>> Build(Ctx c)
+    {
         var table = new Dictionary<IndexKey, List<Frame>>();
         var rc = Right.Open(c);
         while (rc.Next())
@@ -454,7 +470,7 @@ public sealed class HashJoinRel : RelNode
             if (!table.TryGetValue(key, out var list)) table[key] = list = new();
             list.Add(Frames.Save(c, Right.Streams));
         }
-        return new Cursor(this, c, Left.Open(c), table);
+        return table;
     }
 
     sealed class Cursor(HashJoinRel n, Ctx c, RowCursor left, Dictionary<IndexKey, List<Frame>> table) : RowCursor

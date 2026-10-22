@@ -26,8 +26,11 @@ public enum TypeKind : byte
 
 public enum Charset : byte { None, Octets, Utf8, Ascii, Win1252, Iso8859_1, UnicodeFss, Win1250, Win1251 }
 
-/// <summary>Binary (code point order), and the ICU collations UNICODE, UNICODE_CI and UNICODE_CI_AI.</summary>
-public enum Collation : byte { Binary, CaseInsensitive, CaseAccentInsensitive, Unicode }
+/// <summary>
+/// Binary (code point order), the ICU collations UNICODE, UNICODE_CI and UNICODE_CI_AI, and WIN1252's default
+/// collation (the order of its bytes; comparing text under it moves the text to WIN1252).
+/// </summary>
+public enum Collation : byte { Binary, CaseInsensitive, CaseAccentInsensitive, Unicode, Win1252 }
 
 /// <summary>
 /// A static SQL type (column, domain, expression, parameter). Exact numerics are represented as
@@ -56,6 +59,9 @@ public sealed class SqlType : IEquatable<SqlType>
         SubType = subType;
         Charset = kind is TypeKind.Char or TypeKind.VarChar || (kind == TypeKind.Blob && subType == 1) ? charset : Charset.None;
         if (kind == TypeKind.Blob && subType != 1) Charset = Charset.Octets;
+        // a character set's default collation: binary, which for WIN1252 is the order of its bytes
+        if (collation is Collation.Binary or Collation.Win1252)
+            collation = Charset == Charset.Win1252 && kind != TypeKind.Blob ? Collation.Win1252 : Collation.Binary;
         Collation = collation;
     }
 
@@ -192,13 +198,16 @@ public sealed class SqlType : IEquatable<SqlType>
     /// <summary>
     /// The type as described to clients with DataTypeCompatibility = 3.0 (Firebird's "legacy" bindings): INT128
     /// becomes BIGINT with the same scale and subtype, and the WITH TIME ZONE types become TIMESTAMP and TIME (in the
-    /// session time zone).
+    /// session time zone). Text in another real character set is described in the attachment's, UTF8, with room for
+    /// its characters there.
     /// </summary>
     public SqlType Bound => Kind switch
     {
         TypeKind.Int128 => new SqlType(TypeKind.BigInt, scale: Scale, precision: 18, subType: SubType),
         TypeKind.TimestampTz => Timestamp,
         TypeKind.TimeTz => Time,
+        TypeKind.Char or TypeKind.VarChar when Charset is not (Charset.Utf8 or Charset.None or Charset.Octets) =>
+            new SqlType(Kind, Length, charset: Charset.Utf8),
         _ => this,
     };
 

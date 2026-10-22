@@ -55,7 +55,7 @@ public sealed class LikeNode : XNode
             case LikeKind.Containing:
             {
                 // CONTAINING is case-insensitive even for binary collations
-                var col = Collation == Collation.Binary || Collation == Collation.Unicode ? Collation.CaseInsensitive : Collation;
+                var col = Collation is Collation.Binary or Collation.Unicode or Collation.Win1252 ? Collation.CaseInsensitive : Collation;
                 r = Folding.Fold(s, col).Contains(Folding.Fold(pat, col), StringComparison.Ordinal);
                 break;
             }

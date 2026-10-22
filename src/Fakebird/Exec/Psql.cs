@@ -484,12 +484,19 @@ public static class Routines
         return c;
     }
 
-    public static List<Value[]> CallSelectable(Ctx caller, Procedure p, XNode[] args)
-        => RunSelectable(caller, Get(caller.Db, p), EvalArgs(caller, args));
+    /// <summary>A selectable procedure of the FROM; <paramref name="atExecute"/>: its inputs are moved to their types by op_execute.</summary>
+    public static List<Value[]> CallSelectable(Ctx caller, Procedure p, XNode[] args, bool atExecute = false)
+        => RunSelectable(caller, Get(caller.Db, p), EvalArgs(caller, args), atExecute);
 
-    public static List<Value[]> RunSelectable(Ctx caller, CompiledRoutine cr, Value[] args)
+    public static List<Value[]> RunSelectable(Ctx caller, CompiledRoutine cr, Value[] args, bool atExecute = false)
     {
-        var c = Enter(caller, cr, args);
+        Ctx c;
+        try { c = Enter(caller, cr, args); }
+        catch (FbError e) when (atExecute)
+        {
+            e.AtExecute = true;
+            throw;
+        }
         c.Output = new List<Value[]>();
         Run(c, cr);
         return c.Output;

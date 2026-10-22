@@ -519,7 +519,17 @@ public sealed partial class Parser
             return s;
         }
         if (Accept("DOMAIN")) return AlterDomain(pos);
-        if (Accept("DATABASE")) return SkipToEnd("ALTER DATABASE");
+        if (Accept("DATABASE"))
+        {
+            if (!(IsAt(0, "SET") && IsAt(1, "DEFAULT") && IsAt(2, "CHARACTER"))) return SkipToEnd("ALTER DATABASE");
+            Advance();
+            Advance();
+            Advance();
+            Expect("SET");
+            var s = new AlterDatabaseStmt { DefaultCharset = AnyIdent(), Pos = pos };
+            if (Accept("COLLATION")) AnyIdent();
+            return s;
+        }
         if (Accept("USER") || Accept("ROLE") || Accept("CHARACTER")) return SkipToEnd("ALTER");
         if (Is("TRIGGER") && !IsAt(3, "AS"))
         {

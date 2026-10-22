@@ -604,6 +604,11 @@ public sealed partial class Compiler
     SqlType[]? _selectListTypes;
     /// <summary>The next query spec compiled is the statement's top-level one (see PreFilterRel.AtExecute).</summary>
     bool _openAtExecute;
+    /// <summary>
+    /// The FROM of the statement's top-level query spec is being planned: what its streams do when they open (build a
+    /// hash join, evaluate a procedure's inputs) is done by op_execute, which raises its errors.
+    /// </summary>
+    bool _planAtExecute;
 
     QueryNode CompileSpec(QuerySpec qs, Scope? outer, List<OrderItem>? orderBy, LimitSpec? queryLimit, bool withLock = false)
     {
@@ -635,6 +640,8 @@ public sealed partial class Compiler
         _selectListTypes = null;
         var atExecute = _openAtExecute;
         _openAtExecute = false;
+        var planAtExecute = _planAtExecute;
+        _planAtExecute = atExecute;
         var s = new Scope(outer ?? RootScope);
         var tree = BuildFrom(qs.From, s);
 
@@ -650,6 +657,7 @@ public sealed partial class Compiler
         var invariant = pool.Where(c => !c.Streams.Any(s.Streams.Contains)).ToList();
         foreach (var c in invariant) c.Used = true;
         var rel = PlanTree(tree, pool, s);
+        _planAtExecute = planAtExecute;
         if (invariant.Count > 0) rel = new PreFilterRel(rel, AndAll(invariant.Select(c => c.Node).ToList())!) { AtExecute = atExecute };
         foreach (var c in pool)
             if (!c.Used)
@@ -1090,10 +1098,16 @@ public sealed partial class Compiler
             if (Db.Views.TryGetValue(n.Name, out var view))
             {
                 var savedCtes = _ctes.ToList();
+                var savedCharset = DefaultCharset;
                 _ctes.Clear();
+                DefaultCharset = Db.DefaultCharset; // the view's definition is stored
                 QueryNode q;
                 try { q = CompileSelect(view.Query, null); }
-                finally { _ctes.AddRange(savedCtes); }
+                finally
+                {
+                    _ctes.AddRange(savedCtes);
+                    DefaultCharset = savedCharset;
+                }
                 var cols = ColsFor(view.ColumnNames, q.Columns, view.Name, view: true);
                 for (var i = 0; i < cols.Count; i++)
                 {
@@ -1112,7 +1126,8 @@ public sealed partial class Compiler
             var args = BindProcArgs(proc.Inputs, n.Args ?? new List<Expr>(), s, proc.Name);
             var stream = NewStream(proc.Outputs.Count);
             var p = proc;
-            var rel = new FuncRel(c => Routines.CallSelectable(c, p, args), stream);
+            var atExecute = _planAtExecute;
+            var rel = new FuncRel(c => Routines.CallSelectable(c, p, args, atExecute), stream);
             var item = new SourceItem
             {
                 Alias = n.Alias, Name = n.Name, Stream = stream, Context = "procedure",
@@ -1370,7 +1385,7 @@ public sealed partial class Compiler
                 var others = applicable.Where(c => !c.Used).ToList();
                 foreach (var c in others) c.Used = true;
                 return new HashJoinRel(acc, scan, leftKeys.ToArray(), rightKeys.ToArray(), cols.ToArray(), false,
-                    AndAll(others.Select(c => c.Node).ToList()), []);
+                    AndAll(others.Select(c => c.Node).ToList()), []) { AtExecute = _planAtExecute };
             }
         }
         foreach (var c in applicable) c.Used = true;
@@ -1464,7 +1479,7 @@ public sealed partial class Compiler
                     var rest = onPool.Where(c => !c.Used).ToList();
                     foreach (var c in rest) c.Used = true;
                     return new HashJoinRel(leftRel, scan, leftKeys.ToArray(), rightKeys.ToArray(), cols.ToArray(), true,
-                        AndAll(rest.Select(c => c.Node).ToList()), NullRows([st]));
+                        AndAll(rest.Select(c => c.Node).ToList()), NullRows([st])) { AtExecute = _planAtExecute };
                 }
             }
         }

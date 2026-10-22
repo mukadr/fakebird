@@ -143,7 +143,7 @@ public sealed partial class Compiler
 
     public static CompiledRoutine CompileProcedure(Database db, Procedure p)
     {
-        var comp = new Compiler(db, 0);
+        var comp = ForStored(db);
         comp.BeginRoutine();
         var ins = p.Inputs.Select(i => comp.Routine!.Declare(i.Name, i.Type, i.NotNull)).ToArray();
         var outs = p.Outputs.Select(o => comp.Routine!.Declare(o.Name, o.Type, o.NotNull)).ToArray();
@@ -158,7 +158,7 @@ public sealed partial class Compiler
 
     public static CompiledRoutine CompileFunction(Database db, Function f)
     {
-        var comp = new Compiler(db, 0);
+        var comp = ForStored(db);
         comp.BeginRoutine();
         comp.Routine!.IsFunction = true;
         comp.Routine.FunctionReturns = f.Returns;
@@ -173,7 +173,7 @@ public sealed partial class Compiler
 
     public static CompiledRoutine CompileTrigger(Database db, Trigger t, Table table)
     {
-        var comp = new Compiler(db, 0);
+        var comp = ForStored(db);
         comp.BeginRoutine(isTrigger: true);
         var newStream = comp.NewStream(table.Columns.Count);
         var oldStream = comp.NewStream(table.Columns.Count);
@@ -505,7 +505,7 @@ public sealed partial class Compiler
         if (sub.Body == null) throw Err.Dsql(-104, "Sub-routine " + sub.Name + " has no body");
         var cr = new CompiledRoutine { Name = sub.Name, Context = $"At sub {(sub.IsFunction ? "function" : "procedure")} '{sub.Name}'" };
         r.CompiledSubRoutines[sub.Name] = cr;
-        var comp = new Compiler(Db, 0);
+        var comp = new Compiler(Db, 0) { DefaultCharset = DefaultCharset };
         comp.BeginRoutine();
         comp.Routine!.SubRoutines = r.SubRoutines;
         comp.Routine.CompiledSubRoutines = r.CompiledSubRoutines;

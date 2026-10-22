@@ -90,6 +90,16 @@ public static class Builtins
         _ => Conv.CharLength(s),
     };
 
+    /// <summary>A case mapping within a narrow character set: characters whose mapping it lacks stay as they were (µ).</summary>
+    static string InCharset(string s, string mapped, Charset cs)
+    {
+        if (!Charsets.IsNarrow(cs) || mapped.Length != s.Length || Charsets.Fits(mapped, cs)) return mapped;
+        var chars = mapped.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+            if (Charsets.ByteOf(chars[i], cs) < 0) chars[i] = s[i];
+        return new string(chars);
+    }
+
     static long? ConstLong(XNode n) => n is ConstNode { Value.IsNull: false } k && (k.Type.IsExact || k.Type.IsApprox) ? Conv.ToInt64(k.Value) : null;
 
     static SqlType HintString(int i, XNode?[] a) => LongVarchar;
@@ -262,14 +272,14 @@ public static class Builtins
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
             if (v.Tag == VTag.Bytes) return v; // OCTETS have no case
-            return S(CaseMap.Upper(Conv.ToStr(v)));
+            return S(InCharset(Conv.ToStr(v), CaseMap.Upper(Conv.ToStr(v)), f.Type.Charset));
         }, HintString);
         Def("LOWER", 1, 1, a => a[0].Type.IsTextual || a[0].Type.Kind == TypeKind.Null ? a[0].Type : StrResult(a[0]), (c, a, f) =>
         {
             var v = a[0].Eval(c);
             if (v.IsNull) return v;
             if (v.Tag == VTag.Bytes) return v;
-            return S(CaseMap.Lower(Conv.ToStr(v)));
+            return S(InCharset(Conv.ToStr(v), CaseMap.Lower(Conv.ToStr(v)), f.Type.Charset));
         }, HintString);
         Def("TRIM", 3, 3, a => a[2].Type.Kind == TypeKind.Null ? SqlType.VarChar(1, Charset.Ascii) : StrResult(a[2]), (c, a, f) =>
         {
@@ -403,7 +413,7 @@ public static class Builtins
             if (s == null || find == null || repl == null) return Value.Null;
             if (find.Length == 0) return S(s);
             var col = a[0].Type.Collation;
-            if (col == Collation.Binary || col == Collation.Unicode) return S(s.Replace(find, repl, StringComparison.Ordinal));
+            if (col is Collation.Binary or Collation.Unicode or Collation.Win1252) return S(s.Replace(find, repl, StringComparison.Ordinal));
             // case/accent-insensitive collations find the matches on the folded text
             var folded = Folding.Fold(s, col);
             var ff = Folding.Fold(find, col);
