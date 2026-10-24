@@ -452,7 +452,26 @@ public sealed class HashJoinRel : RelNode
         }
     }
 
+    // the hash table of an unfiltered RDB$ relation joined on its columns, valid while the relation's rows are cached
+    List<Value[]>? _builtFrom;
+    Dictionary<IndexKey, List<Frame>>? _built;
+
     Dictionary<IndexKey, List<Frame>> Build(Ctx c)
+    {
+        if (Right is TableScanRel { Table.Virtual: { } rows, Filter: null } && RightKeys.All(k => k is ColNode))
+        {
+            var source = rows(c.Db);
+            if (!ReferenceEquals(source, _builtFrom))
+            {
+                _built = BuildTable(c);
+                _builtFrom = source;
+            }
+            return _built!;
+        }
+        return BuildTable(c);
+    }
+
+    Dictionary<IndexKey, List<Frame>> BuildTable(Ctx c)
     {
         var table = new Dictionary<IndexKey, List<Frame>>();
         var rc = Right.Open(c);
