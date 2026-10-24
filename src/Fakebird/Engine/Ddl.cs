@@ -18,6 +18,10 @@ public static class Ddl
         {
             throw Wrap(e, code, name);
         }
+        finally
+        {
+            db.CatalogVersion++;
+        }
     }
 
     /// <summary>Firebird reports DDL errors as "unsuccessful metadata update / CREATE TABLE T failed / cause".</summary>

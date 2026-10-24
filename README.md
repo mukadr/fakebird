@@ -38,6 +38,8 @@ simplicity and speed over the machinery a shared production server needs.
 
 * No disk I/O; rows are immutable `Value[]` arrays, values are unboxed structs.
 * Statements are compiled once into node trees and cached per database (`SQL text → plan`).
+* The RDB$ system relations are built from the catalog on the first scan after a DDL statement and reused
+  until the next one (clients query them for every result column they describe).
 * Equality predicates use hash indexes (PK/UK/FK/user indexes); joins use index lookups or hash joins.
 * **Copy-on-write snapshots**: a database created from a snapshot shares row storage and index
   maps; a table is copied only when a test first writes to it. Read-only tables are never copied.

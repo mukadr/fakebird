@@ -12,9 +12,21 @@ internal static class SystemTables
     static readonly SqlType Text = SqlType.BlobText;
     static readonly SqlType Bool = SqlType.Boolean;
 
-    static void Add(Database db, string name, (string Name, SqlType Type)[] cols, Func<Database, List<Value[]>> rows)
+    static void Add(Database db, string name, (string Name, SqlType Type)[] cols, Func<Database, List<Value[]>> rows, bool cached = true)
     {
-        var t = new Table { Name = name, IsSystem = true, Virtual = rows };
+        // the rows only change with the catalog: rebuilt on the first scan after a DDL statement
+        List<Value[]>? cache = null;
+        var version = -1;
+        Func<Database, List<Value[]>> scan = !cached ? rows : d =>
+        {
+            if (cache == null || version != d.CatalogVersion)
+            {
+                cache = rows(d);
+                version = d.CatalogVersion;
+            }
+            return cache;
+        };
+        var t = new Table { Name = name, IsSystem = true, Virtual = scan };
         // the type and nullability of a column Firebird defines come from its own system relation definitions
         var schema = SystemSchema.Relations.TryGetValue(name, out var defs) ? defs.ToDictionary(d => d.Name) : null;
         foreach (var (n, ty) in cols)
@@ -35,7 +47,7 @@ internal static class SystemTables
         [
             ("RDB$DESCRIPTION", Text), ("RDB$RELATION_ID", Small), ("RDB$SECURITY_CLASS", Name),
             ("RDB$CHARACTER_SET_NAME", Name), ("RDB$LINGER", Int), ("RDB$SQL_SECURITY", Bool),
-        ], d => [[Value.Null, I(128), N("SQL$1"), N(Charsets.Name(d.DefaultCharset)), Value.Null, Value.Null]]);
+        ], d => [[Value.Null, I(128), N("SQL$1"), N(Charsets.Name(d.DefaultCharset)), Value.Null, Value.Null]], cached: false);
 
         Add(db, "RDB$RELATIONS",
         [

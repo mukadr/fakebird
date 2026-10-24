@@ -20,6 +20,8 @@ public sealed partial class Database
     internal readonly Dictionary<string, Constraint> Constraints = new(StringComparer.Ordinal);
 
     internal int SchemaVersion;
+    /// <summary>Bumped by every DDL statement, even a failed one: the cached rows of the RDB$ relations are stale.</summary>
+    internal int CatalogVersion;
     internal long NextTransactionId = 1;
     internal long CommitSeq;
     internal readonly List<Transaction> ActiveTransactions = new();
@@ -45,6 +47,7 @@ public sealed partial class Database
     internal void SchemaChanged()
     {
         SchemaVersion++;
+        CatalogVersion++;
         PlanCache.Clear();
         Runtimes.Clear();
     }
