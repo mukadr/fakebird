@@ -166,18 +166,19 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
     /// Pooled connections without open transactions are re-attached transparently.</summary>
     public void Restore(string name, DatabaseSnapshot snapshot)
     {
+        // the clone is built outside the server lock: it only reads the frozen snapshot, and attaches to every
+        // other database would wait on it
+        var fresh = Database.FromSnapshot(snapshot.Frozen, name);
         lock (_dbs)
         {
             if (!_dbs.TryGetValue(name, out var e))
             {
-                var fresh = Database.FromSnapshot(snapshot.Frozen, name);
                 fresh.DefaultTimeZone = DefaultZone;
                 _dbs[name] = new DbEntry { Name = name, Database = fresh };
                 return;
             }
-            var zone = e.Database.DefaultTimeZone;
-            e.Database = Database.FromSnapshot(snapshot.Frozen, name);
-            e.Database.DefaultTimeZone = zone;
+            fresh.DefaultTimeZone = e.Database.DefaultTimeZone;
+            e.Database = fresh;
             e.Generation++;
         }
     }

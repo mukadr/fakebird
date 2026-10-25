@@ -194,15 +194,26 @@ public static class Folding
 /// <summary>Unicode simple case mapping (ICU's u_toupper / u_tolower per code point), as Firebird's UPPER/LOWER.</summary>
 public static class CaseMap
 {
-    static readonly TextInfo Text = CultureInfo.GetCultureInfo("en-US").TextInfo;
+    // cached: CultureInfo.GetCultureInfo takes a global lock on every call
+    static readonly CultureInfo En = CultureInfo.GetCultureInfo("en-US");
 
     public static string Upper(string s)
     {
+        if (Ascii.IsValid(s))
+        {
+            var first = s.AsSpan().IndexOfAnyInRange('a', 'z');
+            if (first < 0) return s;
+            return string.Create(s.Length, (s, first), static (span, st) =>
+            {
+                st.s.AsSpan(0, st.first).CopyTo(span);
+                Ascii.ToUpper(st.s.AsSpan(st.first), span[st.first..], out _);
+            });
+        }
         StringBuilder? sb = null;
         var i = 0;
         foreach (var r in s.EnumerateRunes())
         {
-            var u = Rune.ToUpper(r, CultureInfo.GetCultureInfo("en-US"));
+            var u = Rune.ToUpper(r, En);
             if (r.Value == 'ı') u = new Rune('I'); // dotless i: simple mapping to I
             if (u != r && sb == null) sb = new StringBuilder(s, 0, i, s.Length);
             sb?.Append(u.ToString());
@@ -213,11 +224,21 @@ public static class CaseMap
 
     public static string Lower(string s)
     {
+        if (Ascii.IsValid(s))
+        {
+            var first = s.AsSpan().IndexOfAnyInRange('A', 'Z');
+            if (first < 0) return s;
+            return string.Create(s.Length, (s, first), static (span, st) =>
+            {
+                st.s.AsSpan(0, st.first).CopyTo(span);
+                Ascii.ToLower(st.s.AsSpan(st.first), span[st.first..], out _);
+            });
+        }
         StringBuilder? sb = null;
         var i = 0;
         foreach (var r in s.EnumerateRunes())
         {
-            var l = Rune.ToLower(r, CultureInfo.GetCultureInfo("en-US"));
+            var l = Rune.ToLower(r, En);
             if (r.Value == 'İ') l = new Rune('i'); // dotted capital I: simple mapping to i
             if (l != r && sb == null) sb = new StringBuilder(s, 0, i, s.Length);
             sb?.Append(l.ToString());
