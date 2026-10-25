@@ -265,7 +265,9 @@ insert into t values (?, ?)
 ```
 
 The golden files are text recorded once, so a case must not print the current date or time: compare
-it instead (`cast(t as timestamp) = current_date + t`) or describe it with `where 1 = 0`.
+it instead (`cast(t as timestamp) = current_date + t`) or describe it with `where 1 = 0`. Nor may it depend
+on today's date indirectly: a TIME WITH TIME ZONE of a region read as TIME (DataTypeCompatibility 3.0) is
+converted at the current date, so such cases use a region without daylight saving (`Asia/Kolkata`).
 
 To check the golden files against a real server, or to record new ones, run Firebird 5 in docker:
 

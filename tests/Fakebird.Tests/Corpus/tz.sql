@@ -118,7 +118,7 @@ select cast('24:00:00 +00:00' as time with time zone), cast(cast('24:00:00 +00:0
 -- @case
 select cast('10:00:00.5 -01:00' as time with time zone), cast(cast('10:00:00.5 -01:00' as time with time zone) as varchar(40)) from rdb$database
 -- @case
-select cast('10:00 Europe/Lisbon' as time with time zone), cast(cast('10:00 Europe/Lisbon' as time with time zone) as varchar(40)) from rdb$database
+select cast('10:00 Asia/Kolkata' as time with time zone), cast(cast('10:00 Asia/Kolkata' as time with time zone) as varchar(40)) from rdb$database
 -- @case
 select cast('2024-01-15 10:00:00 +03:00' as timestamp) from rdb$database
 -- @case

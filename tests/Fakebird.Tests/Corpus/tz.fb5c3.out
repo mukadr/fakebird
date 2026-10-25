@@ -245,10 +245,10 @@ CAST:TIME (4,,,False,,CAST,False,False)
 CAST:VARCHAR (40,,,False,,CAST,False,False)
 11:00:00.5000 | 10:00:00.5000 -01:00 | 
 affected 0
---- select cast('10:00 Europe/Lisbon' as time with time zone), cast(cast('10:00 Europe/Lisbon' as time with time zone) as varchar(40)) from rdb$database
+--- select cast('10:00 Asia/Kolkata' as time with time zone), cast(cast('10:00 Asia/Kolkata' as time with time zone) as varchar(40)) from rdb$database
 CAST:TIME (4,,,False,,CAST,False,False)
 CAST:VARCHAR (40,,,False,,CAST,False,False)
-09:00:00.0000 | 10:00:00.0000 Europe/Lisbon | 
+04:30:00.0000 | 10:00:00.0000 Asia/Kolkata | 
 affected 0
 --- select cast('2024-01-15 10:00:00 +03:00' as timestamp) from rdb$database
 CAST:TIMESTAMP (8,,,False,,CAST,False,False)
