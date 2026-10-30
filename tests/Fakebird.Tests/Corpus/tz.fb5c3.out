@@ -1217,10 +1217,10 @@ SUBTRACT:TIME (4,,,False,,SUBTRACT,False,False)
 CAST:VARCHAR (60,,,False,,CAST,False,False)
 19:59:59.0000 | 22:59:59.0000 +03:00 | 
 affected 0
---- select 7200 + time '23:00:00 Europe/Berlin', cast(7200 + time '23:00:00 Europe/Berlin' as varchar(60)) from rdb$database
+--- select 7200 + time '23:00:00 Asia/Kolkata', cast(7200 + time '23:00:00 Asia/Kolkata' as varchar(60)) from rdb$database
 ADD:TIME (4,,,False,,ADD,False,False)
 CAST:VARCHAR (60,,,False,,CAST,False,False)
-23:00:00.0000 | 01:00:00.0000 Europe/Berlin | 
+19:30:00.0000 | 01:00:00.0000 Asia/Kolkata | 
 affected 0
 --- select date '2024-01-15' + time '10:00:00 +03:00', cast(date '2024-01-15' + time '10:00:00 +03:00' as varchar(60)) from rdb$database
 ADD:TIMESTAMP (8,,,False,,ADD,False,False)

@@ -496,7 +496,7 @@ select time '23:00:00 -03:00' + 3600, cast(time '23:00:00 -03:00' + 3600 as varc
 -- @case
 select time '23:00:00 +03:00' - 86401, cast(time '23:00:00 +03:00' - 86401 as varchar(60)) from rdb$database
 -- @case
-select 7200 + time '23:00:00 Europe/Berlin', cast(7200 + time '23:00:00 Europe/Berlin' as varchar(60)) from rdb$database
+select 7200 + time '23:00:00 Asia/Kolkata', cast(7200 + time '23:00:00 Asia/Kolkata' as varchar(60)) from rdb$database
 -- @case
 select date '2024-01-15' + time '10:00:00 +03:00', cast(date '2024-01-15' + time '10:00:00 +03:00' as varchar(60)) from rdb$database
 -- @case
