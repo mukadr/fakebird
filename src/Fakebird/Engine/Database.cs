@@ -74,6 +74,22 @@ public sealed partial class Database
     public bool IsFrozen { get; private set; }
 
     /// <summary>
+    /// The snapshot this database was cloned from (for a snapshot: the one its source was cloned from). Tables
+    /// still <see cref="Table.Shared"/> use its row lists; the others still share most of its row arrays.
+    /// </summary>
+    internal Database? Origin { get; private set; }
+
+    WeakReference<Database>? _lastSnapshot;
+
+    /// <summary>The latest snapshot taken of this database, while something keeps it alive: it shares the row
+    /// arrays of the rows unchanged since.</summary>
+    internal Database? LastSnapshot
+    {
+        get => _lastSnapshot != null && _lastSnapshot.TryGetTarget(out var s) ? s : null;
+        set => _lastSnapshot = value == null ? null : new WeakReference<Database>(value);
+    }
+
+    /// <summary>
     /// Produces a frozen snapshot: catalog definitions plus committed rows only. The snapshot's slots and
     /// index maps are never modified afterwards, so databases created from it can share them (COW).
     /// </summary>
@@ -81,13 +97,31 @@ public sealed partial class Database
     {
         lock (Sync)
         {
-            var d = new Database(Name + "$snapshot");
+            var d = Freeze();
+            LastSnapshot = d;
+            return d;
+        }
+    }
+
+    /// <summary><see cref="Snapshot"/> without remembering it as <see cref="LastSnapshot"/> (backups).</summary>
+    internal Database Freeze()
+    {
+        lock (Sync)
+        {
+            var d = new Database(Name + "$snapshot") { Origin = Origin };
             CopyCatalogInto(d);
             foreach (var (k, t) in Tables)
             {
                 if (t.IsSystem) continue;
                 var nt = d.Tables[k];
                 if (t.IsGtt) continue;
+                if (t.Shared)
+                {
+                    // still the origin's frozen rows: share them instead of copying
+                    nt.Rows = t.Rows;
+                    nt.Shared = true;
+                    continue;
+                }
                 var rows = new List<RowSlot>(t.Rows.Count);
                 foreach (var slot in t.Rows)
                 {
@@ -97,12 +131,34 @@ public sealed partial class Database
                 }
                 nt.Rows = rows;
             }
-            foreach (var ix in d.Indexes.Values)
-                if (d.Tables.TryGetValue(ix.Table, out var tt)) ix.Rebuild(tt.Rows);
+            foreach (var (k, ix) in d.Indexes)
+            {
+                if (!d.Tables.TryGetValue(ix.Table, out var tt)) continue;
+                var live = Indexes[k];
+                if (live.Shared && tt.Shared)
+                {
+                    ix.Map = live.Map;
+                    ix.Shared = true;
+                }
+                else ix.Rebuild(tt.Rows);
+            }
             d.IsFrozen = true;
             return d;
         }
     }
+
+    /// <summary>Makes a database read back from a backup a snapshot.</summary>
+    internal void MarkFrozen(Database? origin)
+    {
+        foreach (var t in Tables.Values)
+            if (!t.Shared)
+                foreach (var s in t.Rows) s.Frozen = true;
+        Origin = origin;
+        IsFrozen = true;
+    }
+
+    /// <summary>Makes a database read back from a backup a clone of <paramref name="origin"/>.</summary>
+    internal void SetOrigin(Database origin) => Origin = origin;
 
     /// <summary>
     /// Creates a writable database from a frozen snapshot in O(number of tables): row storage and index maps
@@ -111,7 +167,7 @@ public sealed partial class Database
     public static Database FromSnapshot(Database snapshot, string name)
     {
         if (!snapshot.IsFrozen) throw new InvalidOperationException("Database is not a snapshot; call Snapshot() first.");
-        var d = new Database(name);
+        var d = new Database(name) { Origin = snapshot };
         snapshot.CopyCatalogInto(d);
         foreach (var (k, t) in snapshot.Tables)
         {

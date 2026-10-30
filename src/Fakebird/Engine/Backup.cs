@@ -9,20 +9,39 @@ namespace Fakebird.Engine;
 /// Backup files: the committed state of databases as JSON. Definitions are written field by field together with
 /// their source text (what the RDB$ tables show); expressions, views and PSQL bodies are parsed again from that
 /// text on restore. Rows are arrays of [RDB$DB_KEY, column values...].
+/// <para>
+/// Snapshots are written once, before the databases, and a database names the snapshot it was cloned from (or
+/// the latest one taken of it) as its base. A table still sharing the base's rows is written as "shared"; in
+/// other tables a row whose values are still the base's row with that key is written as just the key. On
+/// restore those tables and rows share the restored snapshot's storage again, as they did before the backup.
+/// </para>
 /// </summary>
 internal static class Backup
 {
     public const string Format = "fakebird-backup";
-    public const int Version = 1;
+    public const int Version = 2;
 
     // ======================================================================== write
 
-    /// <summary>Writes a frozen snapshot (committed rows only, no GTT rows) and the live database's settings
-    /// that snapshots do not carry.</summary>
-    public static void Write(Utf8JsonWriter w, Database db, string name, ushort? defaultTimeZone, long nextTransactionId)
+    /// <summary>The snapshot a database or snapshot is written against: its id in the backup, and whether the
+    /// database is a clone of it (else the snapshot was taken of the database).</summary>
+    public readonly record struct BaseRef(int Id, Database Snapshot, bool IsClone);
+
+    /// <summary>
+    /// Writes a frozen database (committed rows only, no GTT rows): a snapshot (with its <paramref name="id"/>) or
+    /// the <see cref="Database.Freeze"/> of a live database, whose settings that freezing does not carry are passed.
+    /// </summary>
+    public static void Write(Utf8JsonWriter w, Database db, string name, ushort? defaultTimeZone, long nextTransactionId,
+        BaseRef? @base, int? id = null)
     {
         w.WriteStartObject();
+        if (id != null) w.WriteNumber("id", id.Value);
         w.WriteString("name", name);
+        if (@base is { } b)
+        {
+            w.WriteNumber("base", b.Id);
+            Bool(w, "clone", b.IsClone);
+        }
         w.WriteString("defaultCharset", db.DefaultCharset.ToString());
         Str(w, "defaultTimeZone", defaultTimeZone is { } z ? TimeZones.Name(z) : null);
         w.WriteNumber("nextTransactionId", nextTransactionId);
@@ -86,10 +105,22 @@ internal static class Backup
                 Str(w, "identitySequence", c.IdentitySequence);
                 Bool(w, "identityAlways", c.IdentityAlways);
             });
+            var bt = @base?.Snapshot.Tables.GetValueOrDefault(t.Name);
+            if (bt != null && t.Shared && ReferenceEquals(t.Rows, bt.Rows))
+            {
+                w.WriteBoolean("shared", true);
+                return;
+            }
+            var baseRows = bt?.Rows.Where(r => r.LatestCommitted != null).ToDictionary(r => r.Key, r => r.LatestCommitted);
             w.WriteStartArray("rows");
             foreach (var slot in t.Rows)
             {
                 if (slot.LatestCommitted is not { } data) continue;
+                if (baseRows != null && baseRows.TryGetValue(slot.Key, out var same) && ReferenceEquals(same, data))
+                {
+                    w.WriteNumberValue(slot.Key);
+                    continue;
+                }
                 w.WriteStartArray();
                 w.WriteNumberValue(slot.Key);
                 foreach (var v in data) WriteValue(w, v);
@@ -278,8 +309,12 @@ internal static class Backup
 
     // ======================================================================== read
 
-    public static Database Read(JsonElement e)
+    /// <summary>Reads a database, or a snapshot when <paramref name="snapshot"/>; <paramref name="snapshots"/>
+    /// holds the snapshots read so far, by id.</summary>
+    public static Database Read(JsonElement e, IReadOnlyDictionary<int, Database> snapshots, bool snapshot)
     {
+        var @base = e.TryGetProperty("base", out var bid) ? snapshots.GetValueOrDefault(bid.GetInt32())
+            ?? throw new FormatException("Unknown base snapshot " + bid.GetInt32()) : null;
         var db = new Database(e.GetProperty("name").GetString()!)
         {
             DefaultCharset = Enum<Charset>(e, "defaultCharset"),
@@ -349,8 +384,33 @@ internal static class Backup
                 table.Columns.Add(col);
             }
             table.RebuildColumnIndex();
+            db.Tables[table.Name] = table;
+            var bt = @base?.Tables.GetValueOrDefault(table.Name);
+            if (Bool(t, "shared"))
+            {
+                table.Rows = (bt ?? throw new FormatException($"Table {table.Name} is not in the base snapshot")).Rows;
+                table.Shared = true;
+                continue;
+            }
+            Dictionary<long, Value[]>? baseRows = null;
             foreach (var r in t.GetProperty("rows").EnumerateArray())
             {
+                if (r.ValueKind == JsonValueKind.Number)
+                {
+                    baseRows ??= bt?.Rows.Where(x => x.LatestCommitted != null).ToDictionary(x => x.Key, x => x.LatestCommitted!)
+                        ?? throw new FormatException($"Table {table.Name} is not in the base snapshot");
+                    var k = r.GetInt64();
+                    table.Rows.Add(new RowSlot
+                    {
+                        Key = k,
+                        Committed = new RowVersion
+                        {
+                            Data = baseRows.TryGetValue(k, out var same) ? same : throw new FormatException($"Row {k} of {table.Name} is not in the base snapshot"),
+                        },
+                    });
+                    maxKey = Math.Max(maxKey, k);
+                    continue;
+                }
                 var data = new Value[r.GetArrayLength() - 1];
                 var i = -1;
                 long key = 0;
@@ -363,7 +423,6 @@ internal static class Backup
                 maxKey = Math.Max(maxKey, key);
                 table.Rows.Add(new RowSlot { Key = key, Committed = new RowVersion { Data = data } });
             }
-            db.Tables[table.Name] = table;
         }
         RowSlot.KeepKeysAbove(maxKey);
         foreach (var c in Items(e, "constraints"))
@@ -389,7 +448,16 @@ internal static class Backup
                 ExpressionSource = Str(x, "expressionSource"), Description = Str(x, "description"), Constraint = Str(x, "constraint"),
                 Collations = Names(x, "collations").Select(System.Enum.Parse<Collation>).ToArray(),
             };
-            if (db.Tables.TryGetValue(ix.Table, out var t)) ix.Rebuild(t.Rows);
+            if (db.Tables.TryGetValue(ix.Table, out var t))
+            {
+                // a table still sharing the base's rows shares its index maps too, as after FromSnapshot
+                if (t.Shared && @base!.Indexes.TryGetValue(ix.Name, out var bix) && SameKeys(ix, bix))
+                {
+                    ix.Map = bix.Map;
+                    ix.Shared = true;
+                }
+                else ix.Rebuild(t.Rows);
+            }
             db.Indexes[ix.Name] = ix;
         }
         foreach (var v in Items(e, "views"))
@@ -444,8 +512,14 @@ internal static class Backup
             };
             db.Triggers[tr.Name] = tr;
         }
+        if (snapshot) db.MarkFrozen(@base);
+        else if (@base != null && Bool(e, "clone")) db.SetOrigin(@base);
+        else db.LastSnapshot = @base;
         return db;
     }
+
+    static bool SameKeys(Index a, Index b) => a.Table == b.Table && a.Columns.AsSpan().SequenceEqual(b.Columns)
+        && a.Collations.AsSpan().SequenceEqual(b.Collations) && a.ExpressionSource == b.ExpressionSource;
 
     static IEnumerable<JsonElement> Items(JsonElement e, string name) => e.GetProperty(name).EnumerateArray();
 

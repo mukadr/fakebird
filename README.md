@@ -41,10 +41,11 @@ database to a JSON file, and `RestoreBackup` loads it into a server, even a new 
 carries on where it left off:
 
 ```csharp
-server.Backup("demo-backup.json");          // written to demo-backup.json.tmp, then renamed over the old file
+server.Backup("demo-backup.json", snapshot);   // written to demo-backup.json.tmp, then renamed over the old file
 // ... later, maybe in a new process
 var server = FakebirdServer.Start(new FakebirdOptions { Port = 3050 });
-server.RestoreBackup("demo-backup.json");   // Backup(Stream) / RestoreBackup(Stream) work too (e.g. GZipStream)
+var snapshots = server.RestoreBackup("demo-backup.json");   // the Stream overloads work too (e.g. GZipStream)
+var snapshot = snapshots.Single(s => s.Name == "template");  // clone new demo databases from this one
 ```
 
 A backup holds the definitions (domains, tables, constraints, indexes and whether they are active,
@@ -57,6 +58,15 @@ their original line and column, so PSQL errors give the same positions. `Restore
 database in the file or replaces it the way `Restore` does (pooled connections are re-attached), and
 leaves other databases alone. It reads the whole file before changing anything, so a broken file
 leaves the server as it was.
+
+Copy-on-write sharing survives the round trip. Each snapshot is written once: the one a database
+was cloned from, the latest one taken of a database (while something still holds it), and any passed
+to `Backup`. A database is written relative to its snapshot. A table it has not written to is just
+marked `"shared"`, and in the other tables a row that is still the snapshot's row is written as its
+key alone. On restore those tables and rows point at the restored snapshot again, so a template with
+20 demo clones takes the same memory after a restore as before. `RestoreBackup` returns the
+snapshots (`DatabaseSnapshot.Name` is the database each was taken of). Clone new databases from
+those rather than from a new snapshot of the same data, or that data is held twice.
 
 ## Why it is fast
 

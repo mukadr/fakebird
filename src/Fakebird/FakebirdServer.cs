@@ -186,42 +186,67 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
 
     /// <summary>
     /// Writes the committed state of every database (definitions, rows, sequence values) as JSON. Each database is
-    /// frozen on its own, as a <see cref="FakeDatabase.Snapshot"/> is; open transactions are left out.
+    /// frozen on its own, as a <see cref="FakeDatabase.Snapshot"/> is; open transactions are left out. The
+    /// snapshots the databases were cloned from (or last snapshotted to), and <paramref name="snapshots"/>, are
+    /// written once, and each database only as far as it differs from its snapshot, so a restore shares the
+    /// snapshot's storage between the databases again.
     /// </summary>
-    public void Backup(Stream stream)
+    public void Backup(Stream stream, params IEnumerable<DatabaseSnapshot> snapshots)
     {
         DbEntry[] entries;
         lock (_dbs) entries = [.. _dbs.Values];
+        var frozen = entries.Select(e => (e.Name, Live: e.Database, Frozen: e.Database.Freeze())).ToList();
+
+        // every snapshot after the one it is based on
+        var ids = new Dictionary<Database, int>(ReferenceEqualityComparer.Instance);
+        var order = new List<Database>();
+        void Add(Database? snap)
+        {
+            if (snap == null || ids.ContainsKey(snap)) return;
+            Add(snap.Origin);
+            ids[snap] = ids.Count;
+            order.Add(snap);
+        }
+        foreach (var s in snapshots) Add(s.Frozen);
+        foreach (var (_, live, _) in frozen) Add(live.Origin ?? live.LastSnapshot);
+        Fakebird.Engine.Backup.BaseRef? Base(Database? snap, bool clone)
+            => snap == null ? null : new(ids[snap], snap, clone);
+
         using var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
         w.WriteStartObject();
         w.WriteString("format", Fakebird.Engine.Backup.Format);
         w.WriteNumber("version", Fakebird.Engine.Backup.Version);
         w.WriteString("server", ServerVersion);
         w.WriteString("created", DateTimeOffset.UtcNow);
+        w.WriteStartArray("snapshots");
+        foreach (var snap in order)
+            Fakebird.Engine.Backup.Write(w, snap, snap.Name, snap.DefaultTimeZone, snap.NextTransactionId,
+                Base(snap.Origin, clone: false), ids[snap]);
+        w.WriteEndArray();
         w.WriteStartArray("databases");
-        foreach (var e in entries)
-        {
-            var live = e.Database;
-            Fakebird.Engine.Backup.Write(w, live.Snapshot(), e.Name, live.DefaultTimeZone, live.NextTransactionId);
-        }
+        foreach (var (name, live, snap) in frozen)
+            Fakebird.Engine.Backup.Write(w, snap, name, live.DefaultTimeZone, live.NextTransactionId,
+                live.Origin != null ? Base(live.Origin, clone: true) : Base(live.LastSnapshot, clone: false));
         w.WriteEndArray();
         w.WriteEndObject();
     }
 
     /// <summary>Writes a backup to a file, replacing it only once the backup is complete.</summary>
-    public void Backup(string path)
+    public void Backup(string path, params IEnumerable<DatabaseSnapshot> snapshots)
     {
         var tmp = path + ".tmp";
-        using (var f = File.Create(tmp)) Backup(f);
+        using (var f = File.Create(tmp)) Backup(f, snapshots);
         File.Move(tmp, path, overwrite: true);
     }
 
     /// <summary>
-    /// Loads a backup written by <see cref="Backup(Stream)"/>: each database in it is created, or replaced like
-    /// <see cref="Restore"/> does (pooled connections without open transactions are re-attached). Databases not in
-    /// the backup are left alone. Nothing changes if the backup cannot be read.
+    /// Loads a backup written by <see cref="Backup(Stream, IEnumerable{DatabaseSnapshot})"/>: each database in it
+    /// is created, or replaced like <see cref="Restore"/> does (pooled connections without open transactions are
+    /// re-attached). Databases not in the backup are left alone. Nothing changes if the backup cannot be read.
+    /// Returns the backup's snapshots, which the restored databases share storage with: create further databases
+    /// from them rather than from new snapshots of the same data.
     /// </summary>
-    public void RestoreBackup(Stream stream)
+    public IReadOnlyList<DatabaseSnapshot> RestoreBackup(Stream stream)
     {
         using var doc = JsonDocument.Parse(stream);
         var root = doc.RootElement;
@@ -230,7 +255,12 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         var version = root.GetProperty("version").GetInt32();
         if (version > Fakebird.Engine.Backup.Version)
             throw new FormatException($"Fakebird backup version {version} is newer than this Fakebird ({Fakebird.Engine.Backup.Version})");
-        var restored = root.GetProperty("databases").EnumerateArray().Select(Fakebird.Engine.Backup.Read).ToList();
+        var snapshots = new Dictionary<int, Database>();
+        if (root.TryGetProperty("snapshots", out var snaps))
+            foreach (var s in snaps.EnumerateArray())
+                snapshots[s.GetProperty("id").GetInt32()] = Fakebird.Engine.Backup.Read(s, snapshots, snapshot: true);
+        var restored = root.GetProperty("databases").EnumerateArray()
+            .Select(d => Fakebird.Engine.Backup.Read(d, snapshots, snapshot: false)).ToList();
         lock (_dbs)
             foreach (var db in restored)
             {
@@ -242,12 +272,13 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
                 }
                 else _dbs[db.Name] = new DbEntry { Name = db.Name, Database = db };
             }
+        return snapshots.Values.Select(s => new DatabaseSnapshot(s)).ToList();
     }
 
-    public void RestoreBackup(string path)
+    public IReadOnlyList<DatabaseSnapshot> RestoreBackup(string path)
     {
         using var f = File.OpenRead(path);
-        RestoreBackup(f);
+        return RestoreBackup(f);
     }
 
     public FakeDatabase GetDatabase(string name)
@@ -299,6 +330,9 @@ public sealed class DatabaseSnapshot
 {
     internal readonly Database Frozen;
     internal DatabaseSnapshot(Database frozen) => Frozen = frozen;
+
+    /// <summary>Name of the database the snapshot was taken of.</summary>
+    public string Name => Frozen.Name.EndsWith("$snapshot", StringComparison.Ordinal) ? Frozen.Name[..^"$snapshot".Length] : Frozen.Name;
 }
 
 /// <summary>Handle to a database hosted by a <see cref="FakebirdServer"/> for direct (in-process) access.</summary>

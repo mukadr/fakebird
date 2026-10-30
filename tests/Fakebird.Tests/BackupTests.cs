@@ -1,5 +1,6 @@
 using System.Text;
 using Fakebird.Engine;
+using Fakebird.Types;
 using FirebirdSql.Data.FirebirdClient;
 
 namespace Fakebird.Tests;
@@ -97,10 +98,10 @@ public class BackupTests
         _ => o.ToString()!,
     };
 
-    static byte[] BackupOf(FakebirdServer server)
+    static byte[] BackupOf(FakebirdServer server, params DatabaseSnapshot[] snapshots)
     {
         var ms = new MemoryStream();
-        server.Backup(ms);
+        server.Backup(ms, snapshots);
         return ms.ToArray();
     }
 
@@ -235,5 +236,83 @@ public class BackupTests
         a.GetDatabase("demo").RunScript("insert into t values (2);");
         Assert.ThrowsAny<Exception>(() => a.RestoreBackup(new MemoryStream(Encoding.UTF8.GetBytes(backup.ToJsonString()))));
         Assert.Equal(2L, a.GetDatabase("demo").Execute("select count(*) from t").Single()[0]);
+    }
+
+    [Fact]
+    public void SnapshotsAreWrittenOnceAndSharedAgainOnRestore()
+    {
+        using var a = FakebirdServer.Start();
+        var template = a.CreateDatabase("template");
+        template.RunScript(Schema);
+        var snap = template.Snapshot();
+        a.CreateDatabase("untouched", snap);
+        a.CreateDatabase("written", snap).RunScript("insert into customer (name) values ('New');");
+        a.CreateDatabase("altered", snap).RunScript(
+            "update doc set qty = 9 where id = 105; alter table customer add vip boolean; create index ix_cust_name on customer (name);");
+        var written2 = a.GetDatabase("written").Snapshot();
+        a.CreateDatabase("second", written2).RunScript("insert into customer (name) values ('Second');");
+        a.CreateDatabase("empty");
+
+        var backup = BackupOf(a);
+        var json = System.Text.Json.Nodes.JsonNode.Parse(backup)!;
+        var snaps = json["snapshots"]!.AsArray();
+        Assert.Equal(["template$snapshot", "written$snapshot"], snaps.Select(x => (string)x!["name"]!));
+        Assert.Equal(0, (int)snaps[1]!["base"]!);
+        System.Text.Json.Nodes.JsonObject Table(string db, string table) => json["databases"]!.AsArray()
+            .Single(d => (string)d!["name"]! == db)!["tables"]!.AsArray().Single(t => (string)t!["name"]! == table)!.AsObject();
+        Assert.True((bool)Table("untouched", "CUSTOMER")["shared"]!);
+        Assert.True((bool)Table("untouched", "DOC")["shared"]!);
+        // only the new and the changed rows are written in full
+        Assert.Equal([System.Text.Json.JsonValueKind.Number, System.Text.Json.JsonValueKind.Number, System.Text.Json.JsonValueKind.Array],
+            Table("written", "CUSTOMER")["rows"]!.AsArray().Select(r => r!.GetValueKind()));
+        Assert.True((bool)Table("written", "DOC")["shared"]!);
+        Assert.Equal([System.Text.Json.JsonValueKind.Number, System.Text.Json.JsonValueKind.Array],
+            Table("altered", "DOC")["rows"]!.AsArray().Select(r => r!.GetValueKind()));
+        Assert.All(Table("template", "DOC")["rows"]!.AsArray(), r => Assert.Equal(System.Text.Json.JsonValueKind.Number, r!.GetValueKind()));
+        Assert.True((bool)Table("second", "DOC")["shared"]!);
+
+        using var b = FakebirdServer.Start();
+        var restored = b.RestoreBackup(new MemoryStream(backup));
+        Assert.Equal(["template", "written"], restored.Select(r => r.Name));
+        // a backup of the restored server is the same backup, apart from when it was made
+        Assert.Equal(Encoding.UTF8.GetString(backup).Split("\"snapshots\"")[1], Encoding.UTF8.GetString(BackupOf(b)).Split("\"snapshots\"")[1]);
+        foreach (var name in new[] { "template", "untouched", "written", "altered", "second", "empty" })
+            Assert.Equal(Dump(a, name), Dump(b, name));
+
+        // the restored databases share the restored snapshots' storage, as before the backup
+        var s1 = restored[0].Frozen;
+        var s2 = restored[1].Frozen;
+        Assert.Same(s1.Tables["DOC"].Rows, b.Engine("untouched").Tables["DOC"].Rows);
+        Assert.Same(s1.Indexes["PK_DOC"].Map, b.Engine("untouched").Indexes["PK_DOC"].Map);
+        Assert.Same(s1.Tables["DOC"].Rows, s2.Tables["DOC"].Rows);
+        Assert.Same(s2.Tables["DOC"].Rows, b.Engine("second").Tables["DOC"].Rows);
+        static Value[] Row(Database db, string table, int i) => db.Tables[table].Rows[i].LatestCommitted!;
+        Assert.Same(Row(s1, "CUSTOMER", 0), Row(b.Engine("written"), "CUSTOMER", 0));
+        Assert.Same(Row(s1, "DOC", 0), Row(b.Engine("template"), "DOC", 0));
+        Assert.Same(Row(s1, "CUSTOMER", 0), Row(s2, "CUSTOMER", 0));
+        Assert.Same(Row(s1, "DOC", 0), Row(b.Engine("altered"), "DOC", 0));
+
+        // writes copy on write: the snapshot and its other clones keep their rows
+        var untouched = b.GetDatabase("untouched");
+        untouched.RunScript("delete from doc; insert into customer (name) values ('Late');");
+        Assert.Empty(untouched.Execute("select * from doc"));
+        var fresh = b.CreateDatabase("fresh", restored[0]);
+        Assert.Equal(2L, fresh.Execute("select count(*) from doc").Single()[0]);
+        Assert.Equal(Dump(a, "second"), Dump(b, "second"));
+        Assert.Empty(b.GetDatabase("written").Execute("select id from customer where name = 'Late'"));
+    }
+
+    [Fact]
+    public void ExtraSnapshotsAreKept()
+    {
+        using var a = FakebirdServer.Start();
+        var template = a.CreateDatabase("template");
+        template.RunScript("create table t (id integer); insert into t values (1);");
+        var snap = template.Snapshot();
+        a.DropDatabase("template");
+        using var b = FakebirdServer.Start();
+        var restored = b.RestoreBackup(new MemoryStream(BackupOf(a, snap))).Single();
+        Assert.Equal("template", restored.Name);
+        Assert.Equal(1L, b.CreateDatabase("clone", restored).Execute("select id from t").Single()[0]);
     }
 }
