@@ -993,6 +993,7 @@ public sealed partial class Parser
         var bodyTok = _i;
         s.Body = PsqlBody();
         s.Source = SourceFrom(bodyTok); // RDB$PROCEDURE_SOURCE: what follows AS
+        (s.SourceLine, s.SourceCol) = (_t[bodyTok].Line, _t[bodyTok].Col);
         return s;
     }
 
@@ -1010,6 +1011,7 @@ public sealed partial class Parser
         var bodyTok = _i;
         s.Body = PsqlBody();
         s.Source = SourceFrom(bodyTok);
+        (s.SourceLine, s.SourceCol) = (_t[bodyTok].Line, _t[bodyTok].Col);
         return s;
     }
 
@@ -1072,6 +1074,7 @@ public sealed partial class Parser
         else if (mode != CreateMode.Alter) throw Unexpected();
         if (!hasEvent && mode != CreateMode.Alter) throw Unexpected();
         s.Source = SourceFrom(asTok); // RDB$TRIGGER_SOURCE: from AS on
+        (s.SourceLine, s.SourceCol) = (_t[asTok].Line, _t[asTok].Col);
         return s;
     }
 

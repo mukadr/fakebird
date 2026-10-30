@@ -118,6 +118,8 @@ public sealed class Procedure
     public List<RoutineParam> Outputs = new();
     public BlockStmt Body = null!;
     public string Source = null!;
+    /// <summary>Line/column where Source started in its CREATE statement (backups re-parse it there).</summary>
+    public int SourceLine = 1, SourceCol = 1;
     /// <summary>Contains SUSPEND (selectable).</summary>
     public bool Selectable;
     // compiled cache (per database instance)
@@ -125,7 +127,7 @@ public sealed class Procedure
     internal int CompiledVersion = -1;
     public Procedure CloneDef() => new()
     {
-        Name = Name, Inputs = Inputs, Outputs = Outputs, Body = Body, Source = Source, Selectable = Selectable, Description = Description,
+        Name = Name, Inputs = Inputs, Outputs = Outputs, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Selectable = Selectable, Description = Description,
     };
 }
 
@@ -138,12 +140,14 @@ public sealed class Function
     public SqlType Returns = null!;
     public BlockStmt Body = null!;
     public string Source = null!;
+    /// <summary>Line/column where Source started in its CREATE statement (backups re-parse it there).</summary>
+    public int SourceLine = 1, SourceCol = 1;
     public bool Deterministic;
     internal object? Compiled;
     internal int CompiledVersion = -1;
     public Function CloneDef() => new()
     {
-        Name = Name, Inputs = Inputs, Returns = Returns, Body = Body, Source = Source, Deterministic = Deterministic, Description = Description,
+        Name = Name, Inputs = Inputs, Returns = Returns, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Deterministic = Deterministic, Description = Description,
     };
 }
 
@@ -160,11 +164,13 @@ public sealed class Trigger
     public int Position;
     public BlockStmt Body = null!;
     public string Source = null!;
+    /// <summary>Line/column where Source started in its CREATE statement (backups re-parse it there).</summary>
+    public int SourceLine = 1, SourceCol = 1;
     internal object? Compiled;
     internal int CompiledVersion = -1;
     public Trigger CloneDef() => new()
     {
         Name = Name, Table = Table, Active = Active, Timing = Timing, Events = Events, DbEvent = DbEvent,
-        Position = Position, Body = Body, Source = Source, Description = Description,
+        Position = Position, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Description = Description,
     };
 }

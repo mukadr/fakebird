@@ -34,6 +34,46 @@ public sealed partial class Parser
         return s;
     }
 
+    // ------------------------------------------------------------------ stored sources (backups)
+
+    /// <summary>A column/domain/parameter default as stored: "DEFAULT x" (or "= x" for parameters).</summary>
+    internal static Expr ParseDefaultSource(string source, bool parameter)
+    {
+        var p = new Parser(source);
+        if (!p.Accept("DEFAULT")) p.ExpectOp("=");
+        return p.End(parameter ? p.Expression() : p.DefaultValue());
+    }
+
+    /// <summary>A COMPUTED BY or CHECK expression as stored, with or without the CHECK keyword.</summary>
+    internal static Expr ParseExprSource(string source)
+    {
+        var p = new Parser(source);
+        p.Accept("CHECK");
+        return p.End(p.Expression());
+    }
+
+    internal static SelectQuery ParseViewSource(string source)
+    {
+        var p = new Parser(source);
+        return p.End(p.SelectQueryExpr());
+    }
+
+    /// <summary>A routine or trigger body as stored (from AS on for triggers), padded so its positions are
+    /// those of the CREATE statement it came from.</summary>
+    internal static BlockStmt ParseBodySource(string source, int line, int col)
+    {
+        var p = new Parser(new string('\n', Math.Max(line - 1, 0)) + new string(' ', Math.Max(col - 1, 0)) + source);
+        p.Accept("AS");
+        return p.End(p.PsqlBody());
+    }
+
+    T End<T>(T node)
+    {
+        while (AcceptOp(";")) { }
+        if (Cur.Kind != Tok.Eof) throw Unexpected();
+        return node;
+    }
+
     // ------------------------------------------------------------------ token helpers
 
     Token Cur => _t[_i];

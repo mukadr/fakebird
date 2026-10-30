@@ -34,6 +34,30 @@ database (a clone or a `Restore`), so no test ever sees another test's data. Tes
 code, can run fully in parallel (one database per test class or per test), and the engine favours
 simplicity and speed over the machinery a shared production server needs.
 
+## Backup and restore
+
+For a long-running Fakebird (a demo database, say), `Backup` writes the committed state of every
+database to a JSON file, and `RestoreBackup` loads it into a server, even a new process, so it
+carries on where it left off:
+
+```csharp
+server.Backup("demo-backup.json");          // written to demo-backup.json.tmp, then renamed over the old file
+// ... later, maybe in a new process
+var server = FakebirdServer.Start(new FakebirdOptions { Port = 3050 });
+server.RestoreBackup("demo-backup.json");   // Backup(Stream) / RestoreBackup(Stream) work too (e.g. GZipStream)
+```
+
+A backup holds the definitions (domains, tables, constraints, indexes and whether they are active,
+views, procedures, functions, triggers, exceptions, comments), the rows with their `RDB$DB_KEY`, and
+sequence and identity values, along with the system-assigned names (`INTEG_n`, `RDB$PRIMARYn`,
+`CHECK_n`) and the next transaction number, so the RDB$ tables read the same after a restore. Each
+database is frozen on its own, the way `Snapshot` does it: uncommitted work and GTT rows are left out.
+Expressions, views and PSQL bodies are saved as their source text and parsed again on restore, at
+their original line and column, so PSQL errors give the same positions. `RestoreBackup` creates each
+database in the file or replaces it the way `Restore` does (pooled connections are re-attached), and
+leaves other databases alone. It reads the whole file before changing anything, so a broken file
+leaves the server as it was.
+
 ## Why it is fast
 
 * No disk I/O; rows are immutable `Value[]` arrays, values are unboxed structs.
@@ -320,7 +344,7 @@ src/Fakebird/Sql       lexer, AST, recursive-descent parser (DSQL + PSQL)
 src/Fakebird/Types     SqlType, Value, conversions and comparisons
 src/Fakebird/Compile   binder/compiler: name resolution, type inference, join planning
 src/Fakebird/Exec      expression nodes, relational operators, DML pipeline, PSQL runtime
-src/Fakebird/Engine    catalog, storage (row versions, indexes, COW), transactions, DDL, RDB$ tables
+src/Fakebird/Engine    catalog, storage (row versions, indexes, COW), transactions, DDL, RDB$ tables, backups
 src/Fakebird/Wire      Firebird wire protocol (versions 10-12) server
 tests/Fakebird.Tests   engine, wire, SQL feature, client behaviour, Dapper and EF Core tests
 tests/Fakebird.Tests/Corpus   SQL corpus with the golden output of a real Firebird 5

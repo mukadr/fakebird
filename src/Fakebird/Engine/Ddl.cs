@@ -1100,7 +1100,7 @@ public static class Ddl
         var p = new Procedure
         {
             Name = st.Name, Inputs = Params(db, st.Inputs), Outputs = Params(db, st.Outputs), Body = st.Body, Source = st.Source,
-            Selectable = HasSuspend(st.Body),
+            SourceLine = st.SourceLine, SourceCol = st.SourceCol, Selectable = HasSuspend(st.Body),
         };
         db.Procedures[st.Name] = p;
         try
@@ -1128,7 +1128,7 @@ public static class Ddl
         var f = new Function
         {
             Name = st.Name, Inputs = Params(db, st.Inputs), Returns = Comp(db).ResolveType(st.Returns), Body = st.Body,
-            Source = st.Source, Deterministic = st.Deterministic,
+            Source = st.Source, SourceLine = st.SourceLine, SourceCol = st.SourceCol, Deterministic = st.Deterministic,
         };
         db.Functions[st.Name] = f;
         try
@@ -1168,6 +1168,7 @@ public static class Ddl
             {
                 t.Body = st.Body;
                 t.Source = st.Source;
+                (t.SourceLine, t.SourceCol) = (st.SourceLine, st.SourceCol);
             }
         }
         else
@@ -1177,7 +1178,7 @@ public static class Ddl
             t = new Trigger
             {
                 Name = st.Name, Table = tableName, Active = st.Active ?? true, Timing = st.Timing, Events = st.Events,
-                Position = st.Position ?? 0, Body = st.Body!, Source = st.Source,
+                Position = st.Position ?? 0, Body = st.Body!, Source = st.Source, SourceLine = st.SourceLine, SourceCol = st.SourceCol,
             };
         }
         // Firebird reports the trigger's unknown table at line 0, column 0

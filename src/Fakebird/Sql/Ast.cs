@@ -667,6 +667,8 @@ public sealed class CreateProcedureStmt : Stmt
     public List<ParamDecl> Outputs = new();
     public BlockStmt Body = null!;
     public string Source = null!;
+    /// <summary>Where <see cref="Source"/> starts in the statement (the line/column base of the body's positions).</summary>
+    public int SourceLine = 1, SourceCol = 1;
 }
 
 public sealed class CreateFunctionStmt : Stmt
@@ -678,6 +680,8 @@ public sealed class CreateFunctionStmt : Stmt
     public bool Deterministic;
     public BlockStmt Body = null!;
     public string Source = null!;
+    /// <summary>Where <see cref="Source"/> starts in the statement (the line/column base of the body's positions).</summary>
+    public int SourceLine = 1, SourceCol = 1;
 }
 
 public enum TriggerTiming { Before, After }
@@ -700,6 +704,8 @@ public sealed class CreateTriggerStmt : Stmt
     public int? Position;
     public BlockStmt? Body;
     public string Source = null!;
+    /// <summary>Where <see cref="Source"/> starts in the statement (the line/column base of the body's positions).</summary>
+    public int SourceLine = 1, SourceCol = 1;
 }
 
 public enum ObjectKind { Table, View, Procedure, Function, Trigger, Exception, Sequence, Index, Domain, Package, Role, User, Filter, ExternalFunction }

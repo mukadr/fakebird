@@ -20,6 +20,13 @@ public sealed class RowSlot
     static long _nextKey;
     /// <summary>RDB$DB_KEY: increases with insertion order and survives snapshots and clones.</summary>
     public long Key = Interlocked.Increment(ref _nextKey);
+
+    /// <summary>Restored backups bring their own keys: new slots must still get larger ones.</summary>
+    internal static void KeepKeysAbove(long key)
+    {
+        long cur;
+        while ((cur = Volatile.Read(ref _nextKey)) < key && Interlocked.CompareExchange(ref _nextKey, key, cur) != cur) { }
+    }
     public RowVersion? Committed;
     public Value[]? Pending;
     public Transaction? Owner;

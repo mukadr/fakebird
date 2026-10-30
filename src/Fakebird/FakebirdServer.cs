@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
 using Fakebird.Engine;
 using Fakebird.Types;
 using Fakebird.Wire;
@@ -181,6 +182,72 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
             e.Database = fresh;
             e.Generation++;
         }
+    }
+
+    /// <summary>
+    /// Writes the committed state of every database (definitions, rows, sequence values) as JSON. Each database is
+    /// frozen on its own, as a <see cref="FakeDatabase.Snapshot"/> is; open transactions are left out.
+    /// </summary>
+    public void Backup(Stream stream)
+    {
+        DbEntry[] entries;
+        lock (_dbs) entries = [.. _dbs.Values];
+        using var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+        w.WriteStartObject();
+        w.WriteString("format", Fakebird.Engine.Backup.Format);
+        w.WriteNumber("version", Fakebird.Engine.Backup.Version);
+        w.WriteString("server", ServerVersion);
+        w.WriteString("created", DateTimeOffset.UtcNow);
+        w.WriteStartArray("databases");
+        foreach (var e in entries)
+        {
+            var live = e.Database;
+            Fakebird.Engine.Backup.Write(w, live.Snapshot(), e.Name, live.DefaultTimeZone, live.NextTransactionId);
+        }
+        w.WriteEndArray();
+        w.WriteEndObject();
+    }
+
+    /// <summary>Writes a backup to a file, replacing it only once the backup is complete.</summary>
+    public void Backup(string path)
+    {
+        var tmp = path + ".tmp";
+        using (var f = File.Create(tmp)) Backup(f);
+        File.Move(tmp, path, overwrite: true);
+    }
+
+    /// <summary>
+    /// Loads a backup written by <see cref="Backup(Stream)"/>: each database in it is created, or replaced like
+    /// <see cref="Restore"/> does (pooled connections without open transactions are re-attached). Databases not in
+    /// the backup are left alone. Nothing changes if the backup cannot be read.
+    /// </summary>
+    public void RestoreBackup(Stream stream)
+    {
+        using var doc = JsonDocument.Parse(stream);
+        var root = doc.RootElement;
+        if (!root.TryGetProperty("format", out var format) || format.GetString() != Fakebird.Engine.Backup.Format)
+            throw new FormatException("Not a Fakebird backup");
+        var version = root.GetProperty("version").GetInt32();
+        if (version > Fakebird.Engine.Backup.Version)
+            throw new FormatException($"Fakebird backup version {version} is newer than this Fakebird ({Fakebird.Engine.Backup.Version})");
+        var restored = root.GetProperty("databases").EnumerateArray().Select(Fakebird.Engine.Backup.Read).ToList();
+        lock (_dbs)
+            foreach (var db in restored)
+            {
+                db.DefaultTimeZone ??= DefaultZone;
+                if (_dbs.TryGetValue(db.Name, out var e))
+                {
+                    e.Database = db;
+                    e.Generation++;
+                }
+                else _dbs[db.Name] = new DbEntry { Name = db.Name, Database = db };
+            }
+    }
+
+    public void RestoreBackup(string path)
+    {
+        using var f = File.OpenRead(path);
+        RestoreBackup(f);
     }
 
     public FakeDatabase GetDatabase(string name)
