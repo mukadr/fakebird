@@ -61,10 +61,12 @@ leaves the server as it was.
 
 Copy-on-write sharing survives the round trip. Each snapshot is written once: the one a database
 was cloned from, the latest one taken of a database (while something still holds it), and any passed
-to `Backup`. A database is written relative to its snapshot. A table it has not written to is just
-marked `"shared"`, and in the other tables a row that is still the snapshot's row is written as its
-key alone. On restore those tables and rows point at the restored snapshot again, so a template with
-20 demo clones takes the same memory after a restore as before. `RestoreBackup` returns the
+to `Backup`. A database is written relative to its snapshot. A definition it has not changed (domain,
+table, constraint, index, view, procedure, function, trigger...) is written as `"same"`. A table it
+has not written to is just marked `"shared"`, and in the other tables a row that is still the
+snapshot's row is written as its key alone. On restore those definitions, tables and rows point at
+the restored snapshot again, and its parsed procedures and triggers are not parsed again per
+database. So a template with 20 demo clones takes the same memory after a restore as before. `RestoreBackup` returns the
 snapshots (`DatabaseSnapshot.Name` is the database each was taken of). Clone new databases from
 those rather than from a new snapshot of the same data, or that data is held twice.
 

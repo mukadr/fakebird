@@ -188,8 +188,8 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
     /// Writes the committed state of every database (definitions, rows, sequence values) as JSON. Each database is
     /// frozen on its own, as a <see cref="FakeDatabase.Snapshot"/> is; open transactions are left out. The
     /// snapshots the databases were cloned from (or last snapshotted to), and <paramref name="snapshots"/>, are
-    /// written once, and each database only as far as it differs from its snapshot, so a restore shares the
-    /// snapshot's storage between the databases again.
+    /// written once, and each database only as far as it differs from its snapshot (definitions and rows), so a
+    /// restore shares the snapshot's storage and parsed definitions between the databases again.
     /// </summary>
     public void Backup(Stream stream, params IEnumerable<DatabaseSnapshot> snapshots)
     {
@@ -209,6 +209,7 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         }
         foreach (var s in snapshots) Add(s.Frozen);
         foreach (var (_, live, _) in frozen) Add(live.Origin ?? live.LastSnapshot);
+        var baseDefs = new Dictionary<object, byte[]>(ReferenceEqualityComparer.Instance);
         Fakebird.Engine.Backup.BaseRef? Base(Database? snap, bool clone)
             => snap == null ? null : new(ids[snap], snap, clone);
 
@@ -221,12 +222,12 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         w.WriteStartArray("snapshots");
         foreach (var snap in order)
             Fakebird.Engine.Backup.Write(w, snap, snap.Name, snap.DefaultTimeZone, snap.NextTransactionId,
-                Base(snap.Origin, clone: false), ids[snap]);
+                Base(snap.Origin, clone: false), baseDefs, ids[snap]);
         w.WriteEndArray();
         w.WriteStartArray("databases");
         foreach (var (name, live, snap) in frozen)
             Fakebird.Engine.Backup.Write(w, snap, name, live.DefaultTimeZone, live.NextTransactionId,
-                live.Origin != null ? Base(live.Origin, clone: true) : Base(live.LastSnapshot, clone: false));
+                live.Origin != null ? Base(live.Origin, clone: true) : Base(live.LastSnapshot, clone: false), baseDefs);
         w.WriteEndArray();
         w.WriteEndObject();
     }

@@ -248,7 +248,8 @@ public class BackupTests
         a.CreateDatabase("untouched", snap);
         a.CreateDatabase("written", snap).RunScript("insert into customer (name) values ('New');");
         a.CreateDatabase("altered", snap).RunScript(
-            "update doc set qty = 9 where id = 105; alter table customer add vip boolean; create index ix_cust_name on customer (name);");
+            "update doc set qty = 9 where id = 105; alter table customer add vip boolean; create index ix_cust_name on customer (name);" +
+            "set term ^; create or alter function f_twice (x integer) returns integer as begin return x * 3; end^ set term ;^");
         var written2 = a.GetDatabase("written").Snapshot();
         a.CreateDatabase("second", written2).RunScript("insert into customer (name) values ('Second');");
         a.CreateDatabase("empty");
@@ -270,6 +271,17 @@ public class BackupTests
             Table("altered", "DOC")["rows"]!.AsArray().Select(r => r!.GetValueKind()));
         Assert.All(Table("template", "DOC")["rows"]!.AsArray(), r => Assert.Equal(System.Text.Json.JsonValueKind.Number, r!.GetValueKind()));
         Assert.True((bool)Table("second", "DOC")["shared"]!);
+        // definitions a database has not changed are written as "same as the snapshot"
+        System.Text.Json.Nodes.JsonArray Section(string db, string section)
+            => json["databases"]!.AsArray().Single(d => (string)d!["name"]! == db)![section]!.AsArray();
+        foreach (var db in new[] { "template", "untouched", "written", "second" })
+            foreach (var section in new[] { "domains", "exceptions", "tables", "constraints", "indexes", "views", "procedures", "functions", "triggers" })
+                Assert.All(Section(db, section), d => Assert.True((bool?)d!["same"] == true, $"{db}.{section}.{d!["name"]}"));
+        Assert.Null(Table("altered", "CUSTOMER")["same"]);
+        Assert.True((bool)Table("altered", "DOC")["same"]!);
+        Assert.Null(Section("altered", "functions").Single()!["same"]);
+        Assert.Null(Section("altered", "indexes").Single(i => (string)i!["name"]! == "IX_CUST_NAME")!["same"]);
+        Assert.Null(Section("written", "sequences").Single(x => (bool?)x!["identity"] == true)!["same"]);
 
         using var b = FakebirdServer.Start();
         var restored = b.RestoreBackup(new MemoryStream(backup));
@@ -291,6 +303,14 @@ public class BackupTests
         Assert.Same(Row(s1, "DOC", 0), Row(b.Engine("template"), "DOC", 0));
         Assert.Same(Row(s1, "CUSTOMER", 0), Row(s2, "CUSTOMER", 0));
         Assert.Same(Row(s1, "DOC", 0), Row(b.Engine("altered"), "DOC", 0));
+        // and their parsed definitions, as a clone does
+        Assert.Same(s1.Procedures["P_DOCS"].Body, b.Engine("untouched").Procedures["P_DOCS"].Body);
+        Assert.Same(s1.Triggers["DOC_BI"].Body, b.Engine("template").Triggers["DOC_BI"].Body);
+        Assert.Same(s1.Views["V_DOC"].Query, s2.Views["V_DOC"].Query);
+        Assert.Same(s1.Tables["DOC"].Columns[0].Type, b.Engine("second").Tables["DOC"].Columns[0].Type);
+        Assert.NotSame(s1.Functions["F_TWICE"].Body, b.Engine("altered").Functions["F_TWICE"].Body);
+        Assert.Equal(63L, b.GetDatabase("altered").Execute("select f_twice(21) from rdb$database").Single()[0]);
+        Assert.Equal(42L, b.GetDatabase("untouched").Execute("select f_twice(21) from rdb$database").Single()[0]);
 
         // writes copy on write: the snapshot and its other clones keep their rows
         var untouched = b.GetDatabase("untouched");
