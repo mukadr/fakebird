@@ -342,7 +342,9 @@ those zones come from the IANA tz data compiled by `zic` (its header has the com
 
 `dotnet run --project bench/Fakebird.Bench -- script create.sql patch.sql ...` runs the scripts
 in-process, continues past errors and prints the distinct failures with a sample statement each:
-the quickest way to find what a new schema needs.
+the quickest way to find what a new schema needs. `... -- restore create.sql patch.sql ...` builds a
+template from the scripts and prints the time and the bytes allocated by a `Restore` of it, the cost
+paid before every test.
 
 ## Debugging
 
