@@ -305,11 +305,13 @@ public static class Builtins
             var s = Conv.ToStr(src);
             var chars = Conv.ToStr(charsV);
             if (chars.Length == 0) return S(s);
+            // one substring at the end: trimming a CHAR(63) name one space at a time made ~60 strings
+            int from = 0, to = s.Length;
             if (spec is "BOTH" or "LEADING")
-                while (s.StartsWith(chars, StringComparison.Ordinal)) s = s[chars.Length..];
+                while (to - from >= chars.Length && s.AsSpan(from, chars.Length).SequenceEqual(chars)) from += chars.Length;
             if (spec is "BOTH" or "TRAILING")
-                while (s.EndsWith(chars, StringComparison.Ordinal)) s = s[..^chars.Length];
-            return S(s);
+                while (to - from >= chars.Length && s.AsSpan(to - chars.Length, chars.Length).SequenceEqual(chars)) to -= chars.Length;
+            return S(from == 0 && to == s.Length ? s : s[from..to]);
         }, HintString, nullable: a => !a[2].NotNull || !a[1].NotNull);
         Def("SUBSTRING", 2, 3, a => a.Length > 2 && ConstLong(a[2]) is { } n && a[0].Type.Kind != TypeKind.Blob
             ? (n < 0 ? throw BadSubstringLength(n) : StrResult(a[0], (int)Math.Min(n, TypeRules.StringLength(a[0].Type)))) : StrResult(a[0]), (c, a, f) =>
