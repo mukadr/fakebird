@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -9,13 +10,36 @@ namespace Fakebird.Wire;
 /// </summary>
 internal sealed class Xdr
 {
+    const int BufferSize = 64 * 1024;
+    /// <summary>
+    /// The buffers of finished connections, for the next ones: a test suite opens thousands of short-lived
+    /// connections. Not ArrayPool.Shared, which keeps a returned array in the returning thread's slot first,
+    /// and every connection has its own thread, which ends right after.
+    /// </summary>
+    static readonly ArrayPool<byte> Pool = ArrayPool<byte>.Create(BufferSize, maxArraysPerBucket: 256);
     readonly Stream _stream;
-    readonly byte[] _in = new byte[64 * 1024];
+    byte[] _in = Pool.Rent(BufferSize);
     int _inPos, _inLen;
-    byte[] _out = new byte[64 * 1024];
+    byte[] _out;
+    readonly byte[] _rentedOut;
     int _outLen;
 
-    public Xdr(Stream stream) => _stream = stream;
+    public Xdr(Stream stream)
+    {
+        _stream = stream;
+        _out = _rentedOut = Pool.Rent(BufferSize);
+    }
+
+    /// <summary>Returns the buffers to the pool: the connection is over, nothing reads or writes any more.</summary>
+    public void ReleaseBuffers()
+    {
+        if (_in.Length == 0) return;
+        Pool.Return(_in);
+        // a large response may have replaced it with a bigger array, which is not the pool's
+        Pool.Return(_rentedOut);
+        _in = _out = [];
+        _inPos = _inLen = _outLen = 0;
+    }
 
     // ---------------- reading ----------------
 

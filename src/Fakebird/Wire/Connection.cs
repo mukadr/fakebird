@@ -92,6 +92,7 @@ internal sealed class Connection
             Cleanup();
             try { _xdr.Flush(); } catch { /* ignored */ }
             try { _socket.Dispose(); } catch { /* ignored */ }
+            _xdr.ReleaseBuffers();
         }
     }
 
