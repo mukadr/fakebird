@@ -245,6 +245,8 @@ public sealed class Table
     public bool IsSystem;
     public bool IsGtt;
     public bool GttPreserveRows;
+    /// <summary>The table as a query source, for the compiler: shared by MemberwiseClone, replaced by DDL.</summary>
+    internal Compile.TableSourceCols SourceCols = new();
     /// <summary>For virtual (system) tables: produces rows on demand.</summary>
     public Func<Database, List<Value[]>>? Virtual;
 
@@ -306,6 +308,7 @@ public sealed class Table
         Triggers = [.. Triggers];
         Columns = Columns.ConvertAll(c => c.Clone());
         ColumnIndex = new(ColumnIndex, StringComparer.Ordinal);
+        SourceCols = new();
     }
 }
 

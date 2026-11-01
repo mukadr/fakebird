@@ -41,6 +41,13 @@ public sealed class SourceItem
     public bool OuterNullable;
     Dictionary<string, int>? _index;
 
+    /// <summary>A table as a source: its <see cref="TableSourceCols"/>, shared, never changed by the compiler.</summary>
+    public static SourceItem OfTable(Table t)
+    {
+        var (cols, index) = t.SourceCols.Get(t);
+        return new SourceItem { Table = t, Cols = cols, _index = index, Context = "table" };
+    }
+
     public int Find(string col)
     {
         if (_index == null)
@@ -52,6 +59,32 @@ public sealed class SourceItem
     }
 
     public bool Matches(string qualifier) => Alias != null ? Alias == qualifier : Name == qualifier;
+}
+
+/// <summary>
+/// A table's columns as a query source (<see cref="SourceItem.Cols"/> and the lookup by name), built on first use:
+/// every compiled reference to the table made them. The clones of a snapshot share it with the snapshot's table
+/// (MemberwiseClone); DDL gives every table a new one (<see cref="Database.SchemaChanged"/>).
+/// </summary>
+public sealed class TableSourceCols
+{
+    sealed record Built(List<ColInfo> Cols, Dictionary<string, int> Index);
+    Built? _built;
+
+    internal (List<ColInfo> Cols, Dictionary<string, int> Index) Get(Table t)
+    {
+        // a race between two clones builds it twice, the same
+        var b = _built ??= Build(t);
+        return (b.Cols, b.Index);
+    }
+
+    static Built Build(Table t)
+    {
+        var cols = t.Columns.Select(c => new ColInfo { Name = c.Name, Type = c.Type, NotNull = c.NotNull, Relation = t.Name, Field = c.Name }).ToList();
+        var index = new Dictionary<string, int>(cols.Count, StringComparer.Ordinal);
+        for (var i = 0; i < cols.Count; i++) index.TryAdd(cols[i].Name, i);
+        return new Built(cols, index);
+    }
 }
 
 /// <summary>Aggregation binding state of a grouped query.</summary>

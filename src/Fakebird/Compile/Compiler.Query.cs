@@ -1087,11 +1087,10 @@ public sealed partial class Compiler
             if (Db.Tables.TryGetValue(n.Name, out var table))
             {
                 var stream = NewStream(table.Columns.Count);
-                var item = new SourceItem
-                {
-                    Alias = n.Alias, Name = n.Name, Stream = stream, Table = table, Context = "table",
-                    Cols = table.Columns.Select(c => new ColInfo { Name = c.Name, Type = c.Type, NotNull = c.NotNull, Relation = table.Name, Field = c.Name }).ToList(),
-                };
+                var item = SourceItem.OfTable(table);
+                item.Alias = n.Alias;
+                item.Name = n.Name;
+                item.Stream = stream;
                 AddSource(s, item);
                 return new JLeaf { Item = item, Table = table };
             }

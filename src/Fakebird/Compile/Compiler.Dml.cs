@@ -37,12 +37,15 @@ public sealed partial class Compiler
 
     static FbError ReadOnly(Table t, int ci) => new StatusBuilder().Gds(FbMessages.read_only_field).Str(t.Name + "." + t.Columns[ci].Name).Build();
 
-    static SourceItem TableItem(Table t, string? alias, int stream, bool qualifiedOnly = false, string? name = null) => new()
+    static SourceItem TableItem(Table t, string? alias, int stream, bool qualifiedOnly = false, string? name = null)
     {
-        Context = "table",
-        Alias = alias, Name = name ?? t.Name, Stream = stream, Table = t, QualifiedOnly = qualifiedOnly,
-        Cols = t.Columns.Select(c => new ColInfo { Name = c.Name, Type = c.Type, NotNull = c.NotNull, Relation = t.Name, Field = c.Name }).ToList(),
-    };
+        var item = SourceItem.OfTable(t);
+        item.Alias = alias;
+        item.Name = name ?? t.Name;
+        item.Stream = stream;
+        item.QualifiedOnly = qualifiedOnly;
+        return item;
+    }
 
     Scope DmlScope(Scope? parent) => new(parent ?? RootScope);
 

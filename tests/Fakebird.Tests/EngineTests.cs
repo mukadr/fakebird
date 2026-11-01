@@ -160,6 +160,8 @@ public class EngineTests
 
         var ta = new Attachment(a).StartTransaction();
         void ExecA(string sql) { lock (a.Sync) Executor.Execute(ta, sql); }
+        // compiled before the DDL: the clones share what the compiler knows about T's columns
+        ExecA("select v, pid from t");
         ExecA("alter table t add w int");
         ExecA("alter table t alter v set default 'y'");
         ExecA("alter table t alter v to v2");
@@ -169,6 +171,8 @@ public class EngineTests
         ExecA("create index t_id_desc on t(id)");
         ExecA("create trigger t_bi for t before insert as begin new.w = 7; end");
         ExecA("insert into t (id) values (1)");
+        lock (a.Sync) Assert.Equal(7L, Executor.Execute(ta, "select w from t where v2 = 'y'").Rows![0][0].ToClr());
+        Assert.Contains("Column unknown", Assert.Throws<FbError>(() => ExecA("select v from t")).Message);
         ta.Commit();
         lock (a.Sync) Assert.Equal(["ID", "V2", "PID", "W"], a.Tables["T"].Columns.Select(c => c.Name));
 

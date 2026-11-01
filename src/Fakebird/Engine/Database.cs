@@ -57,6 +57,7 @@ public sealed partial class Database
     {
         SchemaVersion++;
         _virtualRows = new(StringComparer.Ordinal);
+        foreach (var t in Tables.Values) t.SourceCols = new();
         PlanCache.Clear();
         Runtimes.Clear();
     }
@@ -228,6 +229,7 @@ public sealed partial class Database
     internal void EnsureCatalogOwned()
     {
         _virtualRows = new(StringComparer.Ordinal);
+        foreach (var t in Tables.Values) t.SourceCols = new();
         if (!_catalogShared) return;
         foreach (var t in Tables.Values)
             if (!t.IsSystem) t.OwnDef();
