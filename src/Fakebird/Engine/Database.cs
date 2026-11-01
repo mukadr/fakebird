@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Fakebird.Types;
 
 namespace Fakebird.Engine;
@@ -36,6 +37,11 @@ public sealed partial class Database
     internal readonly Dictionary<string, object> PlanCache = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, Exec.TableRuntime> Runtimes = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, string> GlobalContext = new(StringComparer.Ordinal);
+    /// <summary>
+    /// Rows of the virtual RDB$ relations, computed on the first scan. They come only from the catalog, so a clone
+    /// shares its snapshot's until DDL (lookups such as "does this column exist" scan RDB$RELATION_FIELDS).
+    /// </summary>
+    ConcurrentDictionary<string, List<Value[]>> _virtualRows = new(StringComparer.Ordinal);
     /// <summary>Session time zone of new attachments (Firebird's DefaultTimeZone); null is the system's zone.</summary>
     public ushort? DefaultTimeZone;
     /// <summary>Character set of the text columns, domains and routine variables declared without one.</summary>
@@ -50,6 +56,7 @@ public sealed partial class Database
     internal void SchemaChanged()
     {
         SchemaVersion++;
+        _virtualRows = new(StringComparer.Ordinal);
         PlanCache.Clear();
         Runtimes.Clear();
     }
@@ -172,7 +179,7 @@ public sealed partial class Database
     public static Database FromSnapshot(Database snapshot, string name)
     {
         if (!snapshot.IsFrozen) throw new InvalidOperationException("Database is not a snapshot; call Snapshot() first.");
-        var d = new Database(name) { Origin = snapshot, _catalogShared = true };
+        var d = new Database(name) { Origin = snapshot, _catalogShared = true, _virtualRows = snapshot._virtualRows };
         snapshot.CopyCatalogInto(d, shareDefinitions: true);
         foreach (var (k, t) in snapshot.Tables)
         {
@@ -211,9 +218,15 @@ public sealed partial class Database
         d.ExceptionCounter = ExceptionCounter;
     }
 
-    /// <summary>Gives the database its own copy of the definitions it still shares with its snapshot.</summary>
+    internal List<Value[]> VirtualRows(Table t) => _virtualRows.GetOrAdd(t.Name, (_, db) => t.Virtual!(db), this);
+
+    /// <summary>
+    /// Gives the database its own copy of the definitions it still shares with its snapshot, and its own (empty)
+    /// cache of the RDB$ rows: called before any DDL changes the catalog.
+    /// </summary>
     internal void EnsureCatalogOwned()
     {
+        _virtualRows = new(StringComparer.Ordinal);
         if (!_catalogShared) return;
         foreach (var t in Tables.Values)
             if (!t.IsSystem) t.OwnDef();

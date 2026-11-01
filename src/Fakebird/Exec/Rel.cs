@@ -79,7 +79,7 @@ public sealed class TableScanRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
-        if (Table.Virtual != null) return new ListCursor(c, Stream, Table.Virtual(c.Db), Filter);
+        if (Table.Virtual != null) return new ListCursor(c, Stream, c.Db.VirtualRows(Table), Filter);
         return new Cursor(this, c);
     }
 

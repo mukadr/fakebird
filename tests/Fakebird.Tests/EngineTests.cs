@@ -190,4 +190,30 @@ public class EngineTests
             }
         }
     }
+
+    [Fact]
+    public void SystemRelationsFollowDdlOfEachClone()
+    {
+        const string fields = "select trim(rdb$field_name) from rdb$relation_fields where rdb$relation_name = 'T' order by rdb$field_position";
+        Exec("create table t (id int)");
+        Assert.Equal(["ID"], Rows(fields).Select(r => r[0]));
+        Exec("alter table t add v int");
+        Assert.Equal(["ID", "V"], Rows(fields).Select(r => r[0]));
+        _tx.Commit(retaining: true);
+        var snap = _db.Snapshot();
+        var a = Database.FromSnapshot(snap, "a");
+        var b = Database.FromSnapshot(snap, "b");
+        List<string?> Fields(Database db)
+        {
+            var tx = new Attachment(db).StartTransaction();
+            lock (db.Sync) return Executor.Execute(tx, fields).Rows!.Select(r => r[0].AsString).ToList();
+        }
+        Assert.Equal(["ID", "V"], Fields(a));
+        Assert.Equal(["ID", "V"], Fields(b));
+        var ta = new Attachment(a).StartTransaction();
+        lock (a.Sync) Executor.Execute(ta, "alter table t add w int");
+        Assert.Equal(["ID", "V", "W"], Fields(a));
+        Assert.Equal(["ID", "V"], Fields(b));
+        Assert.Equal(["ID", "V"], Fields(Database.FromSnapshot(snap, "c")));
+    }
 }
