@@ -28,6 +28,11 @@ public sealed partial class Database
     internal int ConstraintNameCounter, IndexNameCounter, GeneratorNameCounter, CheckTriggerCounter;
     internal int ExceptionCounter;
     internal int ExecDepth;
+    /// <summary>
+    /// Table definitions, constraints, domains and views are still <see cref="Origin"/>'s objects
+    /// (<see cref="FromSnapshot"/>): <see cref="EnsureCatalogOwned"/> copies them before DDL changes any.
+    /// </summary>
+    bool _catalogShared;
     internal readonly Dictionary<string, object> PlanCache = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, Exec.TableRuntime> Runtimes = new(StringComparer.Ordinal);
     internal readonly Dictionary<string, string> GlobalContext = new(StringComparer.Ordinal);
@@ -167,8 +172,8 @@ public sealed partial class Database
     public static Database FromSnapshot(Database snapshot, string name)
     {
         if (!snapshot.IsFrozen) throw new InvalidOperationException("Database is not a snapshot; call Snapshot() first.");
-        var d = new Database(name) { Origin = snapshot };
-        snapshot.CopyCatalogInto(d);
+        var d = new Database(name) { Origin = snapshot, _catalogShared = true };
+        snapshot.CopyCatalogInto(d, shareDefinitions: true);
         foreach (var (k, t) in snapshot.Tables)
         {
             if (t.IsSystem || t.IsGtt) continue;
@@ -185,25 +190,37 @@ public sealed partial class Database
         return d;
     }
 
-    void CopyCatalogInto(Database d)
+    void CopyCatalogInto(Database d, bool shareDefinitions = false)
     {
         d.DefaultCharset = DefaultCharset;
         foreach (var (k, t) in Tables)
-            if (!t.IsSystem) d.Tables[k] = t.CloneDef();
-        foreach (var (k, v) in Views) d.Views[k] = v.Clone();
+            if (!t.IsSystem) d.Tables[k] = shareDefinitions ? t.CloneSharingDef() : t.CloneDef();
+        foreach (var (k, v) in Views) d.Views[k] = shareDefinitions ? v : v.Clone();
         foreach (var (k, s) in Sequences) d.Sequences[k] = s.Clone();
-        foreach (var (k, x) in Domains) d.Domains[k] = x.Clone();
+        foreach (var (k, x) in Domains) d.Domains[k] = shareDefinitions ? x : x.Clone();
         foreach (var (k, p) in Procedures) d.Procedures[k] = p.CloneDef();
         foreach (var (k, f) in Functions) d.Functions[k] = f.CloneDef();
         foreach (var (k, t) in Triggers) d.Triggers[k] = t.CloneDef();
         foreach (var (k, e) in Exceptions) d.Exceptions[k] = e;
-        foreach (var (k, c) in Constraints) d.Constraints[k] = c.Clone();
+        foreach (var (k, c) in Constraints) d.Constraints[k] = shareDefinitions ? c : c.Clone();
         foreach (var (k, ix) in Indexes) d.Indexes[k] = ix.CloneDef();
         d.ConstraintNameCounter = ConstraintNameCounter;
         d.IndexNameCounter = IndexNameCounter;
         d.GeneratorNameCounter = GeneratorNameCounter;
         d.CheckTriggerCounter = CheckTriggerCounter;
         d.ExceptionCounter = ExceptionCounter;
+    }
+
+    /// <summary>Gives the database its own copy of the definitions it still shares with its snapshot.</summary>
+    internal void EnsureCatalogOwned()
+    {
+        if (!_catalogShared) return;
+        foreach (var t in Tables.Values)
+            if (!t.IsSystem) t.OwnDef();
+        foreach (var k in Views.Keys.ToList()) Views[k] = Views[k].Clone();
+        foreach (var k in Domains.Keys.ToList()) Domains[k] = Domains[k].Clone();
+        foreach (var k in Constraints.Keys.ToList()) Constraints[k] = Constraints[k].Clone();
+        _catalogShared = false;
     }
 
     /// <summary>Copy-on-write: gives the table private row slots and index maps before it is modified.</summary>

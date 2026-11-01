@@ -143,4 +143,51 @@ public class EngineTests
         var ts = new Attachment(Database.FromSnapshot(snap, "c")).StartTransaction();
         lock (ts.Db.Sync) Assert.Equal("a", Executor.Execute(ts, "select v from t").Rows![0][0].AsString);
     }
+
+    [Fact]
+    public void SnapshotClonesShareDefinitionsUntilDdl()
+    {
+        Exec("create table p (id int primary key)");
+        Exec("create table t (id int primary key, v varchar(10) default 'x', pid int references p(id), check (id > 0))");
+        Exec("create index t_v on t(v)");
+        Exec("insert into p values (1)");
+        _tx.Commit(retaining: true);
+        var snap = _db.Snapshot();
+        var a = Database.FromSnapshot(snap, "a");
+        var b = Database.FromSnapshot(snap, "b");
+        Assert.Same(a.Tables["T"].Columns, b.Tables["T"].Columns);
+        Assert.Same(a.Constraints[a.Tables["T"].ForeignKeys[0]], b.Constraints[b.Tables["T"].ForeignKeys[0]]);
+
+        var ta = new Attachment(a).StartTransaction();
+        void ExecA(string sql) { lock (a.Sync) Executor.Execute(ta, sql); }
+        ExecA("alter table t add w int");
+        ExecA("alter table t alter v set default 'y'");
+        ExecA("alter table t alter v to v2");
+        ExecA("comment on column t.id is 'changed'");
+        ExecA($"alter table t drop constraint {a.Tables["T"].ForeignKeys[0]}");
+        ExecA("drop index t_v");
+        ExecA("create index t_id_desc on t(id)");
+        ExecA("create trigger t_bi for t before insert as begin new.w = 7; end");
+        ExecA("insert into t (id) values (1)");
+        ta.Commit();
+        lock (a.Sync) Assert.Equal(["ID", "V2", "PID", "W"], a.Tables["T"].Columns.Select(c => c.Name));
+
+        foreach (var db in new[] { b, Database.FromSnapshot(snap, "c") })
+        {
+            var tx = new Attachment(db).StartTransaction();
+            lock (db.Sync)
+            {
+                var t = db.Tables["T"];
+                Assert.Equal(["ID", "V", "PID"], t.Columns.Select(c => c.Name));
+                Assert.Null(t.Columns[0].Description);
+                Assert.Single(t.ForeignKeys);
+                Assert.Contains("T_V", t.Indexes);
+                Assert.DoesNotContain("T_ID_DESC", t.Indexes);
+                Assert.Empty(t.Triggers);
+                Executor.Execute(tx, "insert into t (id) values (1)");
+                Assert.Equal("x", Executor.Execute(tx, "select v from t").Rows![0][0].AsString);
+                Assert.Equal(335544466, Assert.Throws<FbError>(() => Executor.Execute(tx, "insert into t (id, pid) values (2, 99)")).GdsCode);
+            }
+        }
+    }
 }

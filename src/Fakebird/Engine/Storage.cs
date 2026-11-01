@@ -271,6 +271,30 @@ public sealed class Table
         t.RebuildColumnIndex();
         return t;
     }
+
+    /// <summary>
+    /// A copy that shares the definition (columns and the constraint, index and trigger name lists) with this
+    /// table: only DDL changes them, and it calls <see cref="OwnDef"/> on every table first.
+    /// </summary>
+    internal Table CloneSharingDef() => new()
+    {
+        Name = Name, IsSystem = IsSystem, IsGtt = IsGtt, GttPreserveRows = GttPreserveRows, Virtual = Virtual, Description = Description,
+        PrimaryKey = PrimaryKey, Uniques = Uniques, ForeignKeys = ForeignKeys, Checks = Checks,
+        Indexes = Indexes, ReferencedBy = ReferencedBy, Triggers = Triggers, Columns = Columns, ColumnIndex = ColumnIndex,
+    };
+
+    /// <summary>Gives the table its own copy of a definition shared by <see cref="CloneSharingDef"/>.</summary>
+    internal void OwnDef()
+    {
+        Uniques = [.. Uniques];
+        ForeignKeys = [.. ForeignKeys];
+        Checks = [.. Checks];
+        Indexes = [.. Indexes];
+        ReferencedBy = [.. ReferencedBy];
+        Triggers = [.. Triggers];
+        Columns = Columns.ConvertAll(c => c.Clone());
+        ColumnIndex = new(ColumnIndex, StringComparer.Ordinal);
+    }
 }
 
 /// <summary>Signals that the current top-level statement must be restarted (READ CONSISTENCY update conflict).</summary>

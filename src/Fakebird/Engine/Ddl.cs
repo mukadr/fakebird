@@ -10,6 +10,7 @@ public static class Ddl
 {
     public static void Execute(Database db, Stmt stmt, Ctx c)
     {
+        db.EnsureCatalogOwned();
         try
         {
             Run(db, stmt, c);
