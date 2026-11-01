@@ -181,27 +181,28 @@ public sealed partial class Database
         if (!snapshot.IsFrozen) throw new InvalidOperationException("Database is not a snapshot; call Snapshot() first.");
         var d = new Database(name) { Origin = snapshot, _catalogShared = true, _virtualRows = snapshot._virtualRows };
         snapshot.CopyCatalogInto(d, shareDefinitions: true);
-        foreach (var (k, t) in snapshot.Tables)
-        {
-            if (t.IsSystem || t.IsGtt) continue;
-            var nt = d.Tables[k];
-            nt.Rows = t.Rows;
-            nt.Shared = true;
-        }
-        foreach (var (k, ix) in snapshot.Indexes)
-        {
-            var nix = d.Indexes[k];
-            nix.Map = ix.Map;
-            nix.Shared = true;
-        }
         return d;
     }
 
+    /// <summary>
+    /// Copies the catalog into a new database; <paramref name="shareDefinitions"/> (<see cref="FromSnapshot"/>)
+    /// also shares the definitions, the rows and the index maps with this snapshot.
+    /// </summary>
     void CopyCatalogInto(Database d, bool shareDefinitions = false)
     {
         d.DefaultCharset = DefaultCharset;
+        d.Tables.EnsureCapacity(Tables.Count);
+        d.Views.EnsureCapacity(Views.Count);
+        d.Sequences.EnsureCapacity(Sequences.Count);
+        d.Domains.EnsureCapacity(Domains.Count);
+        d.Procedures.EnsureCapacity(Procedures.Count);
+        d.Functions.EnsureCapacity(Functions.Count);
+        d.Triggers.EnsureCapacity(Triggers.Count);
+        d.Exceptions.EnsureCapacity(Exceptions.Count);
+        d.Constraints.EnsureCapacity(Constraints.Count);
+        d.Indexes.EnsureCapacity(Indexes.Count);
         foreach (var (k, t) in Tables)
-            if (!t.IsSystem) d.Tables[k] = shareDefinitions ? t.CloneSharingDef() : t.CloneDef();
+            if (!t.IsSystem) d.Tables[k] = shareDefinitions ? t.CloneSharingDef(t.IsGtt ? null : t.Rows) : t.CloneDef();
         foreach (var (k, v) in Views) d.Views[k] = shareDefinitions ? v : v.Clone();
         foreach (var (k, s) in Sequences) d.Sequences[k] = s.Clone();
         foreach (var (k, x) in Domains) d.Domains[k] = shareDefinitions ? x : x.Clone();
@@ -210,7 +211,7 @@ public sealed partial class Database
         foreach (var (k, t) in Triggers) d.Triggers[k] = t.CloneDef();
         foreach (var (k, e) in Exceptions) d.Exceptions[k] = e;
         foreach (var (k, c) in Constraints) d.Constraints[k] = shareDefinitions ? c : c.Clone();
-        foreach (var (k, ix) in Indexes) d.Indexes[k] = ix.CloneDef();
+        foreach (var (k, ix) in Indexes) d.Indexes[k] = shareDefinitions ? ix.CloneSharingMap() : ix.CloneDef();
         d.ConstraintNameCounter = ConstraintNameCounter;
         d.IndexNameCounter = IndexNameCounter;
         d.GeneratorNameCounter = GeneratorNameCounter;

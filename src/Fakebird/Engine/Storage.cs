@@ -132,6 +132,14 @@ public sealed class Index
         Constraint = Constraint, Collations = Collations, ExpressionSource = ExpressionSource, Description = Description,
     };
 
+    /// <summary>A copy that shares <see cref="Map"/> with this index (copy-on-write, <see cref="Shared"/>).</summary>
+    internal Index CloneSharingMap()
+    {
+        var ix = (Index)MemberwiseClone();
+        ix.Shared = true;
+        return ix;
+    }
+
     public IndexKey KeyOf(Value[] row)
     {
         var vals = new Value[Columns.Length];
@@ -274,14 +282,18 @@ public sealed class Table
 
     /// <summary>
     /// A copy that shares the definition (columns and the constraint, index and trigger name lists) with this
-    /// table: only DDL changes them, and it calls <see cref="OwnDef"/> on every table first.
+    /// table: only DDL changes them, and it calls <see cref="OwnDef"/> on every table first. With
+    /// <paramref name="sharedRows"/> the rows are shared too (copy-on-write); without, the copy has none.
     /// </summary>
-    internal Table CloneSharingDef() => new()
+    internal Table CloneSharingDef(List<RowSlot>? sharedRows)
     {
-        Name = Name, IsSystem = IsSystem, IsGtt = IsGtt, GttPreserveRows = GttPreserveRows, Virtual = Virtual, Description = Description,
-        PrimaryKey = PrimaryKey, Uniques = Uniques, ForeignKeys = ForeignKeys, Checks = Checks,
-        Indexes = Indexes, ReferencedBy = ReferencedBy, Triggers = Triggers, Columns = Columns, ColumnIndex = ColumnIndex,
-    };
+        // MemberwiseClone: the field initializers would allocate lists only to be replaced
+        var t = (Table)MemberwiseClone();
+        t.Rows = sharedRows ?? new();
+        t.Shared = sharedRows != null;
+        t.DeadRows = 0;
+        return t;
+    }
 
     /// <summary>Gives the table its own copy of a definition shared by <see cref="CloneSharingDef"/>.</summary>
     internal void OwnDef()

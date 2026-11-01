@@ -192,6 +192,23 @@ public class EngineTests
     }
 
     [Fact]
+    public void SnapshotClonesHaveTheirOwnGttRows()
+    {
+        Exec("create global temporary table g (id int) on commit preserve rows");
+        _tx.Commit(retaining: true);
+        var snap = _db.Snapshot();
+        var a = Database.FromSnapshot(snap, "a");
+        var b = Database.FromSnapshot(snap, "b");
+        Assert.NotSame(a.Tables["G"].Rows, b.Tables["G"].Rows);
+        var ta = new Attachment(a).StartTransaction();
+        lock (a.Sync) Executor.Execute(ta, "insert into g values (1)");
+        ta.Commit();
+        var tb = new Attachment(b).StartTransaction();
+        lock (b.Sync) Assert.Empty(Executor.Execute(tb, "select id from g").Rows!);
+        Assert.Empty(snap.Tables["G"].Rows);
+    }
+
+    [Fact]
     public void SystemRelationsFollowDdlOfEachClone()
     {
         const string fields = "select trim(rdb$field_name) from rdb$relation_fields where rdb$relation_name = 'T' order by rdb$field_position";
