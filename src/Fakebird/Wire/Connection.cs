@@ -26,6 +26,8 @@ internal sealed class Connection
     int _nextHandle = 1;
     int _lastStatement = InvalidObject;
     readonly Dictionary<int, Transaction> _txs = new();
+    /// <summary>Handles of the transactions that were active when the database was restored (see <see cref="Db"/>).</summary>
+    readonly HashSet<int> _restoredTxs = new();
     readonly Dictionary<int, StmtHandle> _stmts = new();
     readonly Dictionary<int, BlobHandle> _blobs = new();
     /// <summary>Blob contents by blob id (written by the client or materialized for fetched rows).</summary>
@@ -67,8 +69,12 @@ internal sealed class Connection
 
     int NewHandle()
     {
-        var h = _nextHandle++;
-        if (_nextHandle >= InvalidObject) _nextHandle = 1;
+        int h;
+        do
+        {
+            h = _nextHandle++;
+            if (_nextHandle >= InvalidObject) _nextHandle = 1;
+        } while (_restoredTxs.Contains(h));
         return h;
     }
 
@@ -251,16 +257,19 @@ internal sealed class Connection
     }
 
     /// <summary>
-    /// Handles databases restored/replaced under the same name: a connection without open transactions is
-    /// transparently re-attached to the current instance (pooled connections keep working after Restore).
+    /// Handles databases restored/replaced under the same name: the connection is transparently re-attached to the
+    /// current instance (pooled connections keep working after Restore). Its transactions belonged to the replaced
+    /// instance: a statement in one fails (<see cref="RestoredTx"/>), ending one succeeds. Refusing them for good
+    /// broke the connection for every later user: FirebirdClient returns it to the pool when the transaction of a
+    /// TransactionScope fails to end, and the pool hands it out again.
     /// </summary>
     Database Db()
     {
         RequireAttached();
         if (_entry!.Generation != _generation)
         {
-            if (_txs.Values.Any(t => t.Active))
-                throw Err.Random($"database {_entry.Name} was restored while this connection had active transactions");
+            foreach (var (h, tx) in _txs)
+                if (tx.Active) _restoredTxs.Add(h);
             lock (_att!.Db.Sync) _att.Detach();
             var db = _entry.Database;
             lock (db.Sync) _att = new Attachment(db) { User = _att.User, Role = _att.Role };
@@ -352,6 +361,7 @@ internal sealed class Connection
                     .Gds(Err.isc_random).Str("Fakebird: database '" + path + "' does not exist on this server").Build("08001");
             _entry = entry;
             _generation = entry.Generation;
+            _restoredTxs.Clear();
             _db = entry.Database;
             lock (_db.Sync)
                 _att = new Attachment(_db) { User = (user ?? "SYSDBA").ToUpperInvariant(), Role = role?.ToUpperInvariant() ?? "NONE" };
@@ -468,7 +478,11 @@ internal sealed class Connection
 
     Transaction Tx(int handle) => _txs.TryGetValue(handle, out var t) && t.Active
         ? t
-        : throw new StatusBuilder().Gds(335544332).Build("08003"); // bad_trans_handle
+        : _restoredTxs.Contains(handle)
+            ? throw RestoredTx()
+            : throw new StatusBuilder().Gds(335544332).Build("08003"); // bad_trans_handle
+
+    FbError RestoredTx() => Err.Random($"database {_entry!.Name} was restored while this transaction was active");
 
     void OpEndTx(bool commit, bool retain)
     {
@@ -476,6 +490,14 @@ internal sealed class Connection
         Guard(() =>
         {
             var db = Db();
+            // its work went with the replaced database: ending it has nothing left to do, and succeeds so that the
+            // client lets go of it (a failed commit leaves FirebirdClient using the handle, also from the pool)
+            if (_restoredTxs.Contains(h))
+            {
+                if (!retain) _restoredTxs.Remove(h);
+                Response();
+                return;
+            }
             var tx = Tx(h);
             lock (db.Sync)
             {
@@ -798,6 +820,7 @@ internal sealed class Connection
             {
                 var p = Executor.Prepare(db, sql);
                 if (p.ParamTypes.Length > 0) throw Err.Random("EXECUTE IMMEDIATE does not accept parameters");
+                if (_restoredTxs.Contains(txh)) throw RestoredTx();
                 if (txh == 0 || !_txs.ContainsKey(txh))
                 {
                     var tx = _att!.StartTransaction();

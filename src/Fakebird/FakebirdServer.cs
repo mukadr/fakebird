@@ -164,7 +164,7 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
     }
 
     /// <summary>Replaces the contents of a database with a fresh copy-on-write clone of the snapshot.
-    /// Pooled connections without open transactions are re-attached transparently.</summary>
+    /// Pooled connections are re-attached transparently; a transaction open on them runs no more statements.</summary>
     public void Restore(string name, DatabaseSnapshot snapshot)
     {
         // the clone is built outside the server lock: it only reads the frozen snapshot, and attaches to every
@@ -242,8 +242,8 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
 
     /// <summary>
     /// Loads a backup written by <see cref="Backup(Stream, IEnumerable{DatabaseSnapshot})"/>: each database in it
-    /// is created, or replaced like <see cref="Restore"/> does (pooled connections without open transactions are
-    /// re-attached). Databases not in the backup are left alone. Nothing changes if the backup cannot be read.
+    /// is created, or replaced like <see cref="Restore"/> does (pooled connections are re-attached). Databases not
+    /// in the backup are left alone. Nothing changes if the backup cannot be read.
     /// Returns the backup's snapshots, which the restored databases share storage with: create further databases
     /// from them rather than from new snapshots of the same data.
     /// </summary>

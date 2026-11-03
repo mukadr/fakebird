@@ -1,3 +1,4 @@
+using System.Transactions;
 using FirebirdSql.Data.FirebirdClient;
 
 namespace Fakebird.Tests;
@@ -413,5 +414,59 @@ public class SqlFeatureTests(ServerFixture fx)
         using var c2 = new FbConnection(clone.ConnectionString());
         c2.Open();
         Assert.Equal(3L, Scalar(c2, "select count(*) from dept"));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RestoreDuringATransactionScopeLeavesThePooledConnectionUsable(bool complete)
+    {
+        var name = "pooltx_" + Guid.NewGuid().ToString("N");
+        var db = fx.Server.CreateDatabase(name);
+        db.RunScript(Schema);
+        var snap = db.Snapshot();
+        // one connection: the next ones get the same attachment back from the pool
+        var cs = db.ConnectionString("MaxPoolSize=1");
+        using (var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+        {
+            using (var cn = new FbConnection(cs))
+            {
+                cn.Open();
+                Exec(cn, "delete from emp where boss_id is not null");
+            }
+            // the enlisted transaction ends with the scope, after the database it ran on was replaced
+            fx.Server.Restore(name, snap);
+            if (complete) scope.Complete();
+        }
+        for (var i = 0; i < 2; i++)
+        {
+            using var cn = new FbConnection(cs);
+            cn.Open();
+            Assert.Equal(6L, Scalar(cn, "select count(*) from emp"));
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TransactionsOfARestoredDatabaseRunNothingMore(bool commit)
+    {
+        var name = "pooltx_" + Guid.NewGuid().ToString("N");
+        var db = fx.Server.CreateDatabase(name);
+        db.RunScript(Schema);
+        var snap = db.Snapshot();
+        using var cn = new FbConnection(db.ConnectionString());
+        cn.Open();
+        var tx = cn.BeginTransaction();
+        using (var cmd = new FbCommand("delete from emp", cn, tx)) cmd.ExecuteNonQuery();
+        fx.Server.Restore(name, snap);
+        using (var cmd = new FbCommand("insert into dept values (99, 'tmp', 0)", cn, tx))
+            Assert.Contains("was restored", Assert.ThrowsAny<FbException>(() => cmd.ExecuteNonQuery()).Message);
+        // its work went with the replaced database, so ending it either way has nothing left to do
+        if (commit) tx.Commit();
+        else tx.Rollback();
+        Assert.Equal(6L, Scalar(cn, "select count(*) from emp"));
+        Assert.Equal(3L, Scalar(cn, "select count(*) from dept"));
     }
 }
