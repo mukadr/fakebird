@@ -20,6 +20,8 @@ public abstract class Prepared
     public int Version;
     /// <summary>A DML RETURNING cursor: the statement runs at execute, so its errors are not left for the fetch.</summary>
     public bool ReturningCursor;
+    /// <summary>The wire describe last built for this statement (Connection.SqlInfo).</summary>
+    internal object? Describe;
     public abstract ExecResult Execute(Ctx c);
 }
 

@@ -599,6 +599,11 @@ internal sealed class Connection
         });
     }
 
+    readonly InfoBuffer _info = new();
+
+    /// <summary>The describe of a prepared statement for the items a client asks for (the same every time).</summary>
+    sealed record Describe(byte[] Items, int BufLen, Charset Charset, byte[] Data);
+
     void OpInfoSql()
     {
         var sh = _xdr.ReadInt32();
@@ -613,10 +618,20 @@ internal sealed class Connection
         });
     }
 
-    byte[] SqlInfo(StmtHandle s, byte[] items, int bufLen)
+    ReadOnlySpan<byte> SqlInfo(StmtHandle s, byte[] items, int bufLen)
     {
         var p = s.Prepared!;
-        var b = new InfoBuffer();
+        // the plans outlive the tests (Restore keeps them): their describe is built once
+        if (p.Describe is Describe d && d.BufLen == bufLen && d.Charset == _charset && d.Items.AsSpan().SequenceEqual(items)) return d.Data;
+        var data = SqlInfo(p, s, items, bufLen, out var cacheable);
+        if (cacheable) p.Describe = new Describe(items, bufLen, _charset, data.ToArray());
+        return data;
+    }
+
+    ReadOnlySpan<byte> SqlInfo(Prepared p, StmtHandle s, byte[] items, int bufLen, out bool cacheable)
+    {
+        var b = _info.Clear();
+        cacheable = true;
         var i = 0;
         var startIndex = 0;
         while (i < items.Length)
@@ -656,7 +671,7 @@ internal sealed class Connection
                         {
                             b.Byte(Isc.info_truncated);
                             b.Byte(Isc.info_end);
-                            return b.ToArray();
+                            return b.Span;
                         }
                         var (type, nullable, field, relation, alias) = cols[k];
                         var bound = Described(type);
@@ -687,14 +702,15 @@ internal sealed class Connection
                     break;
                 case Isc.info_sql_records:
                 {
+                    // the counts of the last execution
+                    cacheable = false;
                     var r = s.Last ?? ExecResult.Empty;
-                    var inner = new InfoBuffer()
+                    b.Byte(item).Byte(4 * 7 + 1).Byte(0)
                         .Int(Isc.info_req_update_count, r.Updated)
                         .Int(Isc.info_req_delete_count, r.Deleted)
                         .Int(Isc.info_req_select_count, r.Selected)
                         .Int(Isc.info_req_insert_count, r.Inserted)
                         .Byte(Isc.info_end);
-                    b.Bytes(item, inner.ToArray());
                     break;
                 }
                 case Isc.info_sql_get_plan:
@@ -713,7 +729,7 @@ internal sealed class Connection
             }
         }
         b.Byte(Isc.info_end);
-        return b.ToArray();
+        return b.Span;
     }
 
     /// <summary>Re-prepares when the schema changed since prepare (or after a restore).</summary>
