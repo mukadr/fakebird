@@ -183,6 +183,71 @@ public sealed class IndexLookupRel : RelNode
     }
 }
 
+/// <summary>
+/// Equality lookup in an RDB$ table: its rows hashed by the compared columns, built on first use and kept with the
+/// rows (the database's cached RDB$ rows, shared by the clones of a snapshot and replaced after DDL).
+/// </summary>
+public sealed class SystemLookupRel : RelNode
+{
+    public readonly Table Table;
+    public readonly int Stream;
+    public readonly int[] Columns;
+    public readonly XNode[] Keys;
+    readonly SqlType[] _keyTypes;
+    readonly Collation[] _collations;
+    readonly string _mapName;
+    public XNode? Filter;
+
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<List<Value[]>,
+        System.Collections.Concurrent.ConcurrentDictionary<string, Dictionary<IndexKey, List<Value[]>>>> Maps = new();
+
+    public SystemLookupRel(Table table, int stream, int[] columns, XNode[] keys)
+    {
+        Table = table;
+        Stream = stream;
+        Columns = columns;
+        Keys = keys;
+        Streams = [stream];
+        _keyTypes = columns.Select(col => table.Columns[col].Type is { IsString: true } t ? t.WithLength(32765) : table.Columns[col].Type).ToArray();
+        _collations = columns.Select(col => table.Columns[col].Type.Collation).ToArray();
+        _mapName = string.Join(",", columns);
+    }
+
+    public override RowCursor Open(Ctx c)
+    {
+        var vals = new Value[Keys.Length];
+        for (var i = 0; i < Keys.Length; i++)
+        {
+            var v = Keys[i].Eval(c);
+            if (v.IsNull) return EmptyCursor.Instance;
+            vals[i] = Coercion.ToType(v, _keyTypes[i]);
+        }
+        var rows = c.Db.VirtualRows(Table);
+        var map = Maps.GetOrCreateValue(rows).GetOrAdd(_mapName, _ => Build(rows));
+        return map.TryGetValue(new IndexKey(vals, _collations), out var found) ? new ListCursor(c, Stream, found, Filter) : EmptyCursor.Instance;
+    }
+
+    Dictionary<IndexKey, List<Value[]>> Build(List<Value[]> rows)
+    {
+        var map = new Dictionary<IndexKey, List<Value[]>>();
+        foreach (var row in rows)
+        {
+            var vals = new Value[Columns.Length];
+            var hasNull = false;
+            for (var i = 0; i < vals.Length; i++)
+            {
+                vals[i] = row[Columns[i]];
+                if (vals[i].IsNull) hasNull = true;
+            }
+            if (hasNull) continue;
+            var key = new IndexKey(vals, _collations);
+            if (!map.TryGetValue(key, out var list)) map[key] = list = new();
+            list.Add(row);
+        }
+        return map;
+    }
+}
+
 /// <summary>Derived table / view / CTE reference: rows of a query positioned in a stream.</summary>
 public sealed class DerivedRel : RelNode
 {

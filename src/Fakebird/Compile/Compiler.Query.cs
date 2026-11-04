@@ -1353,6 +1353,18 @@ public sealed partial class Compiler
             access = new IndexLookupRel(table, st, best, keyNodes) { Filter = AndAll(rest.Select(c => c.Node).ToList()) };
             return acc == null ? access : new NestedLoopJoinRel(acc, access, false, null, []);
         }
+        // RDB$ tables have no indexes: the equalities on their columns (an app checking that a table or column
+        // exists, the client's metadata queries) look the rows up instead of scanning the whole catalog
+        if (table.Virtual != null && eq.Count > 0)
+        {
+            var cols = eq.Keys.Order().ToArray();
+            var keyNodes = cols.Select(col => eq[col].Other).ToArray();
+            foreach (var col in cols) eq[col].Conj.Used = true;
+            rest = applicable.Where(c => !c.Used).ToList();
+            foreach (var c in rest) c.Used = true;
+            access = new SystemLookupRel(table, st, cols, keyNodes) { Filter = AndAll(rest.Select(c => c.Node).ToList()) };
+            return acc == null ? access : new NestedLoopJoinRel(acc, access, false, null, []);
+        }
 
         // hash join on equi-conditions between this leaf and already joined streams of this query
         if (acc != null)

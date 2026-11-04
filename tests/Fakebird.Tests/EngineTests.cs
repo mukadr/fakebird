@@ -46,6 +46,33 @@ public class EngineTests
     }
 
     [Fact]
+    public void SystemTableEqualityLookups()
+    {
+        const string exists = """
+            select count(*) from rdb$relation_fields rf join rdb$relations r on r.rdb$relation_name = rf.rdb$relation_name
+            where r.rdb$relation_name = upper(?) and rf.rdb$field_name = upper(?)
+            """;
+        Assert.Equal(0L, Scalar(exists, "t", "name"));
+        Exec("create table t (id integer, name varchar(20))");
+        // the catalog changed: new RDB$ rows, new lookups
+        Assert.Equal(1L, Scalar(exists, "t", "name"));
+        Assert.Equal(0L, Scalar(exists, "t", "other"));
+        // CHAR(63) names compare without their blanks; a NULL key matches nothing
+        Assert.Equal(1L, Scalar("select count(*) from rdb$relations where rdb$relation_name = 'T  '"));
+        Assert.Equal(0L, Scalar("select count(*) from rdb$relations where rdb$relation_name = ?", (object?)null));
+        Assert.Equal<object?>(["ID", "NAME"], Rows("select trim(rdb$field_name) from rdb$relation_fields where rdb$relation_name = 'T' order by rdb$field_position").Select(r => r[0]));
+        // a clone shares the snapshot's RDB$ rows until its own DDL
+        var clone = Database.FromSnapshot(_db.Snapshot(), "clone");
+        var tx = new Attachment(clone).StartTransaction();
+        long Count(string sql) { lock (clone.Sync) return (long)Executor.Execute(tx, sql, []).Rows!.Single()[0].ToClr()!; }
+        const string cols = "select count(*) from rdb$relation_fields where rdb$relation_name = 'T'";
+        Assert.Equal(2L, Count(cols));
+        lock (clone.Sync) Executor.Execute(tx, "alter table t add extra integer", []);
+        Assert.Equal(3L, Count(cols));
+        Assert.Equal(2L, Scalar(cols));
+    }
+
+    [Fact]
     public void CreateInsertSelect()
     {
         Exec("create table t (id integer not null primary key, name varchar(20), amount numeric(10,2) default 0)");
