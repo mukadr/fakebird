@@ -1245,6 +1245,59 @@ public sealed partial class Compiler
         return Plan(tree, pool, bound, s);
     }
 
+    /// <summary>
+    /// Like Firebird's optimizer: from <c>a.x = b.y</c> and <c>b.y = v</c> adds <c>a.x = v</c>, so that both streams
+    /// can be looked up by v (<c>rf.relation_name = r.relation_name and r.relation_name = upper(?)</c> finds the one
+    /// RDB$RELATION_FIELDS row instead of every column with that name). Only where equality is transitive: the two
+    /// columns compare like v does (same kind of type and collation), and v is a value that evaluating once more
+    /// cannot change or fail (a constant, a parameter, an outer column, UPPER/LOWER/TRIM of those). The derived
+    /// conjunct is implied by the others, so it never changes the result.
+    /// </summary>
+    void DistributeEqualities(List<Conj> pool, Scope s)
+    {
+        bool Col(XNode n, out ColNode col)
+        {
+            col = (n as ColNode)!;
+            return col != null && s.Streams.Contains(col.Stream);
+        }
+        bool Value(XNode n) => n switch
+        {
+            ConstNode or ParamNode => true,
+            ColNode c => !s.Streams.Contains(c.Stream),
+            FuncNode { Name: "UPPER" or "LOWER" or "TRIM", Deterministic: true } f => f.Args.All(Value),
+            _ => false,
+        };
+        bool Same(SqlType a, SqlType b, Collation collation) => SameCategory(a, b)
+            && (!a.IsTextual || a.Collation == collation && b.Collation == collation);
+        for (var added = true; added;)
+        {
+            added = false;
+            var joins = pool.Where(c => c.Node is CmpNode { Op: CmpOp.Eq } j && Col(j.L, out _) && Col(j.R, out _)).ToList();
+            var values = pool.Where(c => c.Node is CmpNode { Op: CmpOp.Eq } v && (Col(v.L, out _) && Value(v.R) || Col(v.R, out _) && Value(v.L))).ToList();
+            foreach (var jc in joins)
+            {
+                var j = (CmpNode)jc.Node;
+                var (l, r) = ((ColNode)j.L, (ColNode)j.R);
+                if (l.Stream == r.Stream || !Same(l.Type, r.Type, j.Collation)) continue;
+                foreach (var vc in values)
+                {
+                    var v = (CmpNode)vc.Node;
+                    var (col, val) = v.L is ColNode c && Col(c, out _) && Value(v.R) ? (c, v.R) : ((ColNode)v.R, v.L);
+                    if (v.Collation != j.Collation || !SameCategory(col.Type, val.Type)) continue;
+                    ColNode? other = col.Stream == l.Stream && col.Index == l.Index ? r
+                        : col.Stream == r.Stream && col.Index == r.Index ? l : null;
+                    if (other == null) continue;
+                    if (pool.Any(x => x.Node is CmpNode { Op: CmpOp.Eq } e && (e.L is ColNode el && el.Stream == other.Stream && el.Index == other.Index && e.R == val
+                        || e.R is ColNode er && er.Stream == other.Stream && er.Index == other.Index && e.L == val))) continue;
+                    var streams = new HashSet<int>(vc.Streams) { other.Stream };
+                    streams.Remove(col.Stream);
+                    pool.Add(new Conj { Node = new CmpNode(CmpOp.Eq, other, val, v.Collation), Streams = streams });
+                    added = true;
+                }
+            }
+        }
+    }
+
     bool Ready(Conj c, HashSet<int> bound, Scope s, int extra = -1)
     {
         foreach (var st in c.Streams)
@@ -1256,6 +1309,7 @@ public sealed partial class Compiler
     {
         var operands = new List<JT>();
         Flatten(t, operands, pool);
+        DistributeEqualities(pool, s);
         RelNode? acc = null;
         var accStreams = new HashSet<int>(bound);
         foreach (var op in operands)

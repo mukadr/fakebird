@@ -499,3 +499,37 @@ with c as (select id from l) select id from l where id not in (select id from c)
 with c as (select id from x) select * from c
 -- @case
 with c as (select id from l), c as (select id from r) select * from c
+-- @case
+select l.id, r.id from l join r on l.k = r.k where r.k = 20 order by 1, 2
+-- @case params: [20]
+select l.id, r.id from l join r on l.k = r.k where r.k = ? order by 1, 2
+-- @case
+select l.id, r.id from l, r where l.k = r.k and r.k = 10 order by 1, 2
+-- @case
+select l.id, r.id, m.id from l join r on l.k = r.k join m on m.k = r.k where m.k = 10 order by 1, 2, 3
+-- @case
+select l.id, r.id from l left join r on l.k = r.k where r.k = 20 order by 1, 2
+-- @case
+select l.id, r.id from l left join r on l.k = r.k and r.k = 20 order by 1, 2
+-- @case
+select l.id, r.id from l left join r on l.k = r.k and l.k = 20 order by 1, 2
+-- @case
+select l.id, r.id from l right join r on l.k = r.k where l.k = 20 order by 1, 2
+-- @case
+select l.id, r.id from l join r on l.n = r.n where r.n = 1.5 order by 1, 2
+-- @case
+select l.id, r.id from l join r on l.n = r.n where r.n = 1.500 order by 1, 2
+-- @case
+select l.id, m.id from l join m on m.x = l.s where l.s = 'p' order by 1, 2
+-- @case
+select m.id, l.id from m join l on m.x = l.s where m.x = 'a ' order by 1, 2
+-- @case params: [null]
+select l.id, r.id from l join r on l.k = r.k where r.k = ? order by 1, 2
+-- @case
+select l.id, r.id from l join r on l.k = r.k where r.k = upper('20') order by 1, 2
+-- @case
+select l.id, r.id from l join r on l.s = r.t where upper(r.t) = 'X' order by 1, 2
+-- @case
+select l.id from l where exists (select 1 from r join m on m.k = r.k where r.k = l.k) order by 1
+-- @case
+select l.id, (select count(*) from r join m on m.k = r.k where r.k = l.k) from l order by 1

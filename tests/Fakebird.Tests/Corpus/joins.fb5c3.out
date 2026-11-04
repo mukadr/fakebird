@@ -2000,3 +2000,101 @@ SQL error code = -204
 alias C conflicts with an alias in the same statement
 SQL warning code = -104
 CTE "C" is not used in query
+--- select l.id, r.id from l join r on l.k = r.k where r.k = 20 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l join r on l.k = r.k where r.k = ? order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l, r where l.k = r.k and r.k = 10 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+affected 0
+--- select l.id, r.id, m.id from l join r on l.k = r.k join m on m.k = r.k where m.k = 10 order by 1, 2, 3
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+ID:INTEGER (4,,,False,M,ID,False,False)
+1 | 1 | 1 | 
+1 | 1 | 3 | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k where r.k = 20 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k and r.k = 20 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l left join r on l.k = r.k and l.k = 20 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,True,R,ID,False,False)
+1 | NULL | 
+2 | 5 | 
+3 | NULL | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l right join r on l.k = r.k where l.k = 20 order by 1, 2
+ID:INTEGER (4,,,True,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l join r on l.n = r.n where r.n = 1.5 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+affected 0
+--- select l.id, r.id from l join r on l.n = r.n where r.n = 1.500 order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+1 | 1 | 
+affected 0
+--- select l.id, m.id from l join m on m.x = l.s where l.s = 'p' order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,M,ID,False,False)
+affected 0
+--- select m.id, l.id from m join l on m.x = l.s where m.x = 'a ' order by 1, 2
+ID:INTEGER (4,,,False,M,ID,False,False)
+ID:INTEGER (4,,,False,L,ID,False,False)
+affected 0
+--- select l.id, r.id from l join r on l.k = r.k where r.k = ? order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id, r.id from l join r on l.k = r.k where r.k = upper('20') order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+2 | 5 | 
+4 | 5 | 
+affected 0
+--- select l.id, r.id from l join r on l.s = r.t where upper(r.t) = 'X' order by 1, 2
+ID:INTEGER (4,,,False,L,ID,False,False)
+ID:INTEGER (4,,,False,R,ID,False,False)
+affected 0
+--- select l.id from l where exists (select 1 from r join m on m.k = r.k where r.k = l.k) order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+1 | 
+2 | 
+4 | 
+affected 0
+--- select l.id, (select count(*) from r join m on m.k = r.k where r.k = l.k) from l order by 1
+ID:INTEGER (4,,,False,L,ID,True,False)
+COUNT:BIGINT (8,,,True,,COUNT,False,False)
+1 | 2 | 
+2 | 1 | 
+3 | 0 | 
+4 | 1 | 
+affected 0

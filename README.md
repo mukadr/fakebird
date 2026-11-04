@@ -75,6 +75,8 @@ those rather than from a new snapshot of the same data, or that data is held twi
 * No disk I/O; rows are immutable `Value[]` arrays, values are unboxed structs.
 * Statements are compiled once into node trees and cached per database (`SQL text → plan`).
 * Equality predicates use hash indexes (PK/UK/FK/user indexes); joins use index lookups or hash joins.
+* Equalities are distributed like Firebird's optimizer does: `a.x = b.y and b.y = ?` also looks `a` up by
+  the parameter (when the columns compare alike, so the derived condition is implied).
 * Aggregates without GROUP BY (`count(*)`, `sum(...)`) read their input once without keeping its rows.
 * Equalities on RDB$ tables (an app checking that a table or column exists, the client's metadata
   queries) look the rows up in hashes built once per catalog, shared by the clones of a snapshot.
