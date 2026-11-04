@@ -307,6 +307,13 @@ public static class Builtins
             if (chars.Length == 0) return S(s);
             // one substring at the end: trimming a CHAR(63) name one space at a time made ~60 strings
             int from = 0, to = s.Length;
+            if (chars.Length == 1)
+            {
+                // the usual blank: a vectorized search for the first and last other character
+                if (spec is "BOTH" or "TRAILING") to = s.AsSpan().LastIndexOfAnyExcept(chars[0]) + 1;
+                if (spec is "BOTH" or "LEADING") from = to == 0 ? 0 : s.AsSpan(0, to).IndexOfAnyExcept(chars[0]) is var i and >= 0 ? i : to;
+                return S(from == 0 && to == s.Length ? s : s[from..to]);
+            }
             if (spec is "BOTH" or "LEADING")
                 while (to - from >= chars.Length && s.AsSpan(from, chars.Length).SequenceEqual(chars)) from += chars.Length;
             if (spec is "BOTH" or "TRAILING")
