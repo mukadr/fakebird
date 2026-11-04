@@ -212,7 +212,9 @@ public sealed partial class Database
         foreach (var (k, t) in Triggers) d.Triggers[k] = t.CloneDef();
         foreach (var (k, e) in Exceptions) d.Exceptions[k] = e;
         foreach (var (k, c) in Constraints) d.Constraints[k] = shareDefinitions ? c : c.Clone();
-        foreach (var (k, ix) in Indexes) d.Indexes[k] = shareDefinitions ? ix.CloneSharingMap() : ix.CloneDef();
+        // a GTT's rows are each clone's own (never Shared): its index maps must be too
+        foreach (var (k, ix) in Indexes)
+            d.Indexes[k] = shareDefinitions && !(Tables.TryGetValue(ix.Table, out var it) && it.IsGtt) ? ix.CloneSharingMap() : ix.CloneDef();
         d.ConstraintNameCounter = ConstraintNameCounter;
         d.IndexNameCounter = IndexNameCounter;
         d.GeneratorNameCounter = GeneratorNameCounter;

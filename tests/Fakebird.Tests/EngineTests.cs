@@ -240,6 +240,24 @@ public class EngineTests
     }
 
     [Fact]
+    public void SnapshotClonesHaveTheirOwnGttIndexes()
+    {
+        Exec("create global temporary table g (id int not null primary key) on commit preserve rows");
+        _tx.Commit(retaining: true);
+        var snap = _db.Snapshot();
+        var a = Database.FromSnapshot(snap, "a");
+        var ta = new Attachment(a).StartTransaction();
+        lock (a.Sync) Executor.Execute(ta, "insert into g values (1)");
+        ta.Commit();
+        // the clones' rows never reach the snapshot's index (which every other clone shares)
+        Assert.All(snap.Indexes.Values.Where(ix => ix.Table == "G"), ix => Assert.Empty(ix.Map));
+        var b = Database.FromSnapshot(snap, "b");
+        var tb = new Attachment(b).StartTransaction();
+        lock (b.Sync) Executor.Execute(tb, "insert into g values (1)");
+        lock (b.Sync) Assert.Single(Executor.Execute(tb, "select id from g where id = 1").Rows!);
+    }
+
+    [Fact]
     public void SystemRelationsFollowDdlOfEachClone()
     {
         const string fields = "select trim(rdb$field_name) from rdb$relation_fields where rdb$relation_name = 'T' order by rdb$field_position";
