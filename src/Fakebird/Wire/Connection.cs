@@ -269,7 +269,7 @@ internal sealed class Connection
         if (_entry!.Generation != _generation)
         {
             foreach (var (h, tx) in _txs)
-                if (tx.Active) _restoredTxs.Add(h);
+                if (tx.Active || tx.EndedByRestore) _restoredTxs.Add(h);
             lock (_att!.Db.Sync) _att.Detach();
             var db = _entry.Database;
             lock (db.Sync) _att = new Attachment(db) { User = _att.User, Role = _att.Role };
@@ -478,9 +478,12 @@ internal sealed class Connection
 
     Transaction Tx(int handle) => _txs.TryGetValue(handle, out var t) && t.Active
         ? t
-        : _restoredTxs.Contains(handle)
+        : Restored(handle)
             ? throw RestoredTx()
             : throw new StatusBuilder().Gds(335544332).Build("08003"); // bad_trans_handle
+
+    /// <summary>A transaction of the data before a restore (also one reset in place before this connection noticed).</summary>
+    bool Restored(int handle) => _restoredTxs.Contains(handle) || _txs.TryGetValue(handle, out var t) && t.EndedByRestore;
 
     FbError RestoredTx() => Err.Random($"database {_entry!.Name} was restored while this transaction was active");
 
@@ -492,9 +495,13 @@ internal sealed class Connection
             var db = Db();
             // its work went with the replaced database: ending it has nothing left to do, and succeeds so that the
             // client lets go of it (a failed commit leaves FirebirdClient using the handle, also from the pool)
-            if (_restoredTxs.Contains(h))
+            if (Restored(h))
             {
-                if (!retain) _restoredTxs.Remove(h);
+                if (!retain)
+                {
+                    _restoredTxs.Remove(h);
+                    _txs.Remove(h);
+                }
                 Response();
                 return;
             }
@@ -820,7 +827,7 @@ internal sealed class Connection
             {
                 var p = Executor.Prepare(db, sql);
                 if (p.ParamTypes.Length > 0) throw Err.Random("EXECUTE IMMEDIATE does not accept parameters");
-                if (_restoredTxs.Contains(txh)) throw RestoredTx();
+                if (Restored(txh)) throw RestoredTx();
                 if (txh == 0 || !_txs.ContainsKey(txh))
                 {
                     var tx = _att!.StartTransaction();

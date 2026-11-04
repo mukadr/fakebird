@@ -241,10 +241,18 @@ public sealed partial class Database
         _catalogShared = false;
     }
 
+    /// <summary>Tables written since the database was cloned or last reset (<see cref="ResetTo"/>).</summary>
+    readonly List<Table> _written = new();
+
     /// <summary>Copy-on-write: gives the table private row slots and index maps before it is modified.</summary>
     internal void EnsureOwned(Table t)
     {
         if (IsFrozen) throw Err.Random("snapshot databases are read-only");
+        if (!t.Written)
+        {
+            t.Written = true;
+            _written.Add(t);
+        }
         if (!t.Shared) return;
         var rows = new List<RowSlot>(t.Rows.Count + 16);
         // version objects are copied too, so in-place DDL rewrites never touch the snapshot
@@ -258,6 +266,55 @@ public sealed partial class Database
         t.Rows = rows;
         t.Shared = false;
         foreach (var ix in t.Indexes) Indexes[ix].Rebuild(rows);
+    }
+
+    (Sequence Live, Sequence Snapshot)[]? _sequences;
+
+    /// <summary>
+    /// Puts a clone of <paramref name="snapshot"/> back to the snapshot's state in place, when its catalog is still
+    /// the snapshot's (no DDL ran): the tables written get the snapshot's rows and index maps again, the sequences
+    /// its values, and the open transactions end. The plans, table runtimes and compiled routines stay valid, so
+    /// the next test does not compile again what the previous one did. False when a new clone is needed instead.
+    /// </summary>
+    internal bool ResetTo(Database snapshot)
+    {
+        // the default character set types the routines' variables: changed, they compile differently
+        if (Origin != snapshot || !_catalogShared || ExecDepth > 0 || DefaultCharset != snapshot.DefaultCharset) return false;
+        foreach (var tx in ActiveTransactions.ToArray()) tx.EndByRestore();
+        ActiveTransactions.Clear();
+        Monitor.PulseAll(Sync);
+        foreach (var t in _written)
+        {
+            t.Written = false;
+            t.DeadRows = 0;
+            var st = snapshot.Tables[t.Name];
+            if (t.IsGtt) t.Rows = new();
+            else
+            {
+                t.Rows = st.Rows;
+                t.Shared = true;
+            }
+            foreach (var name in t.Indexes)
+            {
+                var ix = Indexes[name];
+                if (t.IsGtt) ix.Map = new();
+                else
+                {
+                    ix.Map = snapshot.Indexes[name].Map;
+                    ix.Shared = true;
+                }
+            }
+        }
+        _written.Clear();
+        _sequences ??= Sequences.Select(kv => (kv.Value, snapshot.Sequences[kv.Key])).ToArray();
+        foreach (var (live, snap) in _sequences)
+        {
+            live.Value = snap.Value;
+            live.Increment = snap.Increment;
+            live.InitialValue = snap.InitialValue;
+        }
+        GlobalContext.Clear();
+        return true;
     }
 
     /// <summary>Physically removes dead slots. Only called when no statement is running.</summary>
@@ -567,6 +624,20 @@ public sealed class Transaction
             foreach (var ix in t.Indexes) Db.Indexes[ix].Rebuild(t.Rows);
         }
         GttTouched = null;
+    }
+
+    /// <summary>Ended by <see cref="Database.ResetTo"/>: its work went with the data it was reset from.</summary>
+    public bool EndedByRestore { get; private set; }
+
+    internal void EndByRestore()
+    {
+        Active = false;
+        EndedByRestore = true;
+        Undo.Clear();
+        Savepoints = null;
+        GttTouched = null;
+        DeferredRefChecks = null;
+        Att.Transactions.Remove(this);
     }
 
     void End()

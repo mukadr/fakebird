@@ -416,6 +416,62 @@ public class SqlFeatureTests(ServerFixture fx)
         Assert.Equal(3L, Scalar(c2, "select count(*) from dept"));
     }
 
+    [Fact]
+    public void RestoreOfAnUnchangedCatalogResetsTheDataInPlace()
+    {
+        var name = "reset_" + Guid.NewGuid().ToString("N");
+        var template = fx.Server.CreateDatabase(name + "_t");
+        template.RunScript(Schema + """
+            create sequence s;
+            create global temporary table g (id integer not null primary key) on commit preserve rows;
+            """);
+        template.RunScript("select next value for s from rdb$database;");
+        var snap = template.Snapshot();
+        var db = fx.Server.CreateDatabase(name, snap);
+        var other = fx.Server.CreateDatabase(name + "_o", snap);
+        var engine = fx.Server.Engine(name);
+        using var cn = new FbConnection(db.ConnectionString());
+        cn.Open();
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal(6L, Scalar(cn, "select count(*) from emp"));
+            Assert.Equal("Alice", Scalar(cn, "select name from emp where id = 1"));
+            Assert.Equal(2L, Scalar(cn, "select next value for s from rdb$database"));
+            Assert.Equal(0L, Scalar(cn, "select count(*) from g"));
+            Assert.Null(Scalar(cn, "select rdb$get_context('USER_SESSION', 'K') from rdb$database"));
+            Exec(cn, "update emp set name = 'Changed' where id = 1");
+            Exec(cn, "delete from emp where id = 2");
+            Exec(cn, "insert into dept values (99, 'tmp', 0)");
+            Exec(cn, "insert into g values (1)");
+            Exec(cn, "select rdb$set_context('USER_SESSION', 'K', 'v') from rdb$database");
+            // an open transaction ends with the reset
+            var tx = cn.BeginTransaction();
+            using (var cmd = new FbCommand("delete from dept where id = 3", cn, tx)) cmd.ExecuteNonQuery();
+            var plans = engine.PlanCache.Count;
+            fx.Server.Restore(name, snap);
+            // the same database: the compiled statements are kept
+            Assert.Same(engine, fx.Server.Engine(name));
+            Assert.Equal(plans, engine.PlanCache.Count);
+            using (var cmd = new FbCommand("select count(*) from dept", cn, tx))
+                Assert.Contains("was restored", Assert.ThrowsAny<FbException>(() => cmd.ExecuteScalar()).Message);
+            tx.Rollback();
+            Assert.Equal(3L, Scalar(cn, "select count(*) from dept"));
+            Assert.Equal(0L, Scalar(cn, "select count(*) from dept where id = 99"));
+            // the index maps are the snapshot's again
+            Assert.Equal(7000m, Scalar(cn, "select salary from emp where name = 'Bob'"));
+        }
+        // DDL: a new clone instead
+        Exec(cn, "alter table dept add extra integer");
+        fx.Server.Restore(name, snap);
+        Assert.NotSame(engine, fx.Server.Engine(name));
+        Assert.Equal(3L, Scalar(cn, "select count(*) from rdb$relation_fields where rdb$relation_name = 'DEPT'"));
+        // the other clone of the snapshot never saw any of it
+        using var c2 = new FbConnection(other.ConnectionString());
+        c2.Open();
+        Assert.Equal(6L, Scalar(c2, "select count(*) from emp"));
+        Assert.Equal(2L, Scalar(c2, "select next value for s from rdb$database"));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

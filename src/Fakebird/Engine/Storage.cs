@@ -241,6 +241,8 @@ public sealed class Table
     public List<RowSlot> Rows = new();
     /// <summary>Rows (and the table's index maps) are shared with a frozen snapshot: copy before writing.</summary>
     internal bool Shared;
+    /// <summary>Written since the database was cloned or reset: listed for <see cref="Database.ResetTo"/>.</summary>
+    internal bool Written;
     public int DeadRows;
     public bool IsSystem;
     public bool IsGtt;
@@ -294,6 +296,7 @@ public sealed class Table
         t.Rows = sharedRows ?? new();
         t.Shared = sharedRows != null;
         t.DeadRows = 0;
+        t.Written = false;
         return t;
     }
 

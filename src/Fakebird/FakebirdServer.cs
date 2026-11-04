@@ -205,10 +205,21 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
         return new FakeDatabase(this, name);
     }
 
-    /// <summary>Replaces the contents of a database with a fresh copy-on-write clone of the snapshot.
-    /// Pooled connections are re-attached transparently; a transaction open on them runs no more statements.</summary>
+    /// <summary>Replaces the contents of a database with a fresh copy-on-write clone of the snapshot (a clone of it
+    /// with no DDL since is reset in place, keeping its compiled statements). Pooled connections are re-attached
+    /// transparently; a transaction open on them runs no more statements.</summary>
     public void Restore(string name, DatabaseSnapshot snapshot)
     {
+        DbEntry? live;
+        lock (_dbs) _dbs.TryGetValue(name, out live);
+        if (live?.Database is { } current)
+            lock (current.Sync)
+                if (current.ResetTo(snapshot.Frozen))
+                {
+                    // the connections re-attach as to a new instance (see Connection.Db)
+                    lock (_dbs) live.Generation++;
+                    return;
+                }
         // the clone is built outside the server lock: it only reads the frozen snapshot, and attaches to every
         // other database would wait on it
         var fresh = Database.FromSnapshot(snapshot.Frozen, name);
