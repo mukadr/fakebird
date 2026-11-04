@@ -125,3 +125,16 @@ using (var cn = new FbConnection(server.GetDatabase("t999").ConnectionString()))
     }
     Console.WriteLine($"2000 trivial queries: {sw.ElapsedMilliseconds} ms");
 }
+using (var cn = new FbConnection(server.GetDatabase("t998").ConnectionString()))
+{
+    cn.Open();
+    sw.Restart();
+    for (var i = 0; i < 200; i++)
+    {
+        // the client describes every column with a query over RDB$RELATION_FIELDS, RDB$FIELDS and the constraints
+        using var cmd = new FbCommand("select * from orders where id = 1", cn);
+        using var r = cmd.ExecuteReader();
+        r.GetSchemaTable();
+    }
+    Console.WriteLine($"200 GetSchemaTable of a 4-column table: {sw.ElapsedMilliseconds} ms");
+}
