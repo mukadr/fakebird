@@ -87,6 +87,8 @@ those rather than from a new snapshot of the same data, or that data is held twi
 * `Restore` of a clone whose catalog is unchanged (no DDL) resets it in place: only the tables the
   test wrote get the snapshot's rows back, and the compiled statements, procedures and triggers are kept,
   so the next test doesn't compile them again. After DDL it builds a new clone.
+* A snapshot of a clone with no DDL (a test class's seeded state) shares the definitions and the RDB$ rows
+  of the snapshot the clone came from instead of copying the catalog.
 
 ## What is supported
 

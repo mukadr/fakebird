@@ -240,6 +240,32 @@ public class EngineTests
     }
 
     [Fact]
+    public void SnapshotsOfAnUnchangedCloneShareTheCatalog()
+    {
+        Exec("create table t (id int not null primary key, v int)");
+        Exec("insert into t values (1, 1)");
+        _tx.Commit(retaining: true);
+        var snap = _db.Snapshot();
+        var clone = Database.FromSnapshot(snap, "c");
+        var tx = new Attachment(clone).StartTransaction();
+        lock (clone.Sync) Executor.Execute(tx, "insert into t values (2, 2)");
+        tx.Commit();
+        var seeded = clone.Snapshot();
+        Assert.Same(snap.Tables["T"].Columns, seeded.Tables["T"].Columns);
+        Assert.Single(snap.Tables["T"].Rows);
+        var c2 = Database.FromSnapshot(seeded, "c2");
+        var tx2 = new Attachment(c2).StartTransaction();
+        lock (c2.Sync) Assert.Equal(2, Executor.Execute(tx2, "select id from t where id in (1, 2)").Rows!.Count);
+        lock (c2.Sync) Assert.Single(Executor.Execute(tx2, "select id from t where id = 2").Rows!);
+        // after DDL the clone's snapshot has its own definitions
+        lock (c2.Sync) Executor.Execute(tx2, "alter table t add w int");
+        tx2.Commit();
+        var altered = c2.Snapshot();
+        Assert.Equal(3, altered.Tables["T"].Columns.Count);
+        Assert.Equal(2, snap.Tables["T"].Columns.Count);
+    }
+
+    [Fact]
     public void SnapshotClonesHaveTheirOwnGttIndexes()
     {
         Exec("create global temporary table g (id int not null primary key) on commit preserve rows");

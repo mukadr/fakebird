@@ -121,8 +121,12 @@ public sealed partial class Database
     {
         lock (Sync)
         {
-            var d = new Database(Name + "$snapshot") { Origin = Origin };
-            CopyCatalogInto(d);
+            // a clone whose catalog is still its origin's (no DDL): the snapshot shares the definitions, and the RDB$
+            // rows built from them, instead of copying the whole catalog
+            var sameCatalog = _catalogShared && Origin != null && DefaultCharset == Origin.DefaultCharset;
+            var d = new Database(Name + "$snapshot") { Origin = Origin, _catalogShared = sameCatalog };
+            CopyCatalogInto(d, shareDefinitions: sameCatalog);
+            if (sameCatalog) d._virtualRows = _virtualRows;
             foreach (var (k, t) in Tables)
             {
                 if (t.IsSystem) continue;
@@ -143,6 +147,7 @@ public sealed partial class Database
                     rows.Add(new RowSlot { Key = slot.Key, Committed = new RowVersion { Data = data, Seq = 0 }, Frozen = true });
                 }
                 nt.Rows = rows;
+                nt.Shared = false;
             }
             foreach (var (k, ix) in d.Indexes)
             {
