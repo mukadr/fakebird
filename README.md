@@ -77,6 +77,8 @@ those rather than from a new snapshot of the same data, or that data is held twi
 * Equality predicates use hash indexes (PK/UK/FK/user indexes); joins use index lookups or hash joins.
 * Equalities on RDB$ tables (an app checking that a table or column exists, the client's metadata
   queries) look the rows up in hashes built once per catalog, shared by the clones of a snapshot.
+* A connection's thread is kept for the next connection when it ends: tests open and close connections
+  all the time, and starting a thread costs more than most statements.
 * **Copy-on-write snapshots**: a database created from a snapshot shares row storage and index
   maps; a table is copied only when a test first writes to it. Read-only tables are never copied.
 

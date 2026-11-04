@@ -36,7 +36,10 @@ public static class TimeZones
         }
     }
 
-    static Dictionary<string, ushort> BuildIds()
+    /// <summary>Back to the system zone: the thread starts serving another connection.</summary>
+    public static void ResetSession() => _hasSession = false;
+
+        static Dictionary<string, ushort> BuildIds()
     {
         var d = new Dictionary<string, ushort>(StringComparer.OrdinalIgnoreCase);
         for (var i = 0; i < TimeZoneList.Names.Length; i++) d.TryAdd(TimeZoneList.Names[i], (ushort)(Gmt - i));

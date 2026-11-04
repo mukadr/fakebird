@@ -96,12 +96,54 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
             }
             socket.NoDelay = true;
             lock (_clients) _clients.Add(socket);
-            var t = new Thread(() =>
+            Hand(socket);
+        }
+    }
+
+    // Connection threads: one per connection, kept for the next one when it ends (tests open and close connections
+    // all the time, and starting a thread costs more than most statements)
+    readonly object _workGate = new();
+    readonly Queue<Socket> _work = new();
+    int _idleWorkers;
+    static readonly TimeSpan WorkerIdleTime = TimeSpan.FromSeconds(30);
+
+    void Hand(Socket socket)
+    {
+        lock (_workGate)
+        {
+            _work.Enqueue(socket);
+            if (_work.Count <= _idleWorkers)
             {
-                try { new Connection(this, socket).Run(); }
-                finally { lock (_clients) _clients.Remove(socket); }
-            }) { IsBackground = true, Name = "fakebird-conn" };
-            t.Start();
+                Monitor.Pulse(_workGate);
+                return;
+            }
+        }
+        new Thread(Work) { IsBackground = true, Name = "fakebird-conn" }.Start();
+    }
+
+    void Work()
+    {
+        while (true)
+        {
+            Socket socket;
+            lock (_workGate)
+            {
+                _idleWorkers++;
+                while (_work.Count == 0)
+                {
+                    // a pulse that raced the timeout leaves its socket queued: whoever is awake takes it
+                    if ((!Monitor.Wait(_workGate, WorkerIdleTime) || _disposed) && _work.Count == 0)
+                    {
+                        _idleWorkers--;
+                        return;
+                    }
+                }
+                _idleWorkers--;
+                socket = _work.Dequeue();
+            }
+            TimeZones.ResetSession();
+            try { new Connection(this, socket).Run(); }
+            finally { lock (_clients) _clients.Remove(socket); }
         }
     }
 
@@ -317,6 +359,7 @@ public sealed class FakebirdServer : IDisposable, IAsyncDisposable
                 try { s.Dispose(); } catch { /* ignored */ }
             _clients.Clear();
         }
+        lock (_workGate) Monitor.PulseAll(_workGate);
     }
 
     public ValueTask DisposeAsync()
