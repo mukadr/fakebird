@@ -122,9 +122,9 @@ public sealed partial class Database
         lock (Sync)
         {
             // a clone whose catalog is still its origin's (no DDL): the snapshot shares the definitions, and the RDB$
-            // rows built from them, instead of copying the whole catalog
+            // rows built from them, instead of copying the whole catalog; Restore can reset clones of the origin to it
             var sameCatalog = _catalogShared && Origin != null && DefaultCharset == Origin.DefaultCharset;
-            var d = new Database(Name + "$snapshot") { Origin = Origin, _catalogShared = sameCatalog };
+            var d = new Database(Name + "$snapshot") { Origin = Origin, CatalogOfOrigin = sameCatalog, _catalogShared = sameCatalog };
             CopyCatalogInto(d, shareDefinitions: sameCatalog);
             if (sameCatalog) d._virtualRows = _virtualRows;
             foreach (var (k, t) in Tables)
@@ -275,46 +275,50 @@ public sealed partial class Database
         foreach (var ix in t.Indexes) Indexes[ix].Rebuild(rows);
     }
 
-    (Sequence Live, Sequence Snapshot)[]? _sequences;
+    /// <summary>
+    /// A snapshot frozen from a clone of <see cref="Origin"/> that had no DDL: its definitions are the origin's, so
+    /// the origin's other clones can be reset to it in place (<see cref="ResetTo"/>).
+    /// </summary>
+    internal bool CatalogOfOrigin;
+    string[]? _differsFromOrigin;
+
+    /// <summary>The tables whose rows are not the origin's (those its source wrote before it was frozen).</summary>
+    string[] DiffersFromOrigin => _differsFromOrigin ??= Tables
+        .Where(kv => !kv.Value.IsSystem && !kv.Value.IsGtt && !ReferenceEquals(kv.Value.Rows, Origin!.Tables[kv.Key].Rows))
+        .Select(kv => kv.Key).ToArray();
+
+    (Database Snapshot, (Sequence Live, Sequence Snapshot)[] Pairs)? _sequences;
 
     /// <summary>
-    /// Puts a clone of <paramref name="snapshot"/> back to the snapshot's state in place, when its catalog is still
-    /// the snapshot's (no DDL ran): the tables written get the snapshot's rows and index maps again, the sequences
-    /// its values, and the open transactions end. The plans, table runtimes and compiled routines stay valid, so
-    /// the next test does not compile again what the previous one did. False when a new clone is needed instead.
+    /// Puts a clone back to <paramref name="snapshot"/>'s state in place, when its catalog is still its origin's (no
+    /// DDL ran) and the snapshot is that origin or was frozen from a clone of it without DDL (a test class's seeded
+    /// state): the tables written, and the ones the snapshot has different rows in, get the snapshot's rows and index
+    /// maps; the sequences get its values; the open transactions end. The plans, table runtimes and compiled
+    /// routines stay valid, so the next test does not compile again what the previous one did. False when a new
+    /// clone is needed instead.
     /// </summary>
     internal bool ResetTo(Database snapshot)
     {
+        var reachable = Origin != null && (snapshot == Origin || snapshot.Origin == Origin && snapshot.CatalogOfOrigin);
         // the default character set types the routines' variables: changed, they compile differently
-        if (Origin != snapshot || !_catalogShared || ExecDepth > 0 || DefaultCharset != snapshot.DefaultCharset) return false;
+        if (!reachable || !_catalogShared || ExecDepth > 0 || DefaultCharset != snapshot.DefaultCharset) return false;
         foreach (var tx in ActiveTransactions.ToArray()) tx.EndByRestore();
         ActiveTransactions.Clear();
         Monitor.PulseAll(Sync);
-        foreach (var t in _written)
-        {
-            t.Written = false;
-            t.DeadRows = 0;
-            var st = snapshot.Tables[t.Name];
-            if (t.IsGtt) t.Rows = new();
-            else
-            {
-                t.Rows = st.Rows;
-                t.Shared = true;
-            }
-            foreach (var name in t.Indexes)
-            {
-                var ix = Indexes[name];
-                if (t.IsGtt) ix.Map = new();
-                else
-                {
-                    ix.Map = snapshot.Indexes[name].Map;
-                    ix.Shared = true;
-                }
-            }
-        }
+        foreach (var t in _written) ResetTable(t, snapshot);
         _written.Clear();
-        _sequences ??= Sequences.Select(kv => (kv.Value, snapshot.Sequences[kv.Key])).ToArray();
-        foreach (var (live, snap) in _sequences)
+        // the tables left with rows other than the origin's: a later reset (to the origin too) puts them back
+        if (snapshot != Origin)
+            foreach (var name in snapshot.DiffersFromOrigin)
+            {
+                var t = Tables[name];
+                ResetTable(t, snapshot);
+                t.Written = true;
+                _written.Add(t);
+            }
+        if (_sequences?.Snapshot != snapshot)
+            _sequences = (snapshot, Sequences.Select(kv => (kv.Value, snapshot.Sequences[kv.Key])).ToArray());
+        foreach (var (live, snap) in _sequences.Value.Pairs)
         {
             live.Value = snap.Value;
             live.Increment = snap.Increment;
@@ -322,6 +326,28 @@ public sealed partial class Database
         }
         GlobalContext.Clear();
         return true;
+    }
+
+    void ResetTable(Table t, Database snapshot)
+    {
+        t.Written = false;
+        t.DeadRows = 0;
+        if (t.IsGtt) t.Rows = new();
+        else
+        {
+            t.Rows = snapshot.Tables[t.Name].Rows;
+            t.Shared = true;
+        }
+        foreach (var name in t.Indexes)
+        {
+            var ix = Indexes[name];
+            if (t.IsGtt) ix.Map = new();
+            else
+            {
+                ix.Map = snapshot.Indexes[name].Map;
+                ix.Shared = true;
+            }
+        }
     }
 
     /// <summary>Physically removes dead slots. Only called when no statement is running.</summary>

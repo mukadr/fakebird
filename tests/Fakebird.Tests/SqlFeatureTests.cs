@@ -460,6 +460,30 @@ public class SqlFeatureTests(ServerFixture fx)
             // the index maps are the snapshot's again
             Assert.Equal(7000m, Scalar(cn, "select salary from emp where name = 'Bob'"));
         }
+        // a class's seeded state: a snapshot of the clone, which it is reset to, and then back to the template
+        Exec(cn, "insert into dept values (50, 'Seeded', 1)");
+        Exec(cn, "update emp set salary = 1 where id = 3");
+        Exec(cn, "select next value for s from rdb$database");
+        var seeded = db.Snapshot();
+        for (var i = 0; i < 2; i++)
+        {
+            Exec(cn, "delete from dept where id = 50");
+            Exec(cn, "insert into emp values (60, 2, 'Temp', 1, '2020-01-01', null)");
+            fx.Server.Restore(name, seeded);
+            Assert.Same(engine, fx.Server.Engine(name));
+            Assert.Equal(4L, Scalar(cn, "select count(*) from dept"));
+            Assert.Equal("Seeded", Scalar(cn, "select name from dept where id = 50"));
+            Assert.Equal(1m, Scalar(cn, "select salary from emp where id = 3"));
+            Assert.Equal(0L, Scalar(cn, "select count(*) from emp where id = 60"));
+            Assert.Equal(3L, Scalar(cn, "select next value for s from rdb$database"));
+        }
+        fx.Server.Restore(name, snap);
+        Assert.Same(engine, fx.Server.Engine(name));
+        Assert.Equal(3L, Scalar(cn, "select count(*) from dept"));
+        Assert.Equal(7000m, Scalar(cn, "select salary from emp where id = 3"));
+        Assert.Equal(2L, Scalar(cn, "select next value for s from rdb$database"));
+        // the seeded snapshot shares the template's definitions and RDB$ rows
+        Assert.Same(snap.Frozen.Tables["DEPT"].Columns, seeded.Frozen.Tables["DEPT"].Columns);
         // DDL: a new clone instead
         Exec(cn, "alter table dept add extra integer");
         fx.Server.Restore(name, snap);
