@@ -132,6 +132,8 @@ public sealed class IndexLookupRel : RelNode
     public readonly int Stream;
     public readonly Engine.Index Index;
     public readonly XNode[] Keys;
+    /// <summary>The types the key values are converted to: the indexed columns' (strings of any length).</summary>
+    readonly SqlType[] _keyTypes;
     public XNode? Filter;
 
     public IndexLookupRel(Table table, int stream, Engine.Index index, XNode[] keys)
@@ -141,6 +143,7 @@ public sealed class IndexLookupRel : RelNode
         Index = index;
         Keys = keys;
         Streams = [stream];
+        _keyTypes = index.Columns.Select(col => table.Columns[col].Type is { IsString: true } t ? t.WithLength(32765) : table.Columns[col].Type).ToArray();
     }
 
     public override RowCursor Open(Ctx c)
@@ -150,26 +153,28 @@ public sealed class IndexLookupRel : RelNode
         {
             var v = Keys[i].Eval(c);
             if (v.IsNull) return EmptyCursor.Instance;
-            vals[i] = Coercion.ToType(v, Table.Columns[Index.Columns[i]].Type.IsString
-                ? Table.Columns[Index.Columns[i]].Type.WithLength(32765) : Table.Columns[Index.Columns[i]].Type);
+            vals[i] = Coercion.ToType(v, _keyTypes[i]);
         }
         var key = Index.MakeKey(vals);
         var list = Index.Lookup(key);
         if (list == null) return EmptyCursor.Instance;
         if (list.Count > 4 && list.Count > Table.Rows.Count / 2) Index.Prune(key, list);
-        return new Cursor(this, c, list.ToArray(), key);
+        // the slots are copied: the statement may change the index while it reads
+        return list.Count == 1 ? new Cursor(this, c, list[0], null, key) : new Cursor(this, c, null, list.ToArray(), key);
     }
 
-    sealed class Cursor(IndexLookupRel n, Ctx c, RowSlot[] slots, IndexKey key) : RowCursor
+    sealed class Cursor(IndexLookupRel n, Ctx c, RowSlot? one, RowSlot[]? slots, IndexKey key) : RowCursor
     {
         int _i;
 
         public override bool Next()
         {
             var tx = c.Tx;
-            while (_i < slots.Length)
+            var count = slots?.Length ?? 1;
+            while (_i < count)
             {
-                var slot = slots[_i++];
+                var slot = slots == null ? one! : slots[_i];
+                _i++;
                 if (n.Table.IsGtt && slot.Attachment != tx.Att.Id) continue;
                 var d = slot.Visible(tx);
                 if (d == null || !n.Index.RowHasKey(d, key)) continue;
