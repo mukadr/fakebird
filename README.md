@@ -75,6 +75,7 @@ those rather than from a new snapshot of the same data, or that data is held twi
 * No disk I/O; rows are immutable `Value[]` arrays, values are unboxed structs.
 * Statements are compiled once into node trees and cached per database (`SQL text → plan`).
 * Equality predicates use hash indexes (PK/UK/FK/user indexes); joins use index lookups or hash joins.
+* Aggregates without GROUP BY (`count(*)`, `sum(...)`) read their input once without keeping its rows.
 * Equalities on RDB$ tables (an app checking that a table or column exists, the client's metadata
   queries) look the rows up in hashes built once per catalog, shared by the clones of a snapshot.
 * A connection's thread is kept for the next connection when it ends: tests open and close connections

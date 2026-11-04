@@ -358,6 +358,7 @@ public sealed class AggregateRel : RelNode
 
     public override RowCursor Open(Ctx c)
     {
+        if (Keys.Length == 0) return OpenSingle(c);
         var groups = new Dictionary<IndexKey, int>();
         var rows = new List<List<(Value[] Keys, byte[] Image, Frame Frame)>>();
         var ic = Input.Open(c);
@@ -398,6 +399,27 @@ public sealed class AggregateRel : RelNode
             list.Add(([], Frames.Null(SaveNullRows), states));
         }
         return new Cursor(this, c, list);
+    }
+
+    /// <summary>No GROUP BY: one group whose rows reach the aggregates in input order, so they are not kept.</summary>
+    RowCursor OpenSingle(Ctx c)
+    {
+        var states = new AggState[Aggs.Length];
+        for (var i = 0; i < states.Length; i++) states[i] = new AggState(Aggs[i]);
+        var last = new Frame(new Value[Save.Length][], new RowSlot?[Save.Length]);
+        var any = false;
+        var ic = Input.Open(c);
+        while (ic.Next())
+        {
+            for (var i = 0; i < Save.Length; i++)
+            {
+                last.Rows[i] = c.Rows[Save[i]];
+                last.Slots[i] = c.Slots[Save[i]];
+            }
+            any = true;
+            foreach (var st in states) st.Add(c);
+        }
+        return new Cursor(this, c, [([], any ? last : Frames.Null(SaveNullRows), states)]);
     }
 
     sealed class Cursor(AggregateRel n, Ctx c, List<(Value[] Keys, Frame Frame, AggState[] States)> groups) : RowCursor
