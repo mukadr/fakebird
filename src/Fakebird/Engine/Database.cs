@@ -241,8 +241,10 @@ public sealed partial class Database
         _catalogShared = false;
     }
 
-    /// <summary>Tables written since the database was cloned or last reset (<see cref="ResetTo"/>).</summary>
+    /// <summary>Tables written since the database was cloned or last reset (<see cref="ResetTo"/>): the only ones
+    /// with dead rows to compact.</summary>
     readonly List<Table> _written = new();
+    internal List<Table> WrittenTables => _written;
 
     /// <summary>Copy-on-write: gives the table private row slots and index maps before it is modified.</summary>
     internal void EnsureOwned(Table t)
@@ -646,7 +648,7 @@ public sealed class Transaction
         Monitor.PulseAll(Db.Sync);
         Db.ActiveTransactions.Remove(this);
         Att.Transactions.Remove(this);
-        foreach (var t in Db.Tables.Values)
+        foreach (var t in Db.WrittenTables)
             if (t.DeadRows > 0) Db.CompactIfNeeded(t);
     }
 
