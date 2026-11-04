@@ -200,7 +200,22 @@ public static class SortImage
 
     /// <summary>The data part of the current row's sort record (SortedStream: zeroed, then flags and fields).</summary>
     public static byte[] Build(Ctx c, SortField[] fields)
-        => Build(fields.Select(f => f.Type).ToArray(), fields.Select(f => c.Rows[f.Stream]?[f.Col] ?? Value.Null).ToArray());
+    {
+        var size = fields.Length;
+        foreach (var f in fields) size = Align(size, f.Type) + Length(f.Type);
+        var data = new byte[(size + 3) & ~3];
+        var at = fields.Length;
+        for (var i = 0; i < fields.Length; i++)
+        {
+            var t = fields[i].Type;
+            at = Align(at, t);
+            var v = c.Rows[fields[i].Stream]?[fields[i].Col] ?? Value.Null;
+            if (v.IsNull) data[i] = 1;
+            else Write(data.AsSpan(at, Length(t)), v, t);
+            at += Length(t);
+        }
+        return data;
+    }
 
     public static byte[] Build(SqlType[] types, Value[] values)
     {
