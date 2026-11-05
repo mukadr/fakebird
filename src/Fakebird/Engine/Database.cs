@@ -126,7 +126,12 @@ public sealed partial class Database
             var sameCatalog = _catalogShared && Origin != null && DefaultCharset == Origin.DefaultCharset;
             var d = new Database(Name + "$snapshot") { Origin = Origin, CatalogOfOrigin = sameCatalog, _catalogShared = sameCatalog };
             CopyCatalogInto(d, shareDefinitions: sameCatalog);
-            if (sameCatalog) d._virtualRows = _virtualRows;
+            if (sameCatalog)
+            {
+                d._virtualRows = _virtualRows;
+                // the tables whose rows are not the origin's are the ones written since the clone (or reset)
+                d._differsFromOrigin = _written.Where(t => !t.IsGtt).Select(t => t.Name).ToArray();
+            }
             foreach (var (k, t) in Tables)
             {
                 if (t.IsSystem) continue;
@@ -287,7 +292,9 @@ public sealed partial class Database
         .Where(kv => !kv.Value.IsSystem && !kv.Value.IsGtt && !ReferenceEquals(kv.Value.Rows, Origin!.Tables[kv.Key].Rows))
         .Select(kv => kv.Key).ToArray();
 
-    (Database Snapshot, (Sequence Live, Sequence Snapshot)[] Pairs)? _sequences;
+    /// <summary>The sequences paired with those of the last two snapshots reset to (a class's seeded state and
+    /// the template it goes back to at the end).</summary>
+    (Database Snapshot, (Sequence Live, Sequence Snapshot)[] Pairs)? _sequences, _sequences2;
 
     /// <summary>
     /// Puts a clone back to <paramref name="snapshot"/>'s state in place, when its catalog is still its origin's (no
@@ -317,8 +324,9 @@ public sealed partial class Database
                 _written.Add(t);
             }
         if (_sequences?.Snapshot != snapshot)
-            _sequences = (snapshot, Sequences.Select(kv => (kv.Value, snapshot.Sequences[kv.Key])).ToArray());
-        foreach (var (live, snap) in _sequences.Value.Pairs)
+            (_sequences, _sequences2) = (_sequences2?.Snapshot == snapshot ? _sequences2
+                : (snapshot, Sequences.Select(kv => (kv.Value, snapshot.Sequences[kv.Key])).ToArray()), _sequences);
+        foreach (var (live, snap) in _sequences!.Value.Pairs)
         {
             live.Value = snap.Value;
             live.Increment = snap.Increment;
