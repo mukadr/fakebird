@@ -451,8 +451,11 @@ public static class Conv
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CharLength(string s)
     {
+        // most text has no surrogate pairs: a vectorized search says so without looking at each character
+        var first = s.AsSpan().IndexOfAnyInRange('\uD800', '\uDBFF');
+        if (first < 0) return s.Length;
         var n = s.Length;
-        for (var i = 0; i < s.Length; i++)
+        for (var i = first; i < s.Length; i++)
             if (char.IsHighSurrogate(s[i])) n--;
         return n;
     }
