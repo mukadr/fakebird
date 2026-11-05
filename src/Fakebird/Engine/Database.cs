@@ -29,6 +29,14 @@ public sealed partial class Database
     internal int ConstraintNameCounter, IndexNameCounter, GeneratorNameCounter, CheckTriggerCounter;
     internal int ExceptionCounter;
     internal int ExecDepth;
+    /// <summary>Transactions waiting (<see cref="Transaction.WaitFor"/>) for another to end: only then does ending
+    /// one wake the waiters.</summary>
+    internal int Waiters;
+
+    internal void WakeWaiters()
+    {
+        if (Waiters > 0) Monitor.PulseAll(Sync);
+    }
     /// <summary>
     /// Table definitions, constraints, domains and views are still <see cref="Origin"/>'s objects
     /// (<see cref="FromSnapshot"/>): <see cref="EnsureCatalogOwned"/> copies them before DDL changes any.
@@ -311,7 +319,7 @@ public sealed partial class Database
         if (!reachable || !_catalogShared || ExecDepth > 0 || DefaultCharset != snapshot.DefaultCharset) return false;
         foreach (var tx in ActiveTransactions.ToArray()) tx.EndByRestore();
         ActiveTransactions.Clear();
-        Monitor.PulseAll(Sync);
+        WakeWaiters();
         foreach (var t in _written) ResetTable(t, snapshot);
         _written.Clear();
         // the tables left with rows other than the origin's: a later reset (to the origin too) puts them back
@@ -514,7 +522,9 @@ public sealed class Transaction
                 var remaining = deadline - DateTime.UtcNow;
                 // a timed-out wait ends like a NOWAIT conflict
                 if (remaining <= TimeSpan.Zero) throw Err.UpdateConflict(other.Id);
-                Monitor.Wait(Db.Sync, remaining > TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : remaining);
+                Db.Waiters++;
+                try { Monitor.Wait(Db.Sync, remaining > TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : remaining); }
+                finally { Db.Waiters--; }
             }
         }
         finally
@@ -629,7 +639,7 @@ public sealed class Transaction
         if (retaining)
         {
             StartSeq = Db.CommitSeq;
-            Monitor.PulseAll(Db.Sync);
+            Db.WakeWaiters();
             return;
         }
         WasCommitted = true;
@@ -684,7 +694,7 @@ public sealed class Transaction
     void End()
     {
         Active = false;
-        Monitor.PulseAll(Db.Sync);
+        Db.WakeWaiters();
         Db.ActiveTransactions.Remove(this);
         Att.Transactions.Remove(this);
         foreach (var t in Db.WrittenTables)
