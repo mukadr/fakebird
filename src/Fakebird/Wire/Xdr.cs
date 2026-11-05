@@ -116,6 +116,30 @@ internal sealed class Xdr
 
     public byte[] ReadBuffer() => ReadOpaque(ReadInt32());
 
+    /// <summary>Statement texts by their bytes: a connection sends the same statements again and again.</summary>
+    Dictionary<int, (byte[] Bytes, string Text)>? _texts;
+
+    /// <summary><see cref="ReadString"/> for statement texts: one already read comes back without decoding it again.</summary>
+    public string ReadText(Encoding enc)
+    {
+        var len = ReadInt32();
+        if (len > _in.Length) return enc.GetString(ReadOpaque(len));
+        Fill(len);
+        var bytes = _in.AsSpan(_inPos, len);
+        var h = new HashCode();
+        h.AddBytes(bytes);
+        var hash = h.ToHashCode();
+        _texts ??= new();
+        if (!_texts.TryGetValue(hash, out var e) || !bytes.SequenceEqual(e.Bytes))
+        {
+            if (_texts.Count >= 512) _texts.Clear();
+            _texts[hash] = e = (bytes.ToArray(), enc.GetString(bytes));
+        }
+        _inPos += len;
+        SkipPad(len);
+        return e.Text;
+    }
+
     public string ReadString(Encoding enc)
     {
         var len = ReadInt32();

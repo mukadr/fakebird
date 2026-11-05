@@ -573,7 +573,7 @@ internal sealed class Connection
         var txh = _xdr.ReadInt32();
         var sh = _xdr.ReadInt32();
         _xdr.ReadInt32(); // dialect
-        var sql = _xdr.ReadString(_enc);
+        var sql = _xdr.ReadText(_enc);
         var items = _xdr.ReadBuffer();
         var bufLen = _xdr.ReadInt32();
         Guard(() =>
@@ -833,7 +833,7 @@ internal sealed class Connection
         var txh = _xdr.ReadInt32();
         _xdr.ReadInt32(); // db handle
         _xdr.ReadInt32(); // dialect
-        var sql = _xdr.ReadString(_enc);
+        var sql = _xdr.ReadText(_enc);
         _xdr.ReadBuffer(); // items
         _xdr.ReadInt32(); // buffer length
         Guard(() =>
