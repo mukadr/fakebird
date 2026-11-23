@@ -158,6 +158,25 @@ public class BackupTests
     }
 
     [Fact]
+    public void RestoredRoutinesKeepTheirDependencies()
+    {
+        using var a = FakebirdServer.Start();
+        a.CreateDatabase("demo").RunScript(Schema);
+        using var b = FakebirdServer.Start();
+        b.RestoreBackup(new MemoryStream(BackupOf(a)));
+        const string deps = "select rdb$dependent_name, rdb$depended_on_name, rdb$field_name, rdb$dependent_type, rdb$depended_on_type from rdb$dependencies order by 1, 2, 3";
+        string Rows(FakebirdServer s) => string.Join("\n", s.GetDatabase("demo").Execute(deps).Select(r => string.Join("|", r)));
+        Assert.Contains("P_DOCS", Rows(a));
+        Assert.Equal(Rows(a), Rows(b));
+        // the view and the procedure read doc.id, the trigger raises e_bad: none of them can go
+        var db = b.GetDatabase("demo");
+        Assert.EndsWith("cannot delete\nCOLUMN DOC.ID\nthere are 2 dependencies",
+            Assert.ThrowsAny<Exception>(() => db.Execute("drop table doc")).Message.Replace("\r", ""));
+        Assert.EndsWith("cannot delete\nEXCEPTION E_BAD\nthere are 1 dependencies",
+            Assert.ThrowsAny<Exception>(() => db.Execute("drop exception e_bad")).Message.Replace("\r", ""));
+    }
+
+    [Fact]
     public void PsqlErrorsReportTheOriginalPositions()
     {
         using var a = FakebirdServer.Start();

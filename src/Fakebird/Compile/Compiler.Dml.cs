@@ -12,6 +12,7 @@ public sealed partial class Compiler
         if (Db.Tables.TryGetValue(name, out var t))
         {
             if (t.IsSystem) throw new StatusBuilder().Gds(335544352).Str("UPDATE").Str("TABLE").Str(name).Build("28000");
+            Dep(t.Name, null, Dependencies.Relation);
             return t;
         }
         if (Db.Views.ContainsKey(name)) throw Err.Unsupported("DML on views (" + name + ")");
@@ -22,6 +23,7 @@ public sealed partial class Compiler
     {
         var i = t.FindColumn(name);
         if (i < 0) throw Err.ColumnUnknown(qualifier == null ? name : qualifier + "." + name, at.Line, at.Col);
+        Dep(t.Name, t.Columns[i].Name, Dependencies.Relation);
         return i;
     }
 
@@ -108,6 +110,7 @@ public sealed partial class Compiler
         }
         else if (st.DefaultValues) cols = [];
         else cols = Enumerable.Range(0, t.Columns.Count).Where(i => !t.Columns[i].IsComputed).ToArray();
+        if (st.Columns == null) foreach (var ci in cols) Dep(t.Name, t.Columns[ci].Name, Dependencies.Relation);
         foreach (var ci in cols)
             if (t.Columns[ci].IsComputed) throw ReadOnly(t, ci);
         // identity columns given a value: GENERATED ALWAYS needs OVERRIDING SYSTEM VALUE; OVERRIDING USER VALUE
@@ -585,6 +588,7 @@ public sealed partial class Compiler
         var proc = Db.Procedures.TryGetValue(st.Name, out var p) ? p
             : throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-204).Gds(FbMessages.dsql_procedure_err)
                 .Gds(Err.isc_random).Str(st.Name).Build();
+        Dep(proc.Name, null, Dependencies.Procedure);
         var args = BindProcArgs(proc.Inputs, st.Args, s, proc.Name);
         var outs = proc.Outputs.Select(o => new OutCol { Name = o.Name, Field = o.Name, Relation = proc.Name, Type = o.Type }).ToArray();
         return new DelegatePrepared(c =>

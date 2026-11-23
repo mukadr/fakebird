@@ -299,10 +299,10 @@ internal static class SystemTables
         [
             ("RDB$DEPENDENT_NAME", Name), ("RDB$DEPENDED_ON_NAME", Name), ("RDB$FIELD_NAME", Name), ("RDB$DEPENDENT_TYPE", Small),
             ("RDB$DEPENDED_ON_TYPE", Small), ("RDB$PACKAGE_NAME", Name),
-        ], d => d.Views.Values.SelectMany(v => ViewDeps.Of(d, v.Query).Select(x => new[]
+        ], d => Dependencies.All(d).Select(x => new[]
         {
-            N(v.Name), N(x.Table), N(x.Column), I(1), I(d.Views.ContainsKey(x.Table) ? 1 : d.Procedures.ContainsKey(x.Table) ? 5 : 0), Value.Null,
-        })).ToList());
+            N(x.Dependent), N(x.On.Name), N(x.On.Field), I(x.DependentType), I(x.On.Type), Value.Null,
+        }).ToList());
 
         Add(db, "RDB$CHECK_CONSTRAINTS", [("RDB$CONSTRAINT_NAME", Name), ("RDB$TRIGGER_NAME", Name)],
             // NOT NULL constraints name their column; CHECKs and foreign key actions their system triggers

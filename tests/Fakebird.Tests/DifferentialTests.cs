@@ -44,7 +44,7 @@ public class DifferentialTests(ServerFixture fx, ITestOutputHelper output)
         var sb = new StringBuilder();
         for (var i = 0; i < file.Steps.Count; i++)
         {
-            if (file.Steps[i].Kind != "case") continue;
+            if (!file.Steps[i].IsSql) continue;
             // the oracle is Firebird 5 with DataTypeCompatibility = 3.0 (other servers are informative)
             var oracle = real.FirstOrDefault(r => r.Name == "fb5c3").Results ?? real.FirstOrDefault().Results;
             var same = oracle == null || oracle[i] == fake[i];

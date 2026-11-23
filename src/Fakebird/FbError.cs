@@ -21,6 +21,8 @@ public sealed class FbError : Exception
     public bool TraceDone { get; init; }
     /// <summary>Raised while opening the top-level cursor, so the client sees it at execute rather than at fetch.</summary>
     public bool AtExecute { get; set; }
+    /// <summary>DDL: an error Firebird raises at commit (its deferred work), not wrapped in "DROP TABLE T failed".</summary>
+    public bool AtCommit { get; set; }
     /// <summary>
     /// PSQL: where the work to undo when a handler catches the error starts, i.e. the start of the outermost
     /// unfinished block or statement under the handling block (Firebird's savepoints above the block's own).

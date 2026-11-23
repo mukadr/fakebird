@@ -184,6 +184,7 @@ public sealed partial class Compiler
             var table = Db.GetTable(ts.TypeOfTable);
             var ci = table.FindColumn(ts.TypeOfColumn!);
             if (ci < 0) throw Err.ColumnUnknown(ts.TypeOfTable + "." + ts.TypeOfColumn);
+            Dep(table.Name, table.Columns[ci].Name, Dependencies.Relation);
             t = table.Columns[ci].Type;
         }
         else if (ts.Domain != null)
@@ -191,6 +192,7 @@ public sealed partial class Compiler
             if (!Db.Domains.TryGetValue(ts.Domain, out domain))
                 throw new StatusBuilder().Gds(Err.isc_sqlerr).Num(-607).Gds(FbMessages.dsql_command_err)
                     .Gds(FbMessages.dsql_domain_not_found).Str(ts.Domain).Build();
+            Dep(domain.Name, null, Dependencies.Domain);
             t = domain.Type;
             if (ts.TypeOf) domain = null;
         }
@@ -415,6 +417,7 @@ public sealed partial class Compiler
             case NextValueExpr nv:
             {
                 var seq = Db.Sequences.TryGetValue(nv.Sequence, out var sq2) ? sq2 : throw Err.ObjectUnknown("Generator/Sequence", nv.Sequence);
+                Dep(seq.Name, null, Dependencies.Generator);
                 return new CtxFuncNode(c =>
                 {
                     seq.Value += seq.Increment;
@@ -1060,8 +1063,13 @@ public sealed partial class Compiler
                     : Err.Dsql104(FbMessages.dsql_agg_column_err, owner.AggClause);
         }
         var ci = item.Cols[idx];
+        DepOnColumn(item, ci);
         if (item.Table is { IsSystem: false } table && idx < table.Columns.Count && table.Columns[idx].ComputedBy is { } computedBy)
-            return BindComputed(item, table, idx, computedBy, ci);
+        {
+            _depsOff++; // what the expression reads is the column's own dependency
+            try { return BindComputed(item, table, idx, computedBy, ci); }
+            finally { _depsOff--; }
+        }
         var n = Col(item.Stream, idx, ci.Type, ci.Name, ci.Relation);
         n.Field = ci.Field;
         n.Relation = ci.Relation;

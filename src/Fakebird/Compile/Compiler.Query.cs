@@ -76,6 +76,7 @@ public sealed partial class Compiler
             {
                 if (f.Args.Count != 2 || f.Args[0] is not ColumnRefExpr g) throw Err.Dsql(-104, "GEN_ID requires a generator name and a step");
                 var seq = Db.Sequences.TryGetValue(g.Name, out var sq) ? sq : throw Err.ObjectUnknown("Generator/Sequence", g.Name);
+                Dep(seq.Name, null, Dependencies.Generator);
                 var step = Bind(f.Args[1], s, SqlType.BigInt);
                 return new FuncNode("GEN_ID", (c, a, fn) =>
                 {
@@ -112,7 +113,10 @@ public sealed partial class Compiler
         if (Routine?.SubRoutines != null && Routine.SubRoutines.TryGetValue(f.Name, out var sub) && sub.IsFunction)
             return BindSubFunctionCall(sub, f, s);
         if (Db.Functions.TryGetValue(f.Name, out var fn2))
+        {
+            Dep(fn2.Name, null, Dependencies.Function);
             return BindFunctionCall(fn2, f, s);
+        }
         throw new StatusBuilder().Gds(Err.isc_dsql_error).Gds(Err.isc_sqlerr).Num(-804).Gds(FbMessages.dsql_function_err)
             .Gds(Err.isc_random).Str(f.Name).Build();
     }
@@ -1092,6 +1096,7 @@ public sealed partial class Compiler
                 item.Name = n.Name;
                 item.Stream = stream;
                 AddSource(s, item);
+                if (!table.IsSystem) Dep(table.Name, null, Dependencies.Relation);
                 return new JLeaf { Item = item, Table = table };
             }
             if (Db.Views.TryGetValue(n.Name, out var view))
@@ -1101,9 +1106,12 @@ public sealed partial class Compiler
                 _ctes.Clear();
                 DefaultCharset = Db.DefaultCharset; // the view's definition is stored
                 QueryNode q;
+                Dep(view.Name, null, Dependencies.View);
+                _depsOff++; // what the view reads is its own dependency
                 try { q = CompileSelect(view.Query, null); }
                 finally
                 {
+                    _depsOff--;
                     _ctes.AddRange(savedCtes);
                     DefaultCharset = savedCharset;
                 }
@@ -1122,6 +1130,7 @@ public sealed partial class Compiler
         }
         if (Db.Procedures.TryGetValue(n.Name, out var proc))
         {
+            Dep(proc.Name, null, Dependencies.Procedure);
             var args = BindProcArgs(proc.Inputs, n.Args ?? new List<Expr>(), s, proc.Name);
             var stream = NewStream(proc.Outputs.Count);
             var p = proc;

@@ -231,12 +231,19 @@ checked against a real Firebird 5 by the corpus (see "Checking against a real Fi
   nullability; RDB$FIELDS has Firebird's sub types, precisions (0 for plain integers), collation ids
   and NULLs, column defaults sit in RDB$RELATION_FIELDS and domain defaults/checks in RDB$FIELDS, all
   sources keep the text as written (`default 'x'`, `check (value > 0)`, trigger source from AS);
-  RDB$VIEW_RELATIONS, RDB$DEPENDENCIES (views), RDB$FUNCTION_ARGUMENTS, COMMENT ON descriptions,
+  RDB$VIEW_RELATIONS, RDB$DEPENDENCIES (of views, procedures, functions and triggers: the tables, views
+  and procedures and the columns they read or write, NEW/OLD columns, procedures executed, functions
+  called, sequences, exceptions, domains and TYPE OF COLUMN), RDB$FUNCTION_ARGUMENTS, COMMENT ON descriptions,
   trigger type codes for multi-event triggers, expression index sources, and field positions that
   keep their gaps after a column is dropped. NUMERIC/DECIMAL take precisions up to 38 (INT128).
   ALTER COLUMN TYPE follows Firebird's rules (no narrowing, no text to number, text keeps its length)
   and the DDL errors (missing or duplicate objects and columns, domains in use, columns used by
-  views, bad lengths and scales) carry Firebird's codes.
+  views, bad lengths and scales) carry Firebird's codes. Like Firebird, DROP and RECREATE of a table,
+  view, procedure, function, sequence or exception, and ALTER TABLE ... DROP of a column, are refused
+  while something in RDB$DEPENDENCIES still depends on it ("cannot delete / COLUMN T.C / there are n
+  dependencies": a table's or view's columns are checked one by one, in order, then the object; a
+  table's own triggers go with it, but count when one of its columns is dropped), and a column something
+  depends on cannot be renamed.
 * **Joins and subqueries**: USING/NATURAL columns are COALESCE(left, right) when unqualified (and in
   `*`), the null-extended side of an outer join is described as nullable, ON conditions only see the
   sources joined so far, and ambiguity, alias-conflict, USING, derived-table column list and column count
@@ -279,7 +286,8 @@ the services API (backup/restore), external tables/functions, WHERE CURRENT OF, 
 
 * DDL is applied immediately (not transactional) and is never cached as a plan. Firebird applies it at
   commit: there a new CHECK or FOREIGN KEY is not enforced until the transaction commits, and a FOREIGN
-  KEY or UNIQUE added over violating rows fails at commit, while Fakebird fails the statement.
+  KEY or UNIQUE added over violating rows fails at commit, while Fakebird fails the statement. The same
+  goes for a DROP that something still depends on: the same error, at the statement instead of the commit.
 * Statement results are materialized at execute time (errors of a SELECT are still reported on
   the fetch, like Firebird: an error discards the rows of its fetch batch; WHERE conditions that depend on no table, such as an uncorrelated
   singleton subquery, fail at execute, also like Firebird).
@@ -311,6 +319,8 @@ insert into t values (?, ?)
 -- @tx snapshot nowait           (restart the current connection's transaction with options:
 --                                read_committed, snapshot, consistency, wait, nowait, timeout N, read_only)
 -- @commit                       (or @rollback)
+-- @ddl                          (a case committed at once, like isql's autoddl: its result is the error
+drop table t                     of the statement or of the commit, where Firebird checks dependencies)
 ```
 
 The golden files are text recorded once, so a case must not print the current date or time: compare

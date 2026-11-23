@@ -122,12 +122,15 @@ public sealed class Procedure
     public int SourceLine = 1, SourceCol = 1;
     /// <summary>Contains SUSPEND (selectable).</summary>
     public bool Selectable;
+    /// <summary>What it depends on (RDB$DEPENDENCIES), found when it was compiled; null until known.</summary>
+    internal Dependency[]? Deps;
     // compiled cache (per database instance)
     internal object? Compiled;
     internal int CompiledVersion = -1;
     public Procedure CloneDef() => new()
     {
         Name = Name, Inputs = Inputs, Outputs = Outputs, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Selectable = Selectable, Description = Description,
+        Deps = Deps,
     };
 }
 
@@ -143,11 +146,14 @@ public sealed class Function
     /// <summary>Line/column where Source started in its CREATE statement (backups re-parse it there).</summary>
     public int SourceLine = 1, SourceCol = 1;
     public bool Deterministic;
+    /// <summary>What it depends on (RDB$DEPENDENCIES), found when it was compiled; null until known.</summary>
+    internal Dependency[]? Deps;
     internal object? Compiled;
     internal int CompiledVersion = -1;
     public Function CloneDef() => new()
     {
         Name = Name, Inputs = Inputs, Returns = Returns, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Deterministic = Deterministic, Description = Description,
+        Deps = Deps,
     };
 }
 
@@ -166,11 +172,14 @@ public sealed class Trigger
     public string Source = null!;
     /// <summary>Line/column where Source started in its CREATE statement (backups re-parse it there).</summary>
     public int SourceLine = 1, SourceCol = 1;
+    /// <summary>What it depends on (RDB$DEPENDENCIES), found when it was compiled; null until known.</summary>
+    internal Dependency[]? Deps;
     internal object? Compiled;
     internal int CompiledVersion = -1;
     public Trigger CloneDef() => new()
     {
         Name = Name, Table = Table, Active = Active, Timing = Timing, Events = Events, DbEvent = DbEvent,
         Position = Position, Body = Body, Source = Source, SourceLine = SourceLine, SourceCol = SourceCol, Description = Description,
+        Deps = Deps,
     };
 }

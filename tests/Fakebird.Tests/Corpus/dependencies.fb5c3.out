@@ -1,0 +1,391 @@
+--- select trim(rdb$dependent_name), trim(rdb$depended_on_name), trim(rdb$field_name), rdb$dependent_type, rdb$depended_on_type from rdb$dependencies where rdb$dependent_name not starting 'RDB$' order by 1, 2, 3
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$DEPENDENT_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDENT_TYPE,False,False)
+RDB$DEPENDED_ON_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDED_ON_TYPE,False,False)
+FW | TW | NULL | 15 | 0 | 
+FW | TW | Y | 15 | 0 | 
+P1 | T | NULL | 5 | 0 | 
+P1 | T | MM | 5 | 0 | 
+P2 | T | NULL | 5 | 0 | 
+P2 | T | MM | 5 | 0 | 
+P2 | T | ZZ | 5 | 0 | 
+P3 | T2 | NULL | 5 | 0 | 
+P3 | T2 | D | 5 | 0 | 
+P3 | T2 | E | 5 | 0 | 
+P3 | T2 | G | 5 | 0 | 
+P3 | T2 | S | 5 | 0 | 
+P4 | T3 | NULL | 5 | 0 | 
+P4 | T3 | H | 5 | 0 | 
+P4 | T3 | ID | 5 | 0 | 
+P5 | P1 | NULL | 5 | 5 | 
+P5 | P1 | R | 5 | 5 | 
+P6 | F1 | NULL | 5 | 15 | 
+P6 | P3 | NULL | 5 | 5 | 
+P7 | T4 | NULL | 5 | 0 | 
+P7 | T4 | H | 5 | 0 | 
+PFR | FR | NULL | 5 | 15 | 
+PR | ZR | NULL | 5 | 5 | 
+PR | ZR | R | 5 | 5 | 
+PV | VA | NULL | 5 | 1 | 
+PV | VA | ID | 5 | 1 | 
+PVR | VR | NULL | 5 | 1 | 
+PVR | VR | ID | 5 | 1 | 
+PZ | TZ | NULL | 5 | 0 | 
+Q1 | DM | NULL | 5 | 9 | 
+Q1 | EX | NULL | 5 | 7 | 
+Q1 | G | NULL | 5 | 14 | 
+Q1 | T5 | NULL | 5 | 0 | 
+Q1 | T5 | A | 5 | 0 | 
+Q1 | T5 | ID | 5 | 0 | 
+Q2 | T6 | NULL | 5 | 0 | 
+Q2 | T6 | A | 5 | 0 | 
+TR6 | T5 | NULL | 2 | 0 | 
+TR6 | T5 | ID | 2 | 0 | 
+TR6 | T6 | A | 2 | 0 | 
+TR6 | T6 | ID | 2 | 0 | 
+TRR | TR | B | 2 | 0 | 
+TRT | TC | NULL | 2 | 0 | 
+TRT | TC | C | 2 | 0 | 
+TRT | TT | X | 2 | 0 | 
+V4 | T4 | NULL | 1 | 0 | 
+V4 | T4 | H | 1 | 0 | 
+V6 | T6 | NULL | 1 | 0 | 
+VA | TV | NULL | 1 | 0 | 
+VA | TV | ID | 1 | 0 | 
+VA | TV | N | 1 | 0 | 
+VB | VA | NULL | 1 | 1 | 
+VB | VA | N | 1 | 1 | 
+VCNT | VA | NULL | 1 | 1 | 
+VR | TR | NULL | 1 | 0 | 
+VR | TR | ID | 1 | 0 | 
+ZR | TR | NULL | 5 | 0 | 
+ZR | TR | A | 5 | 0 | 
+affected 0
+--- @ddl drop table t
+ERROR 335544351 335544673 335544611 'T.ZZ' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T.ZZ
+there are 1 dependencies
+--- @ddl alter table t drop mm
+ERROR 335544351 335544673 335544611 'T.MM' 335544630 #2 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T.MM
+there are 2 dependencies
+--- @ddl alter table t drop aa
+affected 0
+--- @ddl drop table t2
+ERROR 335544351 335544673 335544611 'T2.S' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T2.S
+there are 1 dependencies
+--- @ddl alter table t2 drop s
+ERROR 335544351 335544673 335544611 'T2.S' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T2.S
+there are 1 dependencies
+--- @ddl alter table t2 drop d
+ERROR 335544351 335544673 335544611 'T2.D' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T2.D
+there are 1 dependencies
+--- @ddl alter table t2 drop e
+ERROR 335544351 335544673 335544611 'T2.E' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T2.E
+there are 1 dependencies
+--- @ddl alter table t2 drop g
+ERROR 335544351 335544673 335544611 'T2.G' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T2.G
+there are 1 dependencies
+--- @ddl alter table t2 drop free
+affected 0
+--- @ddl drop table t3
+ERROR 335544351 335544673 335544611 'T3.ID' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T3.ID
+there are 1 dependencies
+--- @ddl alter table t3 drop h
+ERROR 335544351 335544673 335544611 'T3.H' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T3.H
+there are 1 dependencies
+--- @ddl drop procedure p1
+ERROR 335544351 335544673 335544627 'P1' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+PROCEDURE P1
+there are 1 dependencies
+--- @ddl drop procedure p3
+ERROR 335544351 335544673 335544627 'P3' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+PROCEDURE P3
+there are 1 dependencies
+--- @ddl drop function f1
+ERROR 335544351 335544673 335544816 'F1' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+Function F1
+there are 1 dependencies
+--- @ddl drop sequence g
+ERROR 335544351 335544673 335544815 'G' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+GENERATOR G
+there are 1 dependencies
+--- @ddl drop exception ex
+ERROR 335544351 335544673 335544610 'EX' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+EXCEPTION EX
+there are 1 dependencies
+--- @ddl drop table t4
+ERROR 335544351 335544673 335544611 'T4.H' 335544630 #2 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T4.H
+there are 2 dependencies
+--- @ddl alter table t4 drop h
+ERROR 335544351 336397287 'T4' 336068660 'H' 'T4' 'V4                                                             ' '' 42000
+unsuccessful metadata update
+ALTER TABLE T4 failed
+Column H from table T4 is referenced in view V4
+--- @ddl drop view v4
+affected 0
+--- @ddl drop table tz
+ERROR 335544351 335544673 335544626 'TZ' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+TABLE TZ
+there are 1 dependencies
+--- @ddl alter table tz drop q
+affected 0
+--- @ddl drop table tw
+ERROR 335544351 335544673 335544611 'TW.Y' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TW.Y
+there are 1 dependencies
+--- @ddl alter table tw drop y
+ERROR 335544351 335544673 335544611 'TW.Y' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TW.Y
+there are 1 dependencies
+--- @ddl drop table tc
+ERROR 335544351 335544673 335544611 'TC.C' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TC.C
+there are 1 dependencies
+--- @ddl alter table tc drop c
+ERROR 335544351 335544673 335544611 'TC.C' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TC.C
+there are 1 dependencies
+--- @ddl alter table tt drop x
+ERROR 335544351 335544673 335544611 'TT.X' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TT.X
+there are 1 dependencies
+--- @ddl alter table tt drop other
+affected 0
+--- @ddl drop table tt
+affected 0
+--- @ddl drop table tc
+affected 0
+--- @ddl alter table t5 drop a
+ERROR 335544351 335544673 335544611 'T5.A' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T5.A
+there are 1 dependencies
+--- @ddl drop table t6
+ERROR 335544351 335544673 335544611 'T6.A' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T6.A
+there are 1 dependencies
+--- @ddl drop trigger tr6
+affected 0
+--- @ddl drop table t6
+ERROR 335544351 335544673 335544611 'T6.A' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T6.A
+there are 1 dependencies
+--- @ddl drop procedure q2
+affected 0
+--- @ddl drop table t6
+ERROR 335544351 335544673 335544626 'T6' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+TABLE T6
+there are 1 dependencies
+--- @ddl drop view v6
+affected 0
+--- @ddl drop table t6
+affected 0
+--- @ddl drop procedure pz
+affected 0
+--- @ddl drop table tz
+affected 0
+--- @ddl alter procedure p2 returns (r integer) as begin select zz from t into :r; suspend; end
+affected 0
+--- @ddl alter table t drop mm
+ERROR 335544351 335544673 335544611 'T.MM' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN T.MM
+there are 1 dependencies
+--- @ddl drop procedure p2
+affected 0
+--- @ddl drop procedure p5
+affected 0
+--- @ddl drop procedure p1
+affected 0
+--- @ddl alter table t drop mm
+affected 0
+--- @ddl drop table t
+affected 0
+--- @ddl drop view va
+ERROR 335544351 335544673 335544611 'VA.ID' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN VA.ID
+there are 1 dependencies
+--- @ddl alter table tv drop id
+ERROR 335544351 336397287 'TV' 336068660 'ID' 'TV' 'VA                                                             ' '' 42000
+unsuccessful metadata update
+ALTER TABLE TV failed
+Column ID from table TV is referenced in view VA
+--- @ddl drop view vb
+affected 0
+--- @ddl drop view va
+ERROR 335544351 335544673 335544611 'VA.ID' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN VA.ID
+there are 1 dependencies
+--- @ddl drop procedure pv
+affected 0
+--- @ddl drop view va
+ERROR 335544351 335544673 335544626 'VA' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+TABLE VA
+there are 1 dependencies
+--- @ddl drop view vcnt
+affected 0
+--- @ddl drop view va
+affected 0
+--- @ddl drop table tv
+affected 0
+--- @ddl recreate procedure zr returns (r integer) as begin r = 1; suspend; end
+ERROR 335544351 335544673 335544627 'ZR' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+PROCEDURE ZR
+there are 1 dependencies
+--- @ddl recreate function fr returns integer as begin return 2; end
+ERROR 335544351 335544673 335544816 'FR' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+Function FR
+there are 1 dependencies
+--- @ddl recreate view vr as select id from tr
+ERROR 335544351 335544673 335544611 'VR.ID' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN VR.ID
+there are 1 dependencies
+--- @ddl recreate table tr (id integer, a integer, b integer, c integer)
+ERROR 335544351 335544673 335544611 'TR.ID' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+COLUMN TR.ID
+there are 1 dependencies
+--- @ddl recreate sequence g
+ERROR 335544351 335544673 335544815 'G' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+GENERATOR G
+there are 1 dependencies
+--- @ddl recreate exception ex 'again'
+ERROR 335544351 335544673 335544610 'EX' 335544630 #1 '' 42000
+unsuccessful metadata update
+cannot delete
+EXCEPTION EX
+there are 1 dependencies
+--- @ddl alter table tr alter id to id2
+ERROR 335544351 336397287 'TR' 336068814 'ID' 'TR' 'VR' '' 42000
+unsuccessful metadata update
+ALTER TABLE TR failed
+Column ID from table TR is referenced in VR
+--- @ddl alter table tr alter a to a2
+ERROR 335544351 336397287 'TR' 336068814 'A' 'TR' 'ZR' '' 42000
+unsuccessful metadata update
+ALTER TABLE TR failed
+Column A from table TR is referenced in ZR
+--- @ddl alter table tr alter b to b2
+ERROR 335544351 336397287 'TR' 336068814 'B' 'TR' 'TRR' '' 42000
+unsuccessful metadata update
+ALTER TABLE TR failed
+Column B from table TR is referenced in TRR
+--- @ddl alter table tr alter c to c2
+affected 0
+--- @ddl alter table tr alter a type bigint
+affected 0
+--- @ddl alter table tr alter a position 1
+affected 0
+--- select trim(rdb$dependent_name), trim(rdb$depended_on_name), trim(rdb$field_name), rdb$dependent_type, rdb$depended_on_type from rdb$dependencies where rdb$dependent_name not starting 'RDB$' order by 1, 2, 3
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+TRIM:VARCHAR (63,,,True,,TRIM,False,False)
+RDB$DEPENDENT_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDENT_TYPE,False,False)
+RDB$DEPENDED_ON_TYPE:SMALLINT (2,,,True,RDB$DEPENDENCIES,RDB$DEPENDED_ON_TYPE,False,False)
+FW | TW | NULL | 15 | 0 | 
+FW | TW | Y | 15 | 0 | 
+P3 | T2 | NULL | 5 | 0 | 
+P3 | T2 | D | 5 | 0 | 
+P3 | T2 | E | 5 | 0 | 
+P3 | T2 | G | 5 | 0 | 
+P3 | T2 | S | 5 | 0 | 
+P4 | T3 | NULL | 5 | 0 | 
+P4 | T3 | H | 5 | 0 | 
+P4 | T3 | ID | 5 | 0 | 
+P6 | F1 | NULL | 5 | 15 | 
+P6 | P3 | NULL | 5 | 5 | 
+P7 | T4 | NULL | 5 | 0 | 
+P7 | T4 | H | 5 | 0 | 
+PFR | FR | NULL | 5 | 15 | 
+PR | ZR | NULL | 5 | 5 | 
+PR | ZR | R | 5 | 5 | 
+PVR | VR | NULL | 5 | 1 | 
+PVR | VR | ID | 5 | 1 | 
+Q1 | DM | NULL | 5 | 9 | 
+Q1 | EX | NULL | 5 | 7 | 
+Q1 | G | NULL | 5 | 14 | 
+Q1 | T5 | NULL | 5 | 0 | 
+Q1 | T5 | A | 5 | 0 | 
+Q1 | T5 | ID | 5 | 0 | 
+TRR | TR | B | 2 | 0 | 
+VR | TR | NULL | 1 | 0 | 
+VR | TR | ID | 1 | 0 | 
+ZR | TR | NULL | 5 | 0 | 
+ZR | TR | A | 5 | 0 | 
+affected 0

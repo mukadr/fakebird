@@ -141,9 +141,13 @@ public sealed partial class Compiler
         };
     }
 
-    public static CompiledRoutine CompileProcedure(Database db, Procedure p)
+    public static CompiledRoutine CompileProcedure(Database db, Procedure p) => CompileProcedure(db, p, null);
+
+    /// <summary>Compiles it; <paramref name="deps"/> collects what it depends on.</summary>
+    internal static CompiledRoutine CompileProcedure(Database db, Procedure p, HashSet<Dependency>? deps)
     {
         var comp = ForStored(db);
+        comp.Deps = deps;
         comp.BeginRoutine();
         var ins = p.Inputs.Select(i => comp.Routine!.Declare(i.Name, i.Type, i.NotNull)).ToArray();
         var outs = p.Outputs.Select(o => comp.Routine!.Declare(o.Name, o.Type, o.NotNull)).ToArray();
@@ -156,9 +160,13 @@ public sealed partial class Compiler
         return cr;
     }
 
-    public static CompiledRoutine CompileFunction(Database db, Function f)
+    public static CompiledRoutine CompileFunction(Database db, Function f) => CompileFunction(db, f, null);
+
+    /// <summary>Compiles it; <paramref name="deps"/> collects what it depends on.</summary>
+    internal static CompiledRoutine CompileFunction(Database db, Function f, HashSet<Dependency>? deps)
     {
         var comp = ForStored(db);
+        comp.Deps = deps;
         comp.BeginRoutine();
         comp.Routine!.IsFunction = true;
         comp.Routine.FunctionReturns = f.Returns;
@@ -171,9 +179,13 @@ public sealed partial class Compiler
         return cr;
     }
 
-    public static CompiledRoutine CompileTrigger(Database db, Trigger t, Table table)
+    public static CompiledRoutine CompileTrigger(Database db, Trigger t, Table table) => CompileTrigger(db, t, table, null);
+
+    /// <summary>Compiles it; <paramref name="deps"/> collects what it depends on.</summary>
+    internal static CompiledRoutine CompileTrigger(Database db, Trigger t, Table table, HashSet<Dependency>? deps)
     {
         var comp = ForStored(db);
+        comp.Deps = deps;
         comp.BeginRoutine(isTrigger: true);
         var newStream = comp.NewStream(table.Columns.Count);
         var oldStream = comp.NewStream(table.Columns.Count);
@@ -295,7 +307,7 @@ public sealed partial class Compiler
         var preds = h.Conditions.Select<WhenCondition, Func<FbError, bool>>(cnd => cnd.Kind switch
         {
             "EXCEPTION" => Db.Exceptions.ContainsKey(cnd.Name!)
-                ? e => e.UserExceptionName == cnd.Name
+                ? DepOnException(cnd.Name!)
                 : throw Err.ObjectUnknown("Exception", cnd.Name!),
             "SQLCODE" => e => SqlCodes.SqlCodeOf(e) == cnd.Code,
             "GDSCODE" => SqlCodes.GdsCodeByName(cnd.Name!) is var code ? e => e.GdsCode == code : null!,
@@ -321,6 +333,7 @@ public sealed partial class Compiler
                 var t = _triggerTable!;
                 var ci = t.FindColumn(c.Name);
                 if (ci < 0) throw Err.ColumnUnknown("NEW." + c.Name, c.Line, c.Col);
+                Dep(t.Name, t.Columns[ci].Name, Dependencies.Relation);
                 return new Target(_triggerNewStream, ci, t.Columns[ci].Type, false, "NEW." + c.Name);
             }
             case ColumnRefExpr { Qualifier: "OLD" } c when r.IsTrigger && _triggerEvents == TriggerEvent.Insert:
@@ -445,6 +458,7 @@ public sealed partial class Compiler
             {
                 if (rs.Name == null) return new RaiseP(null, null, null);
                 var def = Db.Exceptions.TryGetValue(rs.Name, out var x) ? x : throw Err.ObjectUnknown("Exception", rs.Name);
+                Dep(def.Name, null, Dependencies.Exception);
                 return new RaiseP(def,
                     rs.Message == null ? null : Bind(rs.Message, root, SqlType.VarChar(1021)),
                     rs.Using?.Select(u => Bind(u, root, SqlType.VarChar(1021))).ToArray());
@@ -536,6 +550,12 @@ public sealed partial class Compiler
         var parms = sub.Inputs.Select(i => new RoutineParam { Name = i.Name, Type = ResolveType(i.Type), Default = i.Default }).ToList();
         var args = BindProcArgs(parms, f.Args, s, sub.Name, function: true);
         return new CallFunctionNode { Local = cr, Args = args, Type = cr.Returns ?? ResolveType(sub.Returns!), Name = sub.Name };
+    }
+
+    Func<FbError, bool> DepOnException(string name)
+    {
+        Dep(name, null, Dependencies.Exception);
+        return e => e.UserExceptionName == name;
     }
 
     XNode BindFunctionCall(Function fn, FuncExpr f, Scope s)

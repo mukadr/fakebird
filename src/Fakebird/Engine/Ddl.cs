@@ -15,7 +15,7 @@ public static class Ddl
         {
             Run(db, stmt, c);
         }
-        catch (FbError e) when (FailedCode(stmt) is var (code, name) && code != 0)
+        catch (FbError e) when (!e.AtCommit && FailedCode(stmt) is var (code, name) && code != 0)
         {
             throw Wrap(e, code, name);
         }
@@ -630,6 +630,8 @@ public static class Ddl
                     foreach (var ixName in t.Indexes.ToArray())
                         if (db.Indexes[ixName].Columns.Contains(ci))
                             throw Err.MetaUpdate($"Column {drop.Name} is used in index {ixName}");
+                    // procedures, functions and triggers (its own too) that read or write it
+                    Dependencies.Check(db, t.Name, Dependencies.Relation, t.Columns[ci].Name);
                     var col = t.Columns[ci];
                     // the other columns keep their positions: Firebird leaves the gap
                     for (var k = 0; k < t.Columns.Count; k++) t.Columns[k].Position ??= k;
@@ -768,6 +770,9 @@ public static class Ddl
         if (ac.NewName != null)
         {
             if (t.FindColumn(ac.NewName) >= 0) throw ColumnExists(t.Name, ac.NewName);
+            // a column something depends on keeps its name
+            if (Dependencies.All(db).FirstOrDefault(x => x.On.Type == Dependencies.Relation && x.On.Name == t.Name && x.On.Field == col.Name) is { Dependent: { } dependent })
+                throw new StatusBuilder().Gds(FbMessages.dyn_dependency_exists).Str(col.Name).Str(t.Name).Str(dependent).Build();
             col.Name = ac.NewName;
             t.RebuildColumnIndex();
         }
@@ -907,6 +912,10 @@ public static class Ddl
         {
             case CreateMode.Create when exists || db.Tables.ContainsKey(st.Name): throw Exists("View", st.Name);
             case CreateMode.Alter when !exists: throw Missing("View", st.Name);
+            // RECREATE drops it first
+            case CreateMode.Recreate when exists:
+                Dependencies.CheckRelation(db, st.Name, Dependencies.View, db.Views[st.Name].Columns.Select(c => c.Name));
+                break;
         }
         if (!exists && db.Tables.ContainsKey(st.Name)) throw Exists("Table", st.Name);
         var q = Compiler.ForStored(db).CompileSelect(st.Query, null);
@@ -934,7 +943,11 @@ public static class Ddl
             if (st.StartWith != null) seq!.InitialValue = st.StartWith.Value;
             return;
         }
-        if (st.Mode == CreateMode.Recreate && exists) db.Sequences.Remove(st.Name);
+        if (st.Mode == CreateMode.Recreate && exists)
+        {
+            Dependencies.Check(db, st.Name, Dependencies.Generator);
+            db.Sequences.Remove(st.Name);
+        }
         else if (exists) throw Exists("Sequence", st.Name);
         if (st.IncrementBy == 0) throw Err.MetaUpdate("INCREMENT BY 0 is an illegal option for sequence " + st.Name);
         // Firebird 4+: START WITH (default 1) is the first NEXT VALUE
@@ -950,6 +963,7 @@ public static class Ddl
         {
             case CreateMode.Create when exists: throw Exists("Exception", st.Name);
             case CreateMode.Alter when !exists: throw Missing("Exception", st.Name);
+            case CreateMode.Recreate when exists: Dependencies.Check(db, st.Name, Dependencies.Exception); break;
         }
         if (st.Message.Length > 1021) throw Err.MetaUpdate("Exception message is too long");
         db.Exceptions[st.Name] = new ExceptionDef { Name = st.Name, Message = st.Message, Number = ex?.Number ?? ++db.ExceptionCounter };
@@ -1066,9 +1080,10 @@ public static class Ddl
 
     // ------------------------------------------------------------------ routines / triggers
 
-    static List<RoutineParam> Params(Database db, List<ParamDecl> decls)
+    static List<RoutineParam> Params(Database db, List<ParamDecl> decls, HashSet<Dependency>? deps = null)
     {
         var comp = Comp(db);
+        comp.Deps = deps;
         var names = new HashSet<string>(StringComparer.Ordinal);
         return decls.Select(p =>
         {
@@ -1097,17 +1112,20 @@ public static class Ddl
         {
             case CreateMode.Create when exists: throw Exists("Procedure", st.Name);
             case CreateMode.Alter when !exists: throw Missing("Procedure", st.Name);
+            case CreateMode.Recreate when exists: Dependencies.Check(db, st.Name, Dependencies.Procedure); break;
         }
+        var deps = new HashSet<Dependency>();
         var p = new Procedure
         {
-            Name = st.Name, Inputs = Params(db, st.Inputs), Outputs = Params(db, st.Outputs), Body = st.Body, Source = st.Source,
+            Name = st.Name, Inputs = Params(db, st.Inputs, deps), Outputs = Params(db, st.Outputs, deps), Body = st.Body, Source = st.Source,
             SourceLine = st.SourceLine, SourceCol = st.SourceCol, Selectable = HasSuspend(st.Body),
         };
         db.Procedures[st.Name] = p;
         try
         {
             db.SchemaChanged();
-            Compiler.CompileProcedure(db, p);
+            Compiler.CompileProcedure(db, p, deps);
+            p.Deps = deps.ToArray();
         }
         catch
         {
@@ -1124,18 +1142,23 @@ public static class Ddl
         {
             case CreateMode.Create when exists: throw Exists("Function", st.Name);
             case CreateMode.Alter when !exists: throw Missing("Function", st.Name);
+            case CreateMode.Recreate when exists: Dependencies.Check(db, st.Name, Dependencies.Function); break;
         }
         if (Builtins.Find(st.Name) != null) throw Err.MetaUpdate("Function " + st.Name + " conflicts with a built-in function");
+        var deps = new HashSet<Dependency>();
+        var returns = Comp(db);
+        returns.Deps = deps;
         var f = new Function
         {
-            Name = st.Name, Inputs = Params(db, st.Inputs), Returns = Comp(db).ResolveType(st.Returns), Body = st.Body,
+            Name = st.Name, Inputs = Params(db, st.Inputs, deps), Returns = returns.ResolveType(st.Returns), Body = st.Body,
             Source = st.Source, SourceLine = st.SourceLine, SourceCol = st.SourceCol, Deterministic = st.Deterministic,
         };
         db.Functions[st.Name] = f;
         try
         {
             db.SchemaChanged();
-            Compiler.CompileFunction(db, f);
+            Compiler.CompileFunction(db, f, deps);
+            f.Deps = deps.ToArray();
         }
         catch
         {
@@ -1192,7 +1215,9 @@ public static class Ddl
         try
         {
             db.SchemaChanged();
-            Compiler.CompileTrigger(db, t, table);
+            var deps = new HashSet<Dependency>();
+            Compiler.CompileTrigger(db, t, table, deps);
+            t.Deps = deps.ToArray();
         }
         catch
         {
@@ -1209,24 +1234,6 @@ public static class Ddl
 
     // ------------------------------------------------------------------ DROP
 
-    static bool ViewReferences(SelectQuery q, string name) => RefsQuery(q, name);
-
-    static bool RefsQuery(QueryExpr q, string name) => q switch
-    {
-        SelectQuery sq => (sq.With?.Any(w => RefsQuery(w.Query, name)) ?? false) || RefsQuery(sq.Body, name),
-        SetOpQuery so => RefsQuery(so.Left, name) || RefsQuery(so.Right, name),
-        QuerySpec qs => qs.From.Any(f => RefsTable(f, name)),
-        _ => false,
-    };
-
-    static bool RefsTable(TableRef t, string name) => t switch
-    {
-        NamedTableRef n => n.Name == name,
-        JoinRef j => RefsTable(j.Left, name) || RefsTable(j.Right, name),
-        DerivedTableRef d => RefsQuery(d.Query, name),
-        _ => false,
-    };
-
     static void Drop(Database db, DropStmt st)
     {
         switch (st.Kind)
@@ -1241,25 +1248,27 @@ public static class Ddl
                     if (fk.Table != t.Name)
                         throw new StatusBuilder().Gds(FbMessages.integ_fail).Num(1).Gds(FbMessages.primary_key_ref).Build();
                 }
-                foreach (var v in db.Views.Values)
-                    if (ViewReferences(v.Query, t.Name))
-                        throw Err.MetaUpdate($"cannot delete: COLUMN {t.Name} is used in VIEW {v.Name}");
+                // its own triggers go with it
+                Dependencies.CheckRelation(db, t.Name, Dependencies.Relation, t.Columns.Select(c => c.Name),
+                    t.Triggers.Select(x => (x, Dependencies.Trigger)).ToHashSet());
                 DropTableObjects(db, t);
                 db.Tables.Remove(t.Name);
                 break;
             }
             case ObjectKind.View:
-                if (!db.Views.ContainsKey(st.Name)) throw Missing("View", st.Name);
-                foreach (var v in db.Views.Values)
-                    if (v.Name != st.Name && ViewReferences(v.Query, st.Name))
-                        throw Err.MetaUpdate($"cannot delete: VIEW {st.Name} is used in VIEW {v.Name}");
+                if (!db.Views.TryGetValue(st.Name, out var view)) throw Missing("View", st.Name);
+                Dependencies.CheckRelation(db, view.Name, Dependencies.View, view.Columns.Select(c => c.Name));
                 db.Views.Remove(st.Name);
                 break;
             case ObjectKind.Procedure:
-                if (!db.Procedures.Remove(st.Name)) throw Missing("Procedure", st.Name);
+                if (!db.Procedures.ContainsKey(st.Name)) throw Missing("Procedure", st.Name);
+                Dependencies.Check(db, st.Name, Dependencies.Procedure);
+                db.Procedures.Remove(st.Name);
                 break;
             case ObjectKind.Function:
-                if (!db.Functions.Remove(st.Name)) throw Missing("Function", st.Name);
+                if (!db.Functions.ContainsKey(st.Name)) throw Missing("Function", st.Name);
+                Dependencies.Check(db, st.Name, Dependencies.Function);
+                db.Functions.Remove(st.Name);
                 break;
             case ObjectKind.Trigger:
             {
@@ -1269,12 +1278,15 @@ public static class Ddl
                 break;
             }
             case ObjectKind.Exception:
-                if (!db.Exceptions.Remove(st.Name)) throw Missing("Exception", st.Name);
+                if (!db.Exceptions.ContainsKey(st.Name)) throw Missing("Exception", st.Name);
+                Dependencies.Check(db, st.Name, Dependencies.Exception);
+                db.Exceptions.Remove(st.Name);
                 break;
             case ObjectKind.Sequence:
             {
                 if (!db.Sequences.TryGetValue(st.Name, out var seq)) throw Missing("Sequence", st.Name);
                 if (seq.IsIdentity) throw Err.MetaUpdate("Cannot drop identity sequence " + st.Name);
+                Dependencies.Check(db, st.Name, Dependencies.Generator);
                 db.Sequences.Remove(st.Name);
                 break;
             }

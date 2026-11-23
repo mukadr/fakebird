@@ -10,13 +10,17 @@ namespace Fakebird.Tests.Corpus;
 /// <summary>One step of a corpus file: a SQL case or a directive (connection / transaction control).</summary>
 public sealed record CorpusStep(string Kind, string Text, string? Params = null, int Line = 0)
 {
-    public string Header => Kind == "case" ? Text.Split('\n')[0].Trim() : $"@{Kind} {Text}".Trim();
+    /// <summary>A SQL step: a <c>case</c>, or a <c>ddl</c> case committed at once.</summary>
+    public bool IsSql => Kind is "case" or "ddl";
+    public string Header => Kind == "case" ? Text.Split('\n')[0].Trim()
+        : Kind == "ddl" ? "@ddl " + Text.Split('\n')[0].Trim() : $"@{Kind} {Text}".Trim();
 }
 
 /// <summary>
 /// A corpus file (<c>Corpus/*.sql</c>): an optional <c>-- @setup</c> script followed by cases. Directives:
 /// <c>-- @case [params: [json array]]</c>, <c>-- @conn NAME</c>, <c>-- @tx options</c>, <c>-- @commit</c>,
-/// <c>-- @rollback</c>, <c>-- @mode native|compat3</c>.
+/// <c>-- @rollback</c>, <c>-- @mode native|compat3</c>, <c>-- @ddl</c> (a case committed at once, like isql's
+/// autoddl: its result is the error of the statement or of the commit, as Firebird checks DDL at commit).
 /// </summary>
 public sealed partial class CorpusFile
 {
@@ -40,7 +44,7 @@ public sealed partial class CorpusFile
 
         void Flush()
         {
-            if (section == "case")
+            if (section is "case" or "ddl")
             {
                 var caseLines = body.ToString().TrimEnd().Split('\n').ToList();
                 while (caseLines.Count > 0 && (caseLines[^1].Trim().Length == 0 || caseLines[^1].TrimStart().StartsWith("--")))
@@ -48,7 +52,7 @@ public sealed partial class CorpusFile
                 var sql = string.Join("\n", caseLines).Trim();
                 if (sql.EndsWith(';')) sql = sql[..^1].TrimEnd();
                 if (sql.Length == 0) throw new InvalidOperationException($"{name}:{caseLine}: empty case");
-                file.Steps.Add(new CorpusStep("case", sql, caseParams, caseLine));
+                file.Steps.Add(new CorpusStep(section, sql, caseParams, caseLine));
             }
             body.Clear();
         }
@@ -59,7 +63,7 @@ public sealed partial class CorpusFile
             if (!m.Success)
             {
                 if (section == "setup") setup.AppendLine(lines[i]);
-                else if (section == "case") body.AppendLine(lines[i]);
+                else if (section is "case" or "ddl") body.AppendLine(lines[i]);
                 continue;
             }
             Flush();
@@ -70,8 +74,8 @@ public sealed partial class CorpusFile
                 case "setup":
                     section = "setup";
                     break;
-                case "case":
-                    section = "case";
+                case "case" or "ddl":
+                    section = kind;
                     caseLine = i + 1;
                     caseParams = arg.StartsWith("params:", StringComparison.OrdinalIgnoreCase) ? arg[7..].Trim() : null;
                     break;
@@ -171,6 +175,11 @@ public static partial class CorpusRunner
                         default:
                             var tx = Tx();
                             var d = Describe(conns[current].Cn, tx, step.Text, step.Params);
+                            if (step.Kind == "ddl")
+                            {
+                                try { End(commit: !d.StartsWith("ERROR")); }
+                                catch (FbException e) { d = DescribeError(e); }
+                            }
                             results.Add(d);
                             // the client gave up halfway through a response: the connection is unusable
                             if (d.Contains("CLIENT EXCEPTION"))
@@ -350,7 +359,7 @@ public static partial class CorpusRunner
         var sb = new StringBuilder();
         for (var i = 0; i < file.Steps.Count; i++)
         {
-            if (file.Steps[i].Kind != "case" && results[i].Length == 0) continue;
+            if (!file.Steps[i].IsSql && results[i].Length == 0) continue;
             sb.Append("--- ").Append(file.Steps[i].Header).Append('\n');
             sb.Append(results[i].TrimEnd('\n')).Append('\n');
         }
